@@ -3,110 +3,98 @@
 namespace MakeAuto
 {
     /// <summary>
-    /// Excel 文件信息
+    /// 详细设计说明书信息
     /// </summary>
-    class ExcelFile
+    class Detail
     {
         /// <summary>
-        /// Excel 模块类构造函数，保存模块的相关信息
+        /// 详细设计说明书类构造函数，保存模块的相关信息
         /// </summary>
-        /// <param name="ModuleNo">模块编号</param>
-        /// <param name="ModuleName">模块名称</param>
-        /// <param name="FileName">Excel文件名</param>
-        /// <param name="SqlFile">SQL文件名</param>
-        /// <param name="PasFile">PAS文件名</param>
-        public ExcelFile(int ModuleNo, string ModuleName, string FileName, string SqlFile, string PasFile)
+        /// <param name="Name">模块名称</param>
+        /// <param name="File">Excel文件名</param>
+        /// <param name="Sql">SQL文件名</param>
+        /// <param name="Pas">PAS文件名</param>
+        public Detail(string Name, string File, string Sql, string Pas)
         {
-            _moduleno = ModuleNo;
-            _modulename = ModuleName;
-            _filename = FileName;
-            _pasfile = PasFile;
-            _sqlfile = SqlFile;
+            this.Name= Name;
+            this.File = File;
+            this.Pas = Pas;
+            this.Sql = Sql;
             
             // 保存Proc文件列表
             ProcFiles = new ArrayList();
-            if (_pasfile != string.Empty)
+            if (Pas != string.Empty)
             {
-                ProcFiles.Add(GccFile);
-                ProcFiles.Add(PcFile);
-                ProcFiles.Add(HeaderFile);
-                ProcFiles.Add(CppFile);
+                ProcFiles.Add(Gcc);
+                ProcFiles.Add(Pc);
+                ProcFiles.Add(Header);
+                ProcFiles.Add(Cpp);
             }
         }
 
-        #region 一些属性，用来保存模块编号及相关的文件名
-        private int _moduleno;
-        private string _modulename;
-        private string _filename;
-        private string _pasfile;
-        private string _sqlfile;
-
+        // Pro*C中间件文件
         public ArrayList ProcFiles;
 
-        public int ModuleNo
+        #region 一些属性，用来保存模块编号及相关的文件名
+        public string Name { get; set; }
+        public string File {get; set;}
+        public string Pas {get; set;}
+        public string Sql {get; set;}
+
+        public string Gcc
         {
-            get { return _moduleno; }
-            set { _moduleno = value; }
+            get { return "s_" + Pas + "flow.gcc"; }
         }
 
-        public string ModuleName 
+        public string Pc
         {
-            get { return _modulename; }
-            set { _modulename = value; }
+            get { return "s_" + Pas + "func.pc"; }
         }
 
-        public string FileName
+        public string Cpp
         {
-            get { return _filename; }
-            set { _filename = value; }
-        }
-        public string PasFile
-        {
-            get { return _pasfile; }
-            set { _pasfile = value; }
+            get { return "s_" + Pas + "flow.cpp"; }
         }
 
-        public string SqlFile
+        public string Header
         {
-            get { return _sqlfile; }
-            set { _sqlfile = value + ".sql"; }
+            get { return "s_" + Pas + "func.h"; }
         }
 
-        public string GccFile
+        public string OFlow
         {
-            get { return "s_" + _pasfile + "flow.gcc"; }
+            get { return "s_" + Pas + "flow.o"; }
         }
 
-        public string PcFile
+        public string OFunc
         {
-            get { return  "s_" + _pasfile + "func.pc"; }
+            get { return "s_" + Pas + "func.o"; }
         }
 
-        public string CppFile
+        public string SO
         {
-            get { return "s_" + _pasfile + "flow.cpp"; }
-        }
-
-        public string HeaderFile
-        {
-            get { return  "s_" + _pasfile + "func.h"; }
-        }
-
-        public string OFlowFile
-        {
-            get { return  "s_" + _pasfile + "flow.o"; }
-        }
-
-        public string OFuncFile
-        {
-            get { return "s_" + _pasfile + "func.o"; }
-        }
-
-        public string SOFile
-        {
-            get { return _pasfile.Trim() == string.Empty ? string.Empty : "libs_" + _pasfile + "flow.10.so"; }
+            get { return Pas.Trim() == string.Empty ? string.Empty : "libs_" + Pas + "flow.10.so"; }
         }
         #endregion
         
+    }
+
+    class Details : ArrayList
+    {
+        public Detail this[string name]
+        {
+            get
+            {
+                foreach (Detail a in this)
+                {
+                    if (a.Name == name)
+                    {
+                        return a;
+                    }
+                }
+
+                return null;
+            }
+        }
     }
 }

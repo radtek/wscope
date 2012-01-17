@@ -35,6 +35,7 @@
             this.mniSettings = new System.Windows.Forms.ToolStripMenuItem();
             this.mniRefresh = new System.Windows.Forms.ToolStripMenuItem();
             this.mniAbout = new System.Windows.Forms.ToolStripMenuItem();
+            this.关于ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.toolStripButton1 = new System.Windows.Forms.ToolStripButton();
@@ -44,12 +45,14 @@
             this.panel2 = new System.Windows.Forms.Panel();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.clbModule = new System.Windows.Forms.CheckedListBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.cmbEnd = new System.Windows.Forms.ComboBox();
             this.cmbBegin = new System.Windows.Forms.ComboBox();
             this.lblBegin = new System.Windows.Forms.Label();
             this.lblEnd = new System.Windows.Forms.Label();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.button2 = new System.Windows.Forms.Button();
             this.btnSql = new System.Windows.Forms.Button();
             this.btnHyper = new System.Windows.Forms.Button();
             this.button1 = new System.Windows.Forms.Button();
@@ -64,7 +67,6 @@
             this.label2 = new System.Windows.Forms.Label();
             this.txtAmendList = new System.Windows.Forms.TextBox();
             this.cmsNotify = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.button2 = new System.Windows.Forms.Button();
             this.menuStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -82,12 +84,12 @@
             this.txtLog.BackColor = System.Drawing.SystemColors.Window;
             this.txtLog.Cursor = System.Windows.Forms.Cursors.Default;
             this.txtLog.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.txtLog.Location = new System.Drawing.Point(0, 220);
+            this.txtLog.Location = new System.Drawing.Point(0, 253);
             this.txtLog.Multiline = true;
             this.txtLog.Name = "txtLog";
             this.txtLog.ReadOnly = true;
             this.txtLog.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtLog.Size = new System.Drawing.Size(524, 118);
+            this.txtLog.Size = new System.Drawing.Size(727, 118);
             this.txtLog.TabIndex = 0;
             this.txtLog.TabStop = false;
             this.txtLog.TextChanged += new System.EventHandler(this.txtLog_TextChanged);
@@ -99,7 +101,7 @@
             this.mniAbout});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(524, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(727, 24);
             this.menuStrip1.TabIndex = 2;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -108,28 +110,36 @@
             this.mniSettings.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.mniRefresh});
             this.mniSettings.Name = "mniSettings";
-            this.mniSettings.Size = new System.Drawing.Size(41, 20);
+            this.mniSettings.Size = new System.Drawing.Size(43, 20);
             this.mniSettings.Text = "设置";
             // 
             // mniRefresh
             // 
             this.mniRefresh.Name = "mniRefresh";
-            this.mniRefresh.Size = new System.Drawing.Size(118, 22);
+            this.mniRefresh.Size = new System.Drawing.Size(122, 22);
             this.mniRefresh.Text = "重建模块";
             this.mniRefresh.Click += new System.EventHandler(this.btnRefresh_Click);
             // 
             // mniAbout
             // 
+            this.mniAbout.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.关于ToolStripMenuItem});
             this.mniAbout.Name = "mniAbout";
-            this.mniAbout.Size = new System.Drawing.Size(41, 20);
-            this.mniAbout.Text = "关于";
-            this.mniAbout.Click += new System.EventHandler(this.mniAbout_Click);
+            this.mniAbout.Size = new System.Drawing.Size(43, 20);
+            this.mniAbout.Text = "帮助";
+            // 
+            // 关于ToolStripMenuItem
+            // 
+            this.关于ToolStripMenuItem.Name = "关于ToolStripMenuItem";
+            this.关于ToolStripMenuItem.Size = new System.Drawing.Size(98, 22);
+            this.关于ToolStripMenuItem.Text = "关于";
+            this.关于ToolStripMenuItem.Click += new System.EventHandler(this.关于ToolStripMenuItem_Click);
             // 
             // statusStrip1
             // 
-            this.statusStrip1.Location = new System.Drawing.Point(0, 387);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 420);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(524, 22);
+            this.statusStrip1.Size = new System.Drawing.Size(727, 22);
             this.statusStrip1.TabIndex = 3;
             this.statusStrip1.Text = "statusStrip1";
             // 
@@ -139,7 +149,7 @@
             this.toolStripButton1});
             this.toolStrip1.Location = new System.Drawing.Point(0, 24);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(524, 25);
+            this.toolStrip1.Size = new System.Drawing.Size(727, 25);
             this.toolStrip1.TabIndex = 4;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -172,7 +182,7 @@
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel1.Location = new System.Drawing.Point(0, 49);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(524, 338);
+            this.panel1.Size = new System.Drawing.Size(727, 371);
             this.panel1.TabIndex = 21;
             // 
             // panel2
@@ -181,7 +191,7 @@
             this.panel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel2.Location = new System.Drawing.Point(0, 0);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(524, 220);
+            this.panel2.Size = new System.Drawing.Size(727, 253);
             this.panel2.TabIndex = 23;
             // 
             // tabControl1
@@ -192,21 +202,30 @@
             this.tabControl1.Location = new System.Drawing.Point(0, 0);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(524, 220);
+            this.tabControl1.Size = new System.Drawing.Size(727, 253);
             this.tabControl1.TabIndex = 22;
             // 
             // tabPage1
             // 
-            this.tabPage1.Controls.Add(this.button2);
+            this.tabPage1.Controls.Add(this.clbModule);
             this.tabPage1.Controls.Add(this.groupBox1);
             this.tabPage1.Controls.Add(this.groupBox2);
             this.tabPage1.Location = new System.Drawing.Point(4, 21);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(516, 195);
+            this.tabPage1.Size = new System.Drawing.Size(719, 228);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "编译集成";
             this.tabPage1.UseVisualStyleBackColor = true;
+            // 
+            // clbModule
+            // 
+            this.clbModule.CheckOnClick = true;
+            this.clbModule.FormattingEnabled = true;
+            this.clbModule.Location = new System.Drawing.Point(6, 6);
+            this.clbModule.Name = "clbModule";
+            this.clbModule.Size = new System.Drawing.Size(375, 212);
+            this.clbModule.TabIndex = 23;
             // 
             // groupBox1
             // 
@@ -214,9 +233,9 @@
             this.groupBox1.Controls.Add(this.cmbBegin);
             this.groupBox1.Controls.Add(this.lblBegin);
             this.groupBox1.Controls.Add(this.lblEnd);
-            this.groupBox1.Location = new System.Drawing.Point(0, 0);
+            this.groupBox1.Location = new System.Drawing.Point(397, 6);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(275, 121);
+            this.groupBox1.Size = new System.Drawing.Size(275, 83);
             this.groupBox1.TabIndex = 21;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "模块";
@@ -239,7 +258,6 @@
             this.cmbBegin.Name = "cmbBegin";
             this.cmbBegin.Size = new System.Drawing.Size(121, 20);
             this.cmbBegin.TabIndex = 1;
-            this.cmbBegin.TextUpdate += new System.EventHandler(this.cmbBegin_TextUpdate);
             // 
             // lblBegin
             // 
@@ -261,18 +279,29 @@
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.button2);
             this.groupBox2.Controls.Add(this.btnSql);
             this.groupBox2.Controls.Add(this.btnHyper);
             this.groupBox2.Controls.Add(this.button1);
             this.groupBox2.Controls.Add(this.button5);
             this.groupBox2.Controls.Add(this.btnSO);
             this.groupBox2.Controls.Add(this.btnProC);
-            this.groupBox2.Location = new System.Drawing.Point(306, 0);
+            this.groupBox2.Location = new System.Drawing.Point(387, 95);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(183, 121);
+            this.groupBox2.Size = new System.Drawing.Size(275, 121);
             this.groupBox2.TabIndex = 22;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "操作";
+            // 
+            // button2
+            // 
+            this.button2.Location = new System.Drawing.Point(185, 34);
+            this.button2.Name = "button2";
+            this.button2.Size = new System.Drawing.Size(75, 23);
+            this.button2.TabIndex = 23;
+            this.button2.Text = "button2";
+            this.button2.UseVisualStyleBackColor = true;
+            this.button2.Click += new System.EventHandler(this.button2_Click);
             // 
             // btnSql
             // 
@@ -340,7 +369,7 @@
             this.tabPage2.Location = new System.Drawing.Point(4, 21);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(516, 195);
+            this.tabPage2.Size = new System.Drawing.Size(719, 228);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "修改递交";
             this.tabPage2.UseVisualStyleBackColor = true;
@@ -416,21 +445,11 @@
             this.cmsNotify.Name = "cmsNotify";
             this.cmsNotify.Size = new System.Drawing.Size(61, 4);
             // 
-            // button2
-            // 
-            this.button2.Location = new System.Drawing.Point(362, 165);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(75, 23);
-            this.button2.TabIndex = 23;
-            this.button2.Text = "button2";
-            this.button2.UseVisualStyleBackColor = true;
-            this.button2.Click += new System.EventHandler(this.button2_Click);
-            // 
             // frmMakeAuto
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(524, 409);
+            this.ClientSize = new System.Drawing.Size(727, 442);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.toolStrip1);
             this.Controls.Add(this.statusStrip1);
@@ -499,6 +518,8 @@
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.TextBox txtAmendList;
         private System.Windows.Forms.Button button2;
+        private System.Windows.Forms.ToolStripMenuItem 关于ToolStripMenuItem;
+        private System.Windows.Forms.CheckedListBox clbModule;
     }
 }
 
