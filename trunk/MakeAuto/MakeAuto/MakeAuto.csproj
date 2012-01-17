@@ -24,8 +24,8 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
-    <ApplicationRevision>14</ApplicationRevision>
-    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.0</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -53,7 +53,7 @@
     <StartupObject />
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>962A5627DBE21AF1BE4C70EB667347E63F1B655C</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>7458479BC3BA088981D0A65E6051D1CB275E12AE</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
     <ManifestKeyFile>MakeAuto_TemporaryKey.pfx</ManifestKeyFile>
@@ -62,7 +62,7 @@
     <GenerateManifests>true</GenerateManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <SignManifests>true</SignManifests>
+    <SignManifests>false</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>MakeAuto.ico</ApplicationIcon>
@@ -74,7 +74,6 @@
     <Compile Include="AboutBoxMakeAuto.Designer.cs">
       <DependentUpon>AboutBoxMakeAuto.cs</DependentUpon>
     </Compile>
-    <Compile Include="ConfigHelper.cs" />
     <Compile Include="ExcelFile.cs" />
     <Compile Include="ExcelMacroHelper.cs" />
     <Compile Include="FormMakeAuto.cs">
@@ -83,6 +82,7 @@
     <Compile Include="FormMakeAuto.designer.cs">
       <DependentUpon>FormMakeAuto.cs</DependentUpon>
     </Compile>
+    <Compile Include="MAConf.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
@@ -96,6 +96,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
     <Compile Include="Settings.cs" />
+    <Compile Include="SshConn.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="AboutBoxMakeAuto.resx">
@@ -113,7 +114,7 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="ChilkatDotNet4">
-      <HintPath>D:\Program Files\Chilkat Software Inc\Chilkat.NET-v4.0\ChilkatDotNet4.dll</HintPath>
+      <HintPath>C:\Program Files\Chilkat Software Inc\Chilkat.NET-v4.0\ChilkatDotNet4.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Office.Interop.Excel, Version=14.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -139,10 +140,6 @@
     </COMReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config">
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="MakeAuto_TemporaryKey.pfx" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
