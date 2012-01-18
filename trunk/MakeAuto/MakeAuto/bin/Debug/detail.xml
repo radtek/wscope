@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="gb2312"?>
 <!--excel详细设计说明书-->
-<detail gentime="2012-1-12 23:16:12" detailtime="2012-1-6 20:34:43">
+<detail gentime="2012-1-17 22:25:30" detailtime="2012-1-6 20:34:43">
   <公用模块 file="金融产品销售系统_详细设计说明书_公用模块.xls" sql="user_public" pas="public" />
   <系统管理 file="金融产品销售系统_详细设计说明书_系统管理.xls" sql="user_system" pas="system" />
   <用户管理 file="金融产品销售系统_详细设计说明书_用户管理.xls" sql="user_users" pas="users" />

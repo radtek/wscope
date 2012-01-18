@@ -17,7 +17,9 @@ namespace MakeAuto
         ArrayList alModule = new ArrayList();
 
         // 宏助手
-        private ExcelMacroHelper eh = new ExcelMacroHelper();
+        private ExcelMacroHelper eh = ExcelMacroHelper.instance;
+
+        private MAConf ma = MAConf.instance;
 
         // 当前活动ExcelFile;
         private Detail currDetail;
@@ -34,8 +36,7 @@ namespace MakeAuto
 
         private void btnSO_Click(object sender, EventArgs e)
         {
-            int iFileNo = cmbBegin.SelectedIndex;
-            Detail dl = (Detail)alModule[iFileNo]; // 取当前文件
+            Detail dl = null; // 取当前文件
 
             // 如果选择的序号pas文件字段为空，那么不需要编译SO
             if (dl.Pas == " ")
@@ -69,15 +70,19 @@ namespace MakeAuto
             if (e.Error != null)
                 MessageBox.Show("Error: " + e.Error.Message);
             else if (e.Cancelled)
-                txtLog.Text += "取消任务 \r\n";
+                WriteLog(InfoType.Info, "取消任务");
             else
-                txtLog.Text += "编译完成" + "\r\n";
+                WriteLog(InfoType.Info, "编译完成");
         }
 
         private void bgwProc_ProgressChanged(object sender, System.ComponentModel.ProgressChangedEventArgs e)
         {
             // This method runs on the main thread.
-            txtLog.Text += "进度：" + e.ProgressPercentage.ToString() +"%, "+ e.UserState.ToString() + " \r\n";
+            State c = (State)e.UserState;
+            WriteLog(InfoType.Info, "进度：" + e.ProgressPercentage.ToString() + "%, 当前模块：" + c.dl.Name
+                + ",编译信息：" + c.info, "编译");
+            
+            /*
             if (e.ProgressPercentage == 0)
             {
                 // 启动后处理到托盘
@@ -85,7 +90,7 @@ namespace MakeAuto
                 {
                     this.WindowState = FormWindowState.Minimized;
                     this.Hide();
-                    nfnMake.ShowBalloonTip(1, "提示", "后台处理已启动", ToolTipIcon.Info);
+                    nfnMake.ShowBalloonTip(1000, "提示", "后台处理已启动", ToolTipIcon.Info);
                 }
 
             }
@@ -97,92 +102,35 @@ namespace MakeAuto
                     this.Show();
                     this.WindowState = FormWindowState.Normal;
                     this.Activate();
-                    nfnMake.ShowBalloonTip(1, "提示", "后台处理已完成", ToolTipIcon.Info);
+                    nfnMake.ShowBalloonTip(1000, "提示", "后台处理已完成", ToolTipIcon.Info);
                 }
  
             }
+             * */
         }
 
         private void bgwProc_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
         {
-            // This event handler is where the actual work is done.
-            // This method runs on the background thread.
-
-            // Get the BackgroundWorker object that raised this event.
             System.ComponentModel.BackgroundWorker worker;
             worker = (System.ComponentModel.BackgroundWorker)sender;
 
-            // Get the Words object and call the main method.
-            ExcelMacroHelper eh = (ExcelMacroHelper)e.Argument;
             eh.RunExcelMacro(worker, e);
         }
 
         private void btnProc_Click(object sender, EventArgs e)
         {
-            // 先校验模块中需要忽略的部分
-            for (int iFileNo = cmbBegin.SelectedIndex; iFileNo <= cmbEnd.SelectedIndex; ++iFileNo)
-            {
-                Detail dl = (Detail)alModule[iFileNo]; // 取当前文件
-
-                // 如果选择的序号pas文件字段为空，那么不需要编译SO
-                if (dl.Pas.Trim() == String.Empty)
-                {
-                    txtLog.Text += dl.Name + "不是函数模块，不会为其编译Proc文件！ \r\n";
-                    continue;
-                }
-            }
-
-            try
-            {
-                // 启动异步后台工作
-                // 获得一个ExcelMacroHelper对象
-                eh.MacroName = "CreateAs3CodePub";
-                //eh.BeginNo = (alModule[cmbBegin.SelectedIndex] as Detail).ModuleNo;
-                //eh.EndNo = (alModule[cmbEnd.SelectedIndex] as Detail).ModuleNo;
-                bgwProc.RunWorkerAsync(eh);
-            }
-            catch (System.Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
+            // 对于选中的模块，如果需要编译，则执行编译过程
+            bgwProc.RunWorkerAsync(MacroType.ProC);
         }
 
         private void btnHyper_Click(object sender, EventArgs e)
         {
-            // This method runs on the main thread.
-            // Initialize the object that the background worker calls.
-
-            try
-            {
-                // 启动异步后台工作
-                // 获得一个ExcelMacroHelper对象
-                eh.MacroName = "DocHyberLinkPub";
-                //eh.BeginNo = (alModule[cmbBegin.SelectedIndex] as Detail).ModuleNo;
-                //eh.EndNo = (alModule[cmbEnd.SelectedIndex] as Detail).ModuleNo;
-                bgwProc.RunWorkerAsync(eh);
-            }
-            catch (System.Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
+            bgwProc.RunWorkerAsync(MacroType.Hyper);
         }
 
-        private void cmbBegin_SelectedIndexChanged(object sender, EventArgs e)
+        private void btnSql_Click(object sender, EventArgs e)
         {
-            // 如果结束索引比开始的小，那么重置结束的索引值
-            if (cmbEnd.SelectedIndex < cmbBegin.SelectedIndex)
-            {
-                cmbEnd.SelectedIndex = cmbBegin.SelectedIndex;
-            }
-        }
-
-        private void cmbEnd_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            // 如果结束索引比开始的小，那么重置开始的索引值
-            if (cmbEnd.SelectedIndex < cmbBegin.SelectedIndex)
-            {
-                cmbBegin.SelectedIndex = cmbEnd.SelectedIndex;
-            }
+            bgwProc.RunWorkerAsync(MacroType.SQL);
         }
 
         private void txtLog_TextChanged(object sender, EventArgs e)
@@ -227,36 +175,6 @@ namespace MakeAuto
         {
             AboutBoxMakeAuto mk = new AboutBoxMakeAuto();
             mk.Show(this);
-        }
-
-        private void btnSql_Click(object sender, EventArgs e)
-        {
-            // 先校验模块中需要忽略的部分
-            for (int iFileNo = cmbBegin.SelectedIndex; iFileNo <= cmbEnd.SelectedIndex; ++iFileNo)
-            {
-                Detail dl = (Detail)alModule[iFileNo]; // 取当前文件
-
-                // 如果选择的序号pas文件字段为空，那么不需要编译SO
-                if (dl.Sql.Trim() == String.Empty)
-                {
-                    txtLog.Text += dl.Name + "不是过程模块，不会为其编译Sql文件！ \r\n";
-                    continue;
-                }
-            }
-
-            try
-            {
-                // 启动异步后台工作
-                // 获得一个ExcelMacroHelper对象
-                eh.MacroName = "CreateSQLCodePub";
-                //eh.BeginNo = (alModule[cmbBegin.SelectedIndex] as Detail).ModuleNo;
-                //eh.EndNo = (alModule[cmbEnd.SelectedIndex] as Detail).ModuleNo;
-                bgwProc.RunWorkerAsync(eh);
-            }
-            catch (System.Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
         }
 
         private void btnModPre_Click(object sender, EventArgs e)
@@ -316,10 +234,10 @@ namespace MakeAuto
             string CurrVer = ModBaseDir + ModDir + "/" + ModSubDir + "/";
 
             // 复制文件
-            for (int iFileNo = cmbBegin.SelectedIndex; iFileNo <= cmbEnd.SelectedIndex; ++iFileNo)
+            for (int iFileNo = 0; iFileNo <= 10; ++iFileNo)
             {
                 currDetail = (Detail)alModule[iFileNo]; // 取当前文件
-                
+
                 // 复制编译源文件
                 foreach (string s in currDetail.ProcFiles)
                 {
@@ -329,7 +247,7 @@ namespace MakeAuto
                     }
                     else
                     {
-                        txtLog.Text += "文件：" + MAConf.instance.SrcDir + s + "不存在，请确认！" + "\r\n";
+                        WriteLog(InfoType.Info, "文件：" + MAConf.instance.SrcDir + s + "不存在，请确认！", "集成");
                     }
                 }
 
@@ -342,7 +260,7 @@ namespace MakeAuto
                     }
                     else
                     {
-                        txtLog.Text += "文件：" + MAConf.instance.SrcDir + currDetail.Sql + "不存在，请确认！" + "\r\n";
+                        WriteLog(InfoType.Info, "文件：" + MAConf.instance.SrcDir + currDetail.Sql + "不存在，请确认！", "集成");
                     }
                 }
 
@@ -354,7 +272,7 @@ namespace MakeAuto
             }
 
             // 日志通用记法
-            txtLog.Text += DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "  " + "修改单递交准备完成，生成目录：" + CurrVer + "\r\n";
+            WriteLog(InfoType.Info, "修改单递交准备完成，生成目录：" + CurrVer, "集成");
         }
 
         private void txtAmendList_Validating(object sender, System.ComponentModel.CancelEventArgs e)
@@ -369,7 +287,13 @@ namespace MakeAuto
 
         private void button2_Click(object sender, EventArgs e)
         {
-            MAConf m = MAConf.instance;
+            foreach (Detail dl in MAConf.instance.Dls)
+            {
+                if (dl.Compile)
+                {
+                    txtLog.Text += dl.Name + "\r\n";
+                }
+            }
         }
 
         private void 关于ToolStripMenuItem_Click(object sender, EventArgs e)
@@ -380,11 +304,59 @@ namespace MakeAuto
 
         private void frmMakeAuto_Load(object sender, EventArgs e)
         {
+            MAConf.instance.RefreshDetailList();
             MAConf.instance.LoadDetailList();
             foreach(Detail dl in MAConf.instance.Dls)
             {
                 clbModule.Items.Add(dl.Name);
             }
+        }
+
+        private void tbModule_TextChanged(object sender, EventArgs e)
+        {
+            clbModule.Items.Clear();
+
+            int index;
+
+
+            foreach (Detail dl in MAConf.instance.Dls)
+            {
+                // 如果是空，则显示所有，否则显示匹配项
+                if (tbModule.Text == "" || dl.Name.IndexOf(tbModule.Text) >= 0)
+                {
+                    index = clbModule.Items.Add(dl.Name);
+                    // 如果是选中，则默认显示选中
+                    if (dl.Compile)
+                    {
+                        clbModule.SetItemChecked(index, true);
+                    }
+                }
+            }
+        }
+
+        private void clbModule_ItemCheck(object sender, ItemCheckEventArgs e)
+        {
+            // 根据点击事件更新模块选中状态
+            string name = clbModule.Items[e.Index].ToString();
+            Detail dl = MAConf.instance.Dls[name];
+            if (dl != null)
+            {
+                dl.Compile = e.NewValue == CheckState.Checked ? true : false;
+            }
+        }
+
+        public void WriteLog(InfoType type, string LogContent,string Title="")
+        {
+            // 日志通用记法
+            if (Title == "")
+            {
+                Title = "日志";
+            }
+
+            txtLog.Text += DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "  " 
+                + "[" + Enum.GetName(typeof(InfoType), type) + "]" 
+                + "[" + Title + "]"
+                + "[" + LogContent + "]" + "\r\n";
         }
 
     }

@@ -11,6 +11,14 @@ using System.Data;
 
 namespace MakeAuto
 {
+    public enum InfoType
+    {
+        Nothing = 0,
+        Info = 1,
+        Warning =2,
+        Error = 3,
+    }
+
     sealed class MAConf
     {
         // 详细设计说明说配置 
@@ -26,6 +34,11 @@ namespace MakeAuto
         public SshConns Conns;
         public Details Dls;
 
+        // 是否显示对应模块
+        public bool ShowSecu;
+        public bool ShowCrdt;
+        public bool ShowFutu;
+
         // 取配置文件名称
         private readonly string conf = "MAConf.xml";
 
@@ -39,9 +52,14 @@ namespace MakeAuto
 
             XmlElement root = xmldoc.DocumentElement;
 
+            // 读取显示属性
+            XmlNode xn = root.SelectSingleNode("Part");
+            ShowSecu = bool.Parse(xn.Attributes["showsecu"].InnerText);
+            ShowFutu = bool.Parse(xn.Attributes["showfutu"].InnerText);
+            ShowCrdt = bool.Parse(xn.Attributes["showcrdt"].InnerText);
+
             // 读取节点配置明细
-            XmlNode xn = root.SelectSingleNode("Detail");
-            
+            xn = root.SelectSingleNode("Detail");
             DetailFile = xn.Attributes["DetailFile"].InnerText;
             SrcDir = xn.Attributes["SrcDir"].InnerText;
             DetailList = xn.Attributes["DetailList"].InnerText;
@@ -49,7 +67,7 @@ namespace MakeAuto
             // 读取修改单配置明细
             xn = root.SelectSingleNode("Amend");
             BaseDir = xn.Attributes["BaseDir"].InnerText;
-            SrcDir = xn.Attributes["Author"].InnerText;
+            Author = xn.Attributes["Author"].InnerText;
             ModuleList = xn.Attributes["ModuleList"].InnerText;
 
             // 读取Ssh连接配置
@@ -75,27 +93,7 @@ namespace MakeAuto
 
         // 单例化 MAConf
         public static readonly MAConf instance = new MAConf();
-        /*
-        // 所变量
-        private static object objectLock = new object();
 
-        public static MAConf GetInstance
-        {
-            get
-            {
-                if (instance == null)
-                {
-                    lock (objectLock)
-                    {
-                        if (instance == null)
-                            instance = new MAConf();
-                    }
-                }
-                return instance;
-            }
-        }  
-
-         */
         // 刷新详细设计说明书
         public void RefreshDetailList()
         {
@@ -249,6 +247,17 @@ namespace MakeAuto
             XmlNodeList xnl = xn.ChildNodes;
             foreach (XmlNode x in xnl)
             {
+                // 过滤掉期货和融资融券的数据
+                if (!ShowFutu && x.Name.IndexOf("期货") >= 0)
+                {
+                    continue;
+                }
+
+                if (!ShowCrdt && x.Name.IndexOf("融资融券") >= 0)
+                {
+                    continue;
+                }
+
                 // 构建 Excel 列表文件
                 Detail dl = new Detail(x.Name, x.Attributes["file"].InnerText,
                     x.Attributes["sql"].InnerText, x.Attributes["pas"].InnerText);
