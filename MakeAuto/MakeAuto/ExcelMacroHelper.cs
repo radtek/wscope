@@ -4,19 +4,77 @@ using System.IO;
 
 namespace MakeAuto
 {
+    public enum MacroType
+    {
+        Nothing = 0,
+        ProC = 1,
+        SQL = 2,
+        Hyper = 3,
+    }
+
+    public enum CState
+    {
+        Nothing = 0,
+        Start = 1,
+        Process = 2,
+        End = 3,
+        Fail = 4,
+        Success = 5,
+        FailEx = 6,
+        Other = 7,
+        All = 8,
+    }
+
+    public class State
+    {
+        // 活动的详细设计说明书
+        public Detail dl { get; set; }
+        // 总计编译个数
+        public int count { get; set; }
+        // 当前个数
+        public int index { get; set; }
+        // 进度
+        public int percent { get; set; }
+        // 当前文件编译状态
+        public CState cstate { get; set; }
+        //
+        public string info { get; set; }
+    }
+
+
     /// <summary>
     /// 执行Excel VBA宏帮助类
     /// </summary>
     class ExcelMacroHelper
     {
-        public string ExcelFilePath { get; set; }
-        public string MacroName { get; set;}
-        public bool IsShowExcel { get; set; }
+        public string ExcelFilePath { get; private set; }
         
-        public string SrcDir{ get; set;}
-        public int BeginNo { get; set;}
-        public int EndNo { get; set;}
+        public bool ShowExcel { get; private set; }
+
+        private Detail currDetail { get; set; }
         
+        // 这三个属性对应于通过菜单功能说明书时操作的选择
+        private string SrcDir{ get; set;}
+        private int BeginNo { get; set;}
+        private int EndNo { get; set;}
+        // 对应菜单功能说明书的函数
+        private string MacroName { get; set; }
+
+        public MacroType McrType { get; set; }
+
+        public State state;
+
+        private ExcelMacroHelper()
+        {
+            SrcDir = MAConf.instance.SrcDir;
+            ExcelFilePath = MAConf.instance.DetailFile;
+            ShowExcel = true;
+            state = new State();
+        }
+
+        // 单例化 ExcelMacroHelper
+        public static readonly ExcelMacroHelper instance = new ExcelMacroHelper();
+
         /// <summary>
         /// 执行 Excel 宏
         /// </summary>
@@ -25,30 +83,122 @@ namespace MakeAuto
         public void RunExcelMacro(System.ComponentModel.BackgroundWorker worker,
             System.ComponentModel.DoWorkEventArgs e)
         {
-            worker.ReportProgress(0, "Start");
-            try
-            {
-                if (RunExcelMacro(SrcDir, BeginNo, EndNo) == 0)
-                {
-                    worker.ReportProgress(100, "End");
-                    worker.ReportProgress(100, "Succed");
-                }
-                else
-                {
-                    worker.ReportProgress(0, "Failed");
-                }
-            }
-            catch (Exception ex)
-            {
-                worker.ReportProgress(0, ex.Message);
-            }
-        }
+            int count = 0, num = 0, percent = 0;
 
+            // 根据不同功能调用对应的宏
+            MacroType m = (MacroType)e.Argument;
+            McrType = m;
+            if (m == MacroType.ProC)
+                MacroName = "CreateAs3CodePub";
+            else if (m == MacroType.SQL)
+                MacroName = "CreateSQLCodePub";
+            else if (m == MacroType.Hyper)
+                MacroName = "DocHyberLinkPub";
+
+            // 对所有选中的模块执行编译
+            
+            // 统计需要编译的模块数量，保存到 count 变量中
+            foreach (Detail dl in MAConf.instance.Dls)
+            {
+                // 不需要编译的跳过
+                if (!dl.Compile)
+                {
+                    continue;
+                }
+
+                // 如果选择的序号pas文件字段为空，那么不需要编译SO
+                if (dl.Pas.Trim() == String.Empty)
+                {
+                    state.cstate = CState.Fail;
+                    state.info = "不是函数模块，不需要为其编译Proc文件！ \r\n";
+                    worker.ReportProgress(0, state);
+                    continue;
+                }
+
+                ++count;
+            }
+
+            // 总计的编译数目
+            state.count = count;
+
+            // 执行编译流程
+            foreach (Detail dl in MAConf.instance.Dls)
+            {
+                // 不需要编译的跳过，如果选择的序号pas文件字段为空，那么不需要编译SO
+                if (!dl.Compile || dl.Pas.Trim() == String.Empty)
+                {
+                    continue;
+                }
+
+                // 计算已完成个数
+                percent = (int) (num * 100.0 / count);
+
+
+                // 置status状态值
+                state.dl = dl;
+                state.index = num;
+                state.percent = percent;
+                state.info = "";
+                state.cstate = CState.Nothing;
+                
+
+                // 一个一个编译，逐个生成，所以 BeginNo 和 EndNo 相同
+                BeginNo = MAConf.instance.Dls.IndexOf(dl) + 1;
+                EndNo = BeginNo;
+
+                // 如果取不到 index 为 -1， beginno == 0
+                if (BeginNo == 0)
+                {
+                    state.cstate = CState.Fail;
+                    state.info = Enum.GetName(typeof(CState), state.cstate);
+                    worker.ReportProgress(percent, state);
+                    continue;
+                }
+                
+                // 设置初始的路径
+                state.cstate = CState.Start;
+                state.info = Enum.GetName(typeof(CState), state.cstate);
+                worker.ReportProgress(percent, state);
+                try
+                {
+                    if (RunExcelMacro(SrcDir, BeginNo, EndNo) == 0)
+                    {
+                        ++num;
+                        percent = (int)(num * 100.0 / count);
+                        state.cstate = CState.Success;
+                        state.info = Enum.GetName(typeof(CState), state.cstate);
+                        worker.ReportProgress(percent, state);
+                    }
+                    else
+                    {
+                        ++num;
+                        percent = (int)(num * 100.0 / count);
+                        state.cstate = CState.Fail;
+                        state.info = Enum.GetName(typeof(CState), state.cstate);
+                        worker.ReportProgress(percent, state);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ++num;
+                    percent = (int)(num * 100.0 / count);
+                    state.cstate = CState.FailEx;
+                    state.info = ex.Message;
+                    worker.ReportProgress(percent, state);
+                }
+            }
+
+            // 标记所有完成
+            percent = 100;
+            state.cstate = CState.End;
+            state.info = "编译完成";
+            worker.ReportProgress(percent, state);
+        }
 
         public int RunExcelMacro(string SrcDir, int BeginNo, int EndNo)
         {
             object r = null;
-            RunExcelMacro(ExcelFilePath, MacroName, new object[] { SrcDir, BeginNo, EndNo }, out r, IsShowExcel);
+            RunExcelMacro(ExcelFilePath, MacroName, new object[] { SrcDir, BeginNo, EndNo }, out r, ShowExcel);
             if (r != null)
             {
                 return int.Parse(r.ToString());
@@ -58,6 +208,7 @@ namespace MakeAuto
                 return -1;
             }
         }
+
         /// <summary>
         /// 执行Excel中的宏
         /// </summary>

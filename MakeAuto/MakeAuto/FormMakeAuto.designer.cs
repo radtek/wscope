@@ -46,11 +46,7 @@
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.clbModule = new System.Windows.Forms.CheckedListBox();
-            this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.cmbEnd = new System.Windows.Forms.ComboBox();
-            this.cmbBegin = new System.Windows.Forms.ComboBox();
-            this.lblBegin = new System.Windows.Forms.Label();
-            this.lblEnd = new System.Windows.Forms.Label();
+            this.tbModule = new System.Windows.Forms.TextBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.button2 = new System.Windows.Forms.Button();
             this.btnSql = new System.Windows.Forms.Button();
@@ -73,7 +69,6 @@
             this.panel2.SuspendLayout();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
-            this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.tabPage2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -84,12 +79,12 @@
             this.txtLog.BackColor = System.Drawing.SystemColors.Window;
             this.txtLog.Cursor = System.Windows.Forms.Cursors.Default;
             this.txtLog.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.txtLog.Location = new System.Drawing.Point(0, 253);
+            this.txtLog.Location = new System.Drawing.Point(0, 251);
             this.txtLog.Multiline = true;
             this.txtLog.Name = "txtLog";
             this.txtLog.ReadOnly = true;
             this.txtLog.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtLog.Size = new System.Drawing.Size(727, 118);
+            this.txtLog.Size = new System.Drawing.Size(626, 118);
             this.txtLog.TabIndex = 0;
             this.txtLog.TabStop = false;
             this.txtLog.TextChanged += new System.EventHandler(this.txtLog_TextChanged);
@@ -101,7 +96,7 @@
             this.mniAbout});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(727, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(626, 24);
             this.menuStrip1.TabIndex = 2;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -110,13 +105,13 @@
             this.mniSettings.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.mniRefresh});
             this.mniSettings.Name = "mniSettings";
-            this.mniSettings.Size = new System.Drawing.Size(43, 20);
+            this.mniSettings.Size = new System.Drawing.Size(41, 20);
             this.mniSettings.Text = "设置";
             // 
             // mniRefresh
             // 
             this.mniRefresh.Name = "mniRefresh";
-            this.mniRefresh.Size = new System.Drawing.Size(122, 22);
+            this.mniRefresh.Size = new System.Drawing.Size(118, 22);
             this.mniRefresh.Text = "重建模块";
             this.mniRefresh.Click += new System.EventHandler(this.btnRefresh_Click);
             // 
@@ -125,21 +120,21 @@
             this.mniAbout.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.关于ToolStripMenuItem});
             this.mniAbout.Name = "mniAbout";
-            this.mniAbout.Size = new System.Drawing.Size(43, 20);
+            this.mniAbout.Size = new System.Drawing.Size(41, 20);
             this.mniAbout.Text = "帮助";
             // 
             // 关于ToolStripMenuItem
             // 
             this.关于ToolStripMenuItem.Name = "关于ToolStripMenuItem";
-            this.关于ToolStripMenuItem.Size = new System.Drawing.Size(98, 22);
+            this.关于ToolStripMenuItem.Size = new System.Drawing.Size(94, 22);
             this.关于ToolStripMenuItem.Text = "关于";
             this.关于ToolStripMenuItem.Click += new System.EventHandler(this.关于ToolStripMenuItem_Click);
             // 
             // statusStrip1
             // 
-            this.statusStrip1.Location = new System.Drawing.Point(0, 420);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 418);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(727, 22);
+            this.statusStrip1.Size = new System.Drawing.Size(626, 22);
             this.statusStrip1.TabIndex = 3;
             this.statusStrip1.Text = "statusStrip1";
             // 
@@ -149,7 +144,7 @@
             this.toolStripButton1});
             this.toolStrip1.Location = new System.Drawing.Point(0, 24);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(727, 25);
+            this.toolStrip1.Size = new System.Drawing.Size(626, 25);
             this.toolStrip1.TabIndex = 4;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -182,7 +177,7 @@
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel1.Location = new System.Drawing.Point(0, 49);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(727, 371);
+            this.panel1.Size = new System.Drawing.Size(626, 369);
             this.panel1.TabIndex = 21;
             // 
             // panel2
@@ -191,7 +186,7 @@
             this.panel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel2.Location = new System.Drawing.Point(0, 0);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(727, 253);
+            this.panel2.Size = new System.Drawing.Size(626, 251);
             this.panel2.TabIndex = 23;
             // 
             // tabControl1
@@ -202,18 +197,18 @@
             this.tabControl1.Location = new System.Drawing.Point(0, 0);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(727, 253);
+            this.tabControl1.Size = new System.Drawing.Size(626, 251);
             this.tabControl1.TabIndex = 22;
             // 
             // tabPage1
             // 
+            this.tabPage1.Controls.Add(this.tbModule);
             this.tabPage1.Controls.Add(this.clbModule);
-            this.tabPage1.Controls.Add(this.groupBox1);
             this.tabPage1.Controls.Add(this.groupBox2);
             this.tabPage1.Location = new System.Drawing.Point(4, 21);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(719, 228);
+            this.tabPage1.Size = new System.Drawing.Size(618, 226);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "编译集成";
             this.tabPage1.UseVisualStyleBackColor = true;
@@ -226,56 +221,15 @@
             this.clbModule.Name = "clbModule";
             this.clbModule.Size = new System.Drawing.Size(375, 212);
             this.clbModule.TabIndex = 23;
+            this.clbModule.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.clbModule_ItemCheck);
             // 
-            // groupBox1
+            // tbModule
             // 
-            this.groupBox1.Controls.Add(this.cmbEnd);
-            this.groupBox1.Controls.Add(this.cmbBegin);
-            this.groupBox1.Controls.Add(this.lblBegin);
-            this.groupBox1.Controls.Add(this.lblEnd);
-            this.groupBox1.Location = new System.Drawing.Point(397, 6);
-            this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(275, 83);
-            this.groupBox1.TabIndex = 21;
-            this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "模块";
-            // 
-            // cmbEnd
-            // 
-            this.cmbEnd.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend;
-            this.cmbEnd.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems;
-            this.cmbEnd.FormattingEnabled = true;
-            this.cmbEnd.Location = new System.Drawing.Point(139, 35);
-            this.cmbEnd.Name = "cmbEnd";
-            this.cmbEnd.Size = new System.Drawing.Size(121, 20);
-            this.cmbEnd.TabIndex = 2;
-            // 
-            // cmbBegin
-            // 
-            this.cmbBegin.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend;
-            this.cmbBegin.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.CustomSource;
-            this.cmbBegin.Location = new System.Drawing.Point(8, 35);
-            this.cmbBegin.Name = "cmbBegin";
-            this.cmbBegin.Size = new System.Drawing.Size(121, 20);
-            this.cmbBegin.TabIndex = 1;
-            // 
-            // lblBegin
-            // 
-            this.lblBegin.AutoSize = true;
-            this.lblBegin.Location = new System.Drawing.Point(6, 20);
-            this.lblBegin.Name = "lblBegin";
-            this.lblBegin.Size = new System.Drawing.Size(53, 12);
-            this.lblBegin.TabIndex = 10;
-            this.lblBegin.Text = "起始编号";
-            // 
-            // lblEnd
-            // 
-            this.lblEnd.AutoSize = true;
-            this.lblEnd.Location = new System.Drawing.Point(137, 20);
-            this.lblEnd.Name = "lblEnd";
-            this.lblEnd.Size = new System.Drawing.Size(53, 12);
-            this.lblEnd.TabIndex = 11;
-            this.lblEnd.Text = "结束编号";
+            this.tbModule.Location = new System.Drawing.Point(397, 6);
+            this.tbModule.Name = "tbModule";
+            this.tbModule.Size = new System.Drawing.Size(156, 21);
+            this.tbModule.TabIndex = 12;
+            this.tbModule.TextChanged += new System.EventHandler(this.tbModule_TextChanged);
             // 
             // groupBox2
             // 
@@ -286,16 +240,16 @@
             this.groupBox2.Controls.Add(this.button5);
             this.groupBox2.Controls.Add(this.btnSO);
             this.groupBox2.Controls.Add(this.btnProC);
-            this.groupBox2.Location = new System.Drawing.Point(387, 95);
+            this.groupBox2.Location = new System.Drawing.Point(387, 44);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(275, 121);
+            this.groupBox2.Size = new System.Drawing.Size(181, 172);
             this.groupBox2.TabIndex = 22;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "操作";
             // 
             // button2
             // 
-            this.button2.Location = new System.Drawing.Point(185, 34);
+            this.button2.Location = new System.Drawing.Point(10, 104);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(75, 23);
             this.button2.TabIndex = 23;
@@ -369,7 +323,7 @@
             this.tabPage2.Location = new System.Drawing.Point(4, 21);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(719, 228);
+            this.tabPage2.Size = new System.Drawing.Size(717, 226);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "修改递交";
             this.tabPage2.UseVisualStyleBackColor = true;
@@ -449,7 +403,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(727, 442);
+            this.ClientSize = new System.Drawing.Size(626, 440);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.toolStrip1);
             this.Controls.Add(this.statusStrip1);
@@ -470,8 +424,7 @@
             this.panel2.ResumeLayout(false);
             this.tabControl1.ResumeLayout(false);
             this.tabPage1.ResumeLayout(false);
-            this.groupBox1.ResumeLayout(false);
-            this.groupBox1.PerformLayout();
+            this.tabPage1.PerformLayout();
             this.groupBox2.ResumeLayout(false);
             this.tabPage2.ResumeLayout(false);
             this.groupBox3.ResumeLayout(false);
@@ -505,11 +458,6 @@
         private System.Windows.Forms.Button button5;
         private System.Windows.Forms.Button btnSO;
         private System.Windows.Forms.Button btnProC;
-        private System.Windows.Forms.GroupBox groupBox1;
-        private System.Windows.Forms.ComboBox cmbEnd;
-        private System.Windows.Forms.ComboBox cmbBegin;
-        private System.Windows.Forms.Label lblBegin;
-        private System.Windows.Forms.Label lblEnd;
         private System.Windows.Forms.TabPage tabPage2;
         private System.Windows.Forms.GroupBox groupBox3;
         private System.Windows.Forms.ComboBox cmbModule;
@@ -520,6 +468,7 @@
         private System.Windows.Forms.Button button2;
         private System.Windows.Forms.ToolStripMenuItem 关于ToolStripMenuItem;
         private System.Windows.Forms.CheckedListBox clbModule;
+        private System.Windows.Forms.TextBox tbModule;
     }
 }
 

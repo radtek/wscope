@@ -5,7 +5,7 @@ namespace MakeAuto
     /// <summary>
     /// 详细设计说明书信息
     /// </summary>
-    class Detail
+    public class Detail
     {
         /// <summary>
         /// 详细设计说明书类构造函数，保存模块的相关信息
@@ -30,10 +30,19 @@ namespace MakeAuto
                 ProcFiles.Add(Header);
                 ProcFiles.Add(Cpp);
             }
+
+            Compile = false;
+            Show = true;
         }
 
         // Pro*C中间件文件
         public ArrayList ProcFiles;
+
+        // 是否勾选了编译，在勾选时变为true；否则变为 false
+        public bool Compile { get; set; }
+
+        // 是否显示
+        public bool Show { get; set; }
 
         #region 一些属性，用来保存模块编号及相关的文件名
         public string Name { get; set; }
