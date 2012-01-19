@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Collections;
 using System.Xml;
 using System.Data.OleDb;
 using System.IO;
 using System.Windows.Forms;
 using System.Data;
+using EnterpriseDT.Net.Ftp;
 
 namespace MakeAuto
 {
@@ -17,6 +15,18 @@ namespace MakeAuto
         Info = 1,
         Warning =2,
         Error = 3,
+    }
+
+    public class FtpConf
+    {
+        public string host { get; set; }
+        public int port { get; set; }
+        public string user { get; set; }
+        public string pass { get; set; }
+        // ftp初始化路径
+        public string ServerDir { get; set; }
+        // 本地初始化路径
+        public string LocalDir { get; set; }
     }
 
     sealed class MAConf
@@ -33,6 +43,8 @@ namespace MakeAuto
 
         public SshConns Conns;
         public Details Dls;
+        public FtpConf fc;
+        public FTPConnection ftp;
 
         // 是否显示对应模块
         public bool ShowSecu;
@@ -46,7 +58,9 @@ namespace MakeAuto
         {
             Conns = new SshConns();
             Dls = new Details();
-            
+            fc = new FtpConf();
+            ftp = new FTPConnection();
+
             XmlDocument xmldoc = new XmlDocument();
             xmldoc.Load(conf);
 
@@ -75,12 +89,12 @@ namespace MakeAuto
             XmlNodeList xnl = xn.ChildNodes;
             foreach (XmlNode x in xnl)
             {
-                SshConn sc = new SshConn(x.Attributes["name"].InnerText, 
+                SshConn sc = new SshConn(x.Attributes["name"].InnerText,
                     x.Attributes["host"].InnerText,
-                    int.Parse(x.Attributes["port"].InnerText), 
+                    int.Parse(x.Attributes["port"].InnerText),
                     x.Attributes["user"].InnerText,
                     x.Attributes["pass"].InnerText);
-                
+
                 // 读取FBASE节点，以决定是否进行编译和重启AS
                 xn = x.FirstChild;
                 sc.compile = bool.Parse(xn.Attributes["compile"].InnerText);
@@ -89,6 +103,25 @@ namespace MakeAuto
                 // 添加此连接到配置组
                 Conns.Add(sc);
             }
+
+            // 读取小球FTP路径递交配置
+            xn = root.SelectSingleNode("Smallball");
+            fc.host = xn.Attributes["host"].InnerText;
+            fc.port = int.Parse(xn.Attributes["port"].InnerText);
+            fc.user = xn.Attributes["user"].InnerText;
+            fc.pass = xn.Attributes["pass"].InnerText;
+            fc.ServerDir = xn.ChildNodes[0].Attributes["ServerDir"].InnerText;
+            fc.LocalDir = xn.ChildNodes[0].Attributes["LocalDir"].InnerText;
+
+            ftp.ServerAddress = fc.host;
+            ftp.ServerPort = fc.port;
+            ftp.UserName = fc.user;
+            ftp.Password = fc.pass;
+            ftp.TransferType = FTPTransferType.BINARY;  // 指定 BINARY 传输，否则对于压缩包会失败
+            ftp.CommandEncoding = Encoding.GetEncoding("gb2312"); // 重要，否则乱码且连接不上
+            
+            // 读取VSS配置
+
         }
 
         // 单例化 MAConf

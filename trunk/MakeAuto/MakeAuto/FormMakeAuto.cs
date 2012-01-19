@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Data;
-using System.Drawing;
 using System.Windows.Forms;
-using System.Data.OleDb;
 using System.Collections;
-using System.Xml;
 using System.Text;
 using System.IO;
+using EnterpriseDT.Net.Ftp;
 
 namespace MakeAuto
 {
@@ -18,8 +15,8 @@ namespace MakeAuto
 
         // 宏助手
         private ExcelMacroHelper eh = ExcelMacroHelper.instance;
-
-        private MAConf ma = MAConf.instance;
+        private MAConf mc = MAConf.instance;
+        AmendPack ap = AmendPack.instance;
 
         // 当前活动ExcelFile;
         private Detail currDetail;
@@ -82,7 +79,7 @@ namespace MakeAuto
             WriteLog(InfoType.Info, "进度：" + e.ProgressPercentage.ToString() + "%, 当前模块：" + c.dl.Name
                 + ",编译信息：" + c.info, "编译");
             
-            /*
+            /* 此处以为托盘化是便利的，但是调试期间不见得，所以先不要这样子处理
             if (e.ProgressPercentage == 0)
             {
                 // 启动后处理到托盘
@@ -357,6 +354,102 @@ namespace MakeAuto
                 + "[" + Enum.GetName(typeof(InfoType), type) + "]" 
                 + "[" + Title + "]"
                 + "[" + LogContent + "]" + "\r\n";
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void btnReadInfo_Click(object sender, EventArgs e)
+        {
+            ap.QueryAmend(txbAmenNo.Text);
+            txbMainNo.Text = ap.MainNo;
+            txbCommitPath.Text = ap.CommitPath;
+
+            foreach (CommitCom c in ap.ComComms)
+            {
+                txtLog.Text += c.cname + "\t" + c.cver + "\t" + Enum.GetName(typeof(ComType), c.ctype) + "\r\n";
+            }
+
+        }
+
+        private void button6_Click(object sender, EventArgs e)
+        {
+            // 输出递交包，到本地集成环境处理，需要使用ftp连接
+            FTPConnection ftp = mc.ftp;
+            FtpConf fc = mc.fc;
+            int ver = 0, maxver = 0, dt;
+            string currVerFile;
+            int k, k1;
+
+            if(ftp.IsConnected == false)
+            {
+                ftp.Connect();
+            }
+
+
+            #region 取递交版本信息，确认要输出哪个版本的压缩包，确保只刷出最大的版本
+            if (ftp.DirectoryExists(fc.ServerDir + ap.CommitPath) == false)
+            {
+                MessageBox.Show("FTP路径" + fc.ServerDir + ap.CommitPath + "不存在！");
+                return;
+            }
+            ftp.ChangeWorkingDirectory(fc.ServerDir);
+            // 不使用 true 列举不出目录，只显示文件，很奇怪
+            //string[] files = ftp.GetFiles(fc.ServerDir + ap.CommitPath, true); 
+            string[] files = ftp.GetFiles(fc.ServerDir + ap.CommitPath);
+            
+            // 获取当前的版本信息，先标定版本信息
+            currVerFile = files[0];
+            foreach (string s in files) //查找子目录
+            {
+                // 跳过 src 之类的东东
+                if (s.IndexOf(ap.MainNo) < 0)
+                    continue;
+                
+                // 标定版本
+                k = s.LastIndexOf('V') > 0 ? s.LastIndexOf('V') : s.LastIndexOf('v');
+                k1 = s.LastIndexOf(".");
+
+                if (k < 0 || k1 < 0)
+                {
+                    continue;
+                }
+                
+
+                // 取递交版本
+                ver = int.Parse(s.Substring(k + 1, k1 - k - 1));
+                if(ver > maxver)
+                {
+                    currVerFile = s;
+                    maxver = ver;
+                }
+            }
+            
+            // 如果输出文件不为空，则退出代码
+            if(maxver <= 0) 
+            {
+                return;
+            }
+            #endregion
+
+            #region 刷出代码，此时，已经标定了版本，可以输出集成代码，先标定文件名
+            string LocalDir = fc.LocalDir + ap.CommitPath;
+            string RemotDir = fc.ServerDir + ap.CommitPath;
+            if (!Directory.Exists(LocalDir))
+            {
+                Directory.CreateDirectory(LocalDir);
+            }
+            ftp.DownloadFile(LocalDir + "\\" + currVerFile, RemotDir + "/" + currVerFile);
+            #endregion
+
+            #region 压缩包刷出之后，解压缩包
+            // 开启进程执行 winrar
+            // 获取 Winrar 的路径
+
+            #endregion
+
         }
 
     }

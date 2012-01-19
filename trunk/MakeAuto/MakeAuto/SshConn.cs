@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Windows.Forms;
+﻿using System.Windows.Forms;
 using System.Collections;
 
 namespace MakeAuto
@@ -473,8 +469,6 @@ namespace MakeAuto
 
     class SshConns:  ArrayList
     {
-        //private ArrayList Conns = new ArrayList();
-
         public SshConn this[string name]
         {
             get 

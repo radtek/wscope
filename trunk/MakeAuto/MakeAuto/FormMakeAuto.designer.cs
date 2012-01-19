@@ -34,6 +34,8 @@
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.mniSettings = new System.Windows.Forms.ToolStripMenuItem();
             this.mniRefresh = new System.Windows.Forms.ToolStripMenuItem();
+            this.开发ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.集成ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mniAbout = new System.Windows.Forms.ToolStripMenuItem();
             this.关于ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
@@ -43,35 +45,55 @@
             this.bgwProc = new System.ComponentModel.BackgroundWorker();
             this.panel1 = new System.Windows.Forms.Panel();
             this.panel2 = new System.Windows.Forms.Panel();
-            this.tabControl1 = new System.Windows.Forms.TabControl();
+            this.tcSCM = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
-            this.clbModule = new System.Windows.Forms.CheckedListBox();
             this.tbModule = new System.Windows.Forms.TextBox();
+            this.clbModule = new System.Windows.Forms.CheckedListBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.button2 = new System.Windows.Forms.Button();
             this.btnSql = new System.Windows.Forms.Button();
             this.btnHyper = new System.Windows.Forms.Button();
+            this.btnSO = new System.Windows.Forms.Button();
             this.button1 = new System.Windows.Forms.Button();
             this.button5 = new System.Windows.Forms.Button();
-            this.btnSO = new System.Windows.Forms.Button();
             this.btnProC = new System.Windows.Forms.Button();
             this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.button4 = new System.Windows.Forms.Button();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.comboBox1 = new System.Windows.Forms.ComboBox();
+            this.label1 = new System.Windows.Forms.Label();
+            this.button3 = new System.Windows.Forms.Button();
+            this.label3 = new System.Windows.Forms.Label();
+            this.textBox1 = new System.Windows.Forms.TextBox();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.cmbModule = new System.Windows.Forms.ComboBox();
             this.txtModule = new System.Windows.Forms.Label();
             this.btnModPre = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
             this.txtAmendList = new System.Windows.Forms.TextBox();
+            this.tabPage3 = new System.Windows.Forms.TabPage();
+            this.btnReadInfo = new System.Windows.Forms.Button();
             this.cmsNotify = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.groupBox4 = new System.Windows.Forms.GroupBox();
+            this.label4 = new System.Windows.Forms.Label();
+            this.label5 = new System.Windows.Forms.Label();
+            this.txbAmenNo = new System.Windows.Forms.TextBox();
+            this.txbCommitPath = new System.Windows.Forms.TextBox();
+            this.label6 = new System.Windows.Forms.Label();
+            this.txbMainNo = new System.Windows.Forms.TextBox();
+            this.button6 = new System.Windows.Forms.Button();
             this.menuStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
-            this.tabControl1.SuspendLayout();
+            this.tcSCM.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.tabPage2.SuspendLayout();
+            this.groupBox1.SuspendLayout();
             this.groupBox3.SuspendLayout();
+            this.tabPage3.SuspendLayout();
+            this.groupBox4.SuspendLayout();
             this.SuspendLayout();
             // 
             // txtLog
@@ -93,6 +115,8 @@
             // 
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.mniSettings,
+            this.开发ToolStripMenuItem,
+            this.集成ToolStripMenuItem,
             this.mniAbout});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
@@ -112,8 +136,20 @@
             // 
             this.mniRefresh.Name = "mniRefresh";
             this.mniRefresh.Size = new System.Drawing.Size(118, 22);
-            this.mniRefresh.Text = "重建模块";
+            this.mniRefresh.Text = "刷新模块";
             this.mniRefresh.Click += new System.EventHandler(this.btnRefresh_Click);
+            // 
+            // 开发ToolStripMenuItem
+            // 
+            this.开发ToolStripMenuItem.Name = "开发ToolStripMenuItem";
+            this.开发ToolStripMenuItem.Size = new System.Drawing.Size(41, 20);
+            this.开发ToolStripMenuItem.Text = "质保";
+            // 
+            // 集成ToolStripMenuItem
+            // 
+            this.集成ToolStripMenuItem.Name = "集成ToolStripMenuItem";
+            this.集成ToolStripMenuItem.Size = new System.Drawing.Size(41, 20);
+            this.集成ToolStripMenuItem.Text = "集成";
             // 
             // mniAbout
             // 
@@ -182,23 +218,24 @@
             // 
             // panel2
             // 
-            this.panel2.Controls.Add(this.tabControl1);
+            this.panel2.Controls.Add(this.tcSCM);
             this.panel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel2.Location = new System.Drawing.Point(0, 0);
             this.panel2.Name = "panel2";
             this.panel2.Size = new System.Drawing.Size(626, 251);
             this.panel2.TabIndex = 23;
             // 
-            // tabControl1
+            // tcSCM
             // 
-            this.tabControl1.Controls.Add(this.tabPage1);
-            this.tabControl1.Controls.Add(this.tabPage2);
-            this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tabControl1.Location = new System.Drawing.Point(0, 0);
-            this.tabControl1.Name = "tabControl1";
-            this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(626, 251);
-            this.tabControl1.TabIndex = 22;
+            this.tcSCM.Controls.Add(this.tabPage1);
+            this.tcSCM.Controls.Add(this.tabPage2);
+            this.tcSCM.Controls.Add(this.tabPage3);
+            this.tcSCM.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tcSCM.Location = new System.Drawing.Point(0, 0);
+            this.tcSCM.Name = "tcSCM";
+            this.tcSCM.SelectedIndex = 0;
+            this.tcSCM.Size = new System.Drawing.Size(626, 251);
+            this.tcSCM.TabIndex = 22;
             // 
             // tabPage1
             // 
@@ -213,6 +250,14 @@
             this.tabPage1.Text = "编译集成";
             this.tabPage1.UseVisualStyleBackColor = true;
             // 
+            // tbModule
+            // 
+            this.tbModule.Location = new System.Drawing.Point(397, 6);
+            this.tbModule.Name = "tbModule";
+            this.tbModule.Size = new System.Drawing.Size(156, 21);
+            this.tbModule.TabIndex = 12;
+            this.tbModule.TextChanged += new System.EventHandler(this.tbModule_TextChanged);
+            // 
             // clbModule
             // 
             this.clbModule.CheckOnClick = true;
@@ -223,22 +268,14 @@
             this.clbModule.TabIndex = 23;
             this.clbModule.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.clbModule_ItemCheck);
             // 
-            // tbModule
-            // 
-            this.tbModule.Location = new System.Drawing.Point(397, 6);
-            this.tbModule.Name = "tbModule";
-            this.tbModule.Size = new System.Drawing.Size(156, 21);
-            this.tbModule.TabIndex = 12;
-            this.tbModule.TextChanged += new System.EventHandler(this.tbModule_TextChanged);
-            // 
             // groupBox2
             // 
             this.groupBox2.Controls.Add(this.button2);
             this.groupBox2.Controls.Add(this.btnSql);
             this.groupBox2.Controls.Add(this.btnHyper);
+            this.groupBox2.Controls.Add(this.btnSO);
             this.groupBox2.Controls.Add(this.button1);
             this.groupBox2.Controls.Add(this.button5);
-            this.groupBox2.Controls.Add(this.btnSO);
             this.groupBox2.Controls.Add(this.btnProC);
             this.groupBox2.Location = new System.Drawing.Point(387, 44);
             this.groupBox2.Name = "groupBox2";
@@ -249,7 +286,7 @@
             // 
             // button2
             // 
-            this.button2.Location = new System.Drawing.Point(10, 104);
+            this.button2.Location = new System.Drawing.Point(100, 143);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(75, 23);
             this.button2.TabIndex = 23;
@@ -269,7 +306,7 @@
             // 
             // btnHyper
             // 
-            this.btnHyper.Location = new System.Drawing.Point(91, 46);
+            this.btnHyper.Location = new System.Drawing.Point(10, 46);
             this.btnHyper.Name = "btnHyper";
             this.btnHyper.Size = new System.Drawing.Size(75, 23);
             this.btnHyper.TabIndex = 5;
@@ -277,13 +314,23 @@
             this.btnHyper.UseVisualStyleBackColor = true;
             this.btnHyper.Click += new System.EventHandler(this.btnHyper_Click);
             // 
+            // btnSO
+            // 
+            this.btnSO.Location = new System.Drawing.Point(91, 46);
+            this.btnSO.Name = "btnSO";
+            this.btnSO.Size = new System.Drawing.Size(75, 23);
+            this.btnSO.TabIndex = 4;
+            this.btnSO.Text = "编译SO";
+            this.btnSO.UseVisualStyleBackColor = true;
+            this.btnSO.Click += new System.EventHandler(this.btnSO_Click);
+            // 
             // button1
             // 
             this.button1.Location = new System.Drawing.Point(91, 75);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(75, 23);
             this.button1.TabIndex = 17;
-            this.button1.Text = "重建模块";
+            this.button1.Text = "刷新模块";
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.btnRefresh_Click);
             // 
@@ -297,16 +344,6 @@
             this.button5.UseVisualStyleBackColor = true;
             this.button5.Click += new System.EventHandler(this.btnAS_Click);
             // 
-            // btnSO
-            // 
-            this.btnSO.Location = new System.Drawing.Point(10, 46);
-            this.btnSO.Name = "btnSO";
-            this.btnSO.Size = new System.Drawing.Size(75, 23);
-            this.btnSO.TabIndex = 4;
-            this.btnSO.Text = "编译SO";
-            this.btnSO.UseVisualStyleBackColor = true;
-            this.btnSO.Click += new System.EventHandler(this.btnSO_Click);
-            // 
             // btnProC
             // 
             this.btnProC.Location = new System.Drawing.Point(10, 17);
@@ -319,14 +356,91 @@
             // 
             // tabPage2
             // 
+            this.tabPage2.Controls.Add(this.button4);
+            this.tabPage2.Controls.Add(this.groupBox1);
             this.tabPage2.Controls.Add(this.groupBox3);
             this.tabPage2.Location = new System.Drawing.Point(4, 21);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(717, 226);
+            this.tabPage2.Size = new System.Drawing.Size(618, 226);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "修改递交";
             this.tabPage2.UseVisualStyleBackColor = true;
+            // 
+            // button4
+            // 
+            this.button4.Location = new System.Drawing.Point(364, 17);
+            this.button4.Name = "button4";
+            this.button4.Size = new System.Drawing.Size(75, 23);
+            this.button4.TabIndex = 25;
+            this.button4.Text = "test";
+            this.button4.UseVisualStyleBackColor = true;
+            this.button4.Click += new System.EventHandler(this.button4_Click);
+            // 
+            // groupBox1
+            // 
+            this.groupBox1.Controls.Add(this.comboBox1);
+            this.groupBox1.Controls.Add(this.label1);
+            this.groupBox1.Controls.Add(this.button3);
+            this.groupBox1.Controls.Add(this.label3);
+            this.groupBox1.Controls.Add(this.textBox1);
+            this.groupBox1.Location = new System.Drawing.Point(8, 110);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Size = new System.Drawing.Size(275, 87);
+            this.groupBox1.TabIndex = 24;
+            this.groupBox1.TabStop = false;
+            this.groupBox1.Text = "修改单";
+            // 
+            // comboBox1
+            // 
+            this.comboBox1.AutoCompleteCustomSource.AddRange(new string[] {
+            "ni",
+            "wo",
+            "dajia",
+            "better"});
+            this.comboBox1.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.Suggest;
+            this.comboBox1.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems;
+            this.comboBox1.FormattingEnabled = true;
+            this.comboBox1.Location = new System.Drawing.Point(65, 55);
+            this.comboBox1.Name = "comboBox1";
+            this.comboBox1.Size = new System.Drawing.Size(121, 20);
+            this.comboBox1.TabIndex = 20;
+            this.comboBox1.Text = "12-周边管理";
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(6, 58);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(53, 12);
+            this.label1.TabIndex = 19;
+            this.label1.Text = "递交模块";
+            // 
+            // button3
+            // 
+            this.button3.Location = new System.Drawing.Point(194, 52);
+            this.button3.Name = "button3";
+            this.button3.Size = new System.Drawing.Size(75, 23);
+            this.button3.TabIndex = 18;
+            this.button3.Text = "集成";
+            this.button3.UseVisualStyleBackColor = true;
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(6, 22);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(53, 12);
+            this.label3.TabIndex = 13;
+            this.label3.Text = "修改单号";
+            // 
+            // textBox1
+            // 
+            this.textBox1.Location = new System.Drawing.Point(65, 19);
+            this.textBox1.Name = "textBox1";
+            this.textBox1.Size = new System.Drawing.Size(121, 21);
+            this.textBox1.TabIndex = 12;
+            this.textBox1.Text = "20110509040";
             // 
             // groupBox3
             // 
@@ -394,10 +508,109 @@
             this.txtAmendList.TabIndex = 12;
             this.txtAmendList.Text = "20110509040";
             // 
+            // tabPage3
+            // 
+            this.tabPage3.Controls.Add(this.button6);
+            this.tabPage3.Controls.Add(this.groupBox4);
+            this.tabPage3.Controls.Add(this.btnReadInfo);
+            this.tabPage3.Location = new System.Drawing.Point(4, 21);
+            this.tabPage3.Name = "tabPage3";
+            this.tabPage3.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPage3.Size = new System.Drawing.Size(618, 226);
+            this.tabPage3.TabIndex = 2;
+            this.tabPage3.Text = "集成打包";
+            this.tabPage3.UseVisualStyleBackColor = true;
+            // 
+            // btnReadInfo
+            // 
+            this.btnReadInfo.Location = new System.Drawing.Point(398, 17);
+            this.btnReadInfo.Name = "btnReadInfo";
+            this.btnReadInfo.Size = new System.Drawing.Size(75, 23);
+            this.btnReadInfo.TabIndex = 26;
+            this.btnReadInfo.Text = "读取";
+            this.btnReadInfo.UseVisualStyleBackColor = true;
+            this.btnReadInfo.Click += new System.EventHandler(this.btnReadInfo_Click);
+            // 
             // cmsNotify
             // 
             this.cmsNotify.Name = "cmsNotify";
             this.cmsNotify.Size = new System.Drawing.Size(61, 4);
+            // 
+            // groupBox4
+            // 
+            this.groupBox4.Controls.Add(this.label6);
+            this.groupBox4.Controls.Add(this.txbMainNo);
+            this.groupBox4.Controls.Add(this.txbCommitPath);
+            this.groupBox4.Controls.Add(this.label4);
+            this.groupBox4.Controls.Add(this.label5);
+            this.groupBox4.Controls.Add(this.txbAmenNo);
+            this.groupBox4.Location = new System.Drawing.Point(8, 6);
+            this.groupBox4.Name = "groupBox4";
+            this.groupBox4.Size = new System.Drawing.Size(332, 204);
+            this.groupBox4.TabIndex = 27;
+            this.groupBox4.TabStop = false;
+            this.groupBox4.Text = "修改单";
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(6, 76);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(53, 12);
+            this.label4.TabIndex = 19;
+            this.label4.Text = "递交路径";
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(6, 22);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(53, 12);
+            this.label5.TabIndex = 13;
+            this.label5.Text = "修改单号";
+            // 
+            // txbAmenNo
+            // 
+            this.txbAmenNo.Location = new System.Drawing.Point(65, 19);
+            this.txbAmenNo.Name = "txbAmenNo";
+            this.txbAmenNo.Size = new System.Drawing.Size(121, 21);
+            this.txbAmenNo.TabIndex = 12;
+            this.txbAmenNo.Text = "20111123054";
+            // 
+            // txbCommitPath
+            // 
+            this.txbCommitPath.Location = new System.Drawing.Point(65, 73);
+            this.txbCommitPath.Name = "txbCommitPath";
+            this.txbCommitPath.ReadOnly = true;
+            this.txbCommitPath.Size = new System.Drawing.Size(261, 21);
+            this.txbCommitPath.TabIndex = 20;
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(6, 49);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(53, 12);
+            this.label6.TabIndex = 22;
+            this.label6.Text = "主修改单";
+            // 
+            // txbMainNo
+            // 
+            this.txbMainNo.Location = new System.Drawing.Point(65, 46);
+            this.txbMainNo.Name = "txbMainNo";
+            this.txbMainNo.ReadOnly = true;
+            this.txbMainNo.Size = new System.Drawing.Size(121, 21);
+            this.txbMainNo.TabIndex = 21;
+            // 
+            // button6
+            // 
+            this.button6.Location = new System.Drawing.Point(398, 50);
+            this.button6.Name = "button6";
+            this.button6.Size = new System.Drawing.Size(75, 23);
+            this.button6.TabIndex = 28;
+            this.button6.Text = "刷出";
+            this.button6.UseVisualStyleBackColor = true;
+            this.button6.Click += new System.EventHandler(this.button6_Click);
             // 
             // frmMakeAuto
             // 
@@ -422,13 +635,18 @@
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
             this.panel2.ResumeLayout(false);
-            this.tabControl1.ResumeLayout(false);
+            this.tcSCM.ResumeLayout(false);
             this.tabPage1.ResumeLayout(false);
             this.tabPage1.PerformLayout();
             this.groupBox2.ResumeLayout(false);
             this.tabPage2.ResumeLayout(false);
+            this.groupBox1.ResumeLayout(false);
+            this.groupBox1.PerformLayout();
             this.groupBox3.ResumeLayout(false);
             this.groupBox3.PerformLayout();
+            this.tabPage3.ResumeLayout(false);
+            this.groupBox4.ResumeLayout(false);
+            this.groupBox4.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -448,7 +666,7 @@
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.ToolStripMenuItem mniRefresh;
         private System.Windows.Forms.ContextMenuStrip cmsNotify;
-        private System.Windows.Forms.TabControl tabControl1;
+        private System.Windows.Forms.TabControl tcSCM;
         private System.Windows.Forms.TabPage tabPage1;
         private System.Windows.Forms.Panel panel2;
         private System.Windows.Forms.GroupBox groupBox2;
@@ -469,6 +687,25 @@
         private System.Windows.Forms.ToolStripMenuItem 关于ToolStripMenuItem;
         private System.Windows.Forms.CheckedListBox clbModule;
         private System.Windows.Forms.TextBox tbModule;
+        private System.Windows.Forms.Button button4;
+        private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.ComboBox comboBox1;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Button button3;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.TextBox textBox1;
+        private System.Windows.Forms.ToolStripMenuItem 开发ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 集成ToolStripMenuItem;
+        private System.Windows.Forms.TabPage tabPage3;
+        private System.Windows.Forms.Button btnReadInfo;
+        private System.Windows.Forms.GroupBox groupBox4;
+        private System.Windows.Forms.TextBox txbCommitPath;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.TextBox txbAmenNo;
+        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.TextBox txbMainNo;
+        private System.Windows.Forms.Button button6;
     }
 }
 
