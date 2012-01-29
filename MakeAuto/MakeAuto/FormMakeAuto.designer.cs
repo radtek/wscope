@@ -72,16 +72,18 @@
             this.label2 = new System.Windows.Forms.Label();
             this.txtAmendList = new System.Windows.Forms.TextBox();
             this.tabPage3 = new System.Windows.Forms.TabPage();
-            this.btnReadInfo = new System.Windows.Forms.Button();
-            this.cmsNotify = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.button6 = new System.Windows.Forms.Button();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
+            this.label6 = new System.Windows.Forms.Label();
+            this.txbMainNo = new System.Windows.Forms.TextBox();
+            this.txbCommitPath = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
             this.txbAmenNo = new System.Windows.Forms.TextBox();
-            this.txbCommitPath = new System.Windows.Forms.TextBox();
-            this.label6 = new System.Windows.Forms.Label();
-            this.txbMainNo = new System.Windows.Forms.TextBox();
-            this.button6 = new System.Windows.Forms.Button();
+            this.btnReadInfo = new System.Windows.Forms.Button();
+            this.cmsNotify = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.button7 = new System.Windows.Forms.Button();
+            this.button8 = new System.Windows.Forms.Button();
             this.menuStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -106,7 +108,7 @@
             this.txtLog.Name = "txtLog";
             this.txtLog.ReadOnly = true;
             this.txtLog.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtLog.Size = new System.Drawing.Size(626, 118);
+            this.txtLog.Size = new System.Drawing.Size(740, 118);
             this.txtLog.TabIndex = 0;
             this.txtLog.TabStop = false;
             this.txtLog.TextChanged += new System.EventHandler(this.txtLog_TextChanged);
@@ -120,7 +122,7 @@
             this.mniAbout});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(626, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(740, 24);
             this.menuStrip1.TabIndex = 2;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -170,7 +172,7 @@
             // 
             this.statusStrip1.Location = new System.Drawing.Point(0, 418);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(626, 22);
+            this.statusStrip1.Size = new System.Drawing.Size(740, 22);
             this.statusStrip1.TabIndex = 3;
             this.statusStrip1.Text = "statusStrip1";
             // 
@@ -180,7 +182,7 @@
             this.toolStripButton1});
             this.toolStrip1.Location = new System.Drawing.Point(0, 24);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(626, 25);
+            this.toolStrip1.Size = new System.Drawing.Size(740, 25);
             this.toolStrip1.TabIndex = 4;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -213,7 +215,7 @@
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel1.Location = new System.Drawing.Point(0, 49);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(626, 369);
+            this.panel1.Size = new System.Drawing.Size(740, 369);
             this.panel1.TabIndex = 21;
             // 
             // panel2
@@ -222,7 +224,7 @@
             this.panel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel2.Location = new System.Drawing.Point(0, 0);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(626, 251);
+            this.panel2.Size = new System.Drawing.Size(740, 251);
             this.panel2.TabIndex = 23;
             // 
             // tcSCM
@@ -234,7 +236,7 @@
             this.tcSCM.Location = new System.Drawing.Point(0, 0);
             this.tcSCM.Name = "tcSCM";
             this.tcSCM.SelectedIndex = 0;
-            this.tcSCM.Size = new System.Drawing.Size(626, 251);
+            this.tcSCM.Size = new System.Drawing.Size(740, 251);
             this.tcSCM.TabIndex = 22;
             // 
             // tabPage1
@@ -510,31 +512,28 @@
             // 
             // tabPage3
             // 
+            this.tabPage3.Controls.Add(this.button8);
+            this.tabPage3.Controls.Add(this.button7);
             this.tabPage3.Controls.Add(this.button6);
             this.tabPage3.Controls.Add(this.groupBox4);
             this.tabPage3.Controls.Add(this.btnReadInfo);
             this.tabPage3.Location = new System.Drawing.Point(4, 21);
             this.tabPage3.Name = "tabPage3";
             this.tabPage3.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage3.Size = new System.Drawing.Size(618, 226);
+            this.tabPage3.Size = new System.Drawing.Size(732, 226);
             this.tabPage3.TabIndex = 2;
             this.tabPage3.Text = "集成打包";
             this.tabPage3.UseVisualStyleBackColor = true;
             // 
-            // btnReadInfo
+            // button6
             // 
-            this.btnReadInfo.Location = new System.Drawing.Point(398, 17);
-            this.btnReadInfo.Name = "btnReadInfo";
-            this.btnReadInfo.Size = new System.Drawing.Size(75, 23);
-            this.btnReadInfo.TabIndex = 26;
-            this.btnReadInfo.Text = "读取";
-            this.btnReadInfo.UseVisualStyleBackColor = true;
-            this.btnReadInfo.Click += new System.EventHandler(this.btnReadInfo_Click);
-            // 
-            // cmsNotify
-            // 
-            this.cmsNotify.Name = "cmsNotify";
-            this.cmsNotify.Size = new System.Drawing.Size(61, 4);
+            this.button6.Location = new System.Drawing.Point(398, 50);
+            this.button6.Name = "button6";
+            this.button6.Size = new System.Drawing.Size(75, 23);
+            this.button6.TabIndex = 28;
+            this.button6.Text = "下载";
+            this.button6.UseVisualStyleBackColor = true;
+            this.button6.Click += new System.EventHandler(this.button6_Click);
             // 
             // groupBox4
             // 
@@ -546,10 +545,35 @@
             this.groupBox4.Controls.Add(this.txbAmenNo);
             this.groupBox4.Location = new System.Drawing.Point(8, 6);
             this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Size = new System.Drawing.Size(332, 204);
+            this.groupBox4.Size = new System.Drawing.Size(332, 194);
             this.groupBox4.TabIndex = 27;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "修改单";
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(6, 49);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(53, 12);
+            this.label6.TabIndex = 22;
+            this.label6.Text = "主修改单";
+            // 
+            // txbMainNo
+            // 
+            this.txbMainNo.Location = new System.Drawing.Point(65, 46);
+            this.txbMainNo.Name = "txbMainNo";
+            this.txbMainNo.ReadOnly = true;
+            this.txbMainNo.Size = new System.Drawing.Size(121, 21);
+            this.txbMainNo.TabIndex = 21;
+            // 
+            // txbCommitPath
+            // 
+            this.txbCommitPath.Location = new System.Drawing.Point(65, 73);
+            this.txbCommitPath.Name = "txbCommitPath";
+            this.txbCommitPath.ReadOnly = true;
+            this.txbCommitPath.Size = new System.Drawing.Size(261, 21);
+            this.txbCommitPath.TabIndex = 20;
             // 
             // label4
             // 
@@ -577,46 +601,46 @@
             this.txbAmenNo.TabIndex = 12;
             this.txbAmenNo.Text = "20111123054";
             // 
-            // txbCommitPath
+            // btnReadInfo
             // 
-            this.txbCommitPath.Location = new System.Drawing.Point(65, 73);
-            this.txbCommitPath.Name = "txbCommitPath";
-            this.txbCommitPath.ReadOnly = true;
-            this.txbCommitPath.Size = new System.Drawing.Size(261, 21);
-            this.txbCommitPath.TabIndex = 20;
+            this.btnReadInfo.Location = new System.Drawing.Point(398, 17);
+            this.btnReadInfo.Name = "btnReadInfo";
+            this.btnReadInfo.Size = new System.Drawing.Size(75, 23);
+            this.btnReadInfo.TabIndex = 26;
+            this.btnReadInfo.Text = "读取";
+            this.btnReadInfo.UseVisualStyleBackColor = true;
+            this.btnReadInfo.Click += new System.EventHandler(this.btnReadInfo_Click);
             // 
-            // label6
+            // cmsNotify
             // 
-            this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(6, 49);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(53, 12);
-            this.label6.TabIndex = 22;
-            this.label6.Text = "主修改单";
+            this.cmsNotify.Name = "cmsNotify";
+            this.cmsNotify.Size = new System.Drawing.Size(61, 4);
             // 
-            // txbMainNo
+            // button7
             // 
-            this.txbMainNo.Location = new System.Drawing.Point(65, 46);
-            this.txbMainNo.Name = "txbMainNo";
-            this.txbMainNo.ReadOnly = true;
-            this.txbMainNo.Size = new System.Drawing.Size(121, 21);
-            this.txbMainNo.TabIndex = 21;
+            this.button7.Location = new System.Drawing.Point(398, 82);
+            this.button7.Name = "button7";
+            this.button7.Size = new System.Drawing.Size(75, 23);
+            this.button7.TabIndex = 29;
+            this.button7.Text = "编译";
+            this.button7.UseVisualStyleBackColor = true;
+            this.button7.Click += new System.EventHandler(this.button7_Click);
             // 
-            // button6
+            // button8
             // 
-            this.button6.Location = new System.Drawing.Point(398, 50);
-            this.button6.Name = "button6";
-            this.button6.Size = new System.Drawing.Size(75, 23);
-            this.button6.TabIndex = 28;
-            this.button6.Text = "刷出";
-            this.button6.UseVisualStyleBackColor = true;
-            this.button6.Click += new System.EventHandler(this.button6_Click);
+            this.button8.Location = new System.Drawing.Point(398, 129);
+            this.button8.Name = "button8";
+            this.button8.Size = new System.Drawing.Size(75, 23);
+            this.button8.TabIndex = 30;
+            this.button8.Text = "版本对比";
+            this.button8.UseVisualStyleBackColor = true;
+            this.button8.Click += new System.EventHandler(this.button8_Click);
             // 
             // frmMakeAuto
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(626, 440);
+            this.ClientSize = new System.Drawing.Size(740, 440);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.toolStrip1);
             this.Controls.Add(this.statusStrip1);
@@ -706,6 +730,8 @@
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.TextBox txbMainNo;
         private System.Windows.Forms.Button button6;
+        private System.Windows.Forms.Button button7;
+        private System.Windows.Forms.Button button8;
     }
 }
 

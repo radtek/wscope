@@ -41,6 +41,9 @@ namespace MakeAuto
         public string Author { get; set; }
         public string ModuleList { get; set; }
 
+        // winrar路径
+        public string rar { get; private set; }
+
         public SshConns Conns;
         public Details Dls;
         public FtpConf fc;
@@ -50,6 +53,9 @@ namespace MakeAuto
         public bool ShowSecu;
         public bool ShowCrdt;
         public bool ShowFutu;
+
+        // 错误输出
+        public TextBox ErrorOut {get; set;}
 
         // 取配置文件名称
         private readonly string conf = "MAConf.xml";
@@ -119,6 +125,9 @@ namespace MakeAuto
             ftp.Password = fc.pass;
             ftp.TransferType = FTPTransferType.BINARY;  // 指定 BINARY 传输，否则对于压缩包会失败
             ftp.CommandEncoding = Encoding.GetEncoding("gb2312"); // 重要，否则乱码且连接不上
+
+            // 读取 WinRAR 压缩配置，在节点RAR上
+            rar = xn.ChildNodes[1].Attributes["Path"].InnerText;
             
             // 读取VSS配置
 
@@ -307,5 +316,18 @@ namespace MakeAuto
             //eh.SrcDir = MAConf.instance.SrcDir;
         }
 
+        public void WriteLog(InfoType type, string LogContent, string Title = "")
+        {
+            // 日志通用记法
+            if (Title == "")
+            {
+                Title = "日志";
+            }
+
+            ErrorOut.Text += DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "  "
+                + "[" + Enum.GetName(typeof(InfoType), type) + "]"
+                + "[" + Title + "]"
+                + "[" + LogContent + "]" + "\r\n";
+        }
     }
 }

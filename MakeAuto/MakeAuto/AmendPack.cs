@@ -5,6 +5,9 @@ using System.Text;
 using System.Collections;
 using System.Data;
 using System.Data.SqlClient;
+using System.IO;
+using System.Text.RegularExpressions;
+using System.Diagnostics;
 
 namespace MakeAuto
 {
@@ -105,6 +108,66 @@ namespace MakeAuto
             get
             {
                 return CommitPath.Substring(0, CommitPath.IndexOf("/"));
+            }
+        }
+
+        // 本次V*包
+        // 20111123054-国金短信-李景杰-20120117-V1.rar
+        public string currVerFile { get; set; }
+        
+        // 本地修改单路径，带最后的 /
+        // E:\xgd\融资融券\20111123054-国金短信
+        public string LocalDir 
+        {
+            get
+            {
+                return MAConf.instance.fc.LocalDir + CommitPath;
+            }
+        }
+
+        // 远程递交文件夹
+        public string RemoteDir
+        {
+            get 
+            {
+                return MAConf.instance.fc.ServerDir + CommitPath;
+            }
+        }
+
+        // 修改单压缩包本地存放文件
+        public string LocalFile
+        {
+            get
+            {
+                return LocalDir + "\\" + currVerFile;
+            }
+        }
+
+        public string RemoteFile
+        {
+            get 
+            {
+                return RemoteDir + "\\" + currVerFile;
+            }
+        }
+ 
+        // 本地修改单V*文件夹路径，不带最后的 /
+        // E:\xgd\融资融券\20111123054-国金短信\20111123054-国金短信-李景杰-20120117-V1
+        public string AmendDir
+        {
+            get
+            {
+                return LocalDir + "\\" + Path.GetFileNameWithoutExtension(LocalFile);
+            }
+        }
+
+        // 集成文件夹路径
+        // E:\xgd\融资融券\20111123054-国金短信\集成-20111123054-国金短信-李景杰-20120117-V1
+        public string SCMAmendDir 
+        {
+            get
+            {
+                return LocalDir + "\\" + "集成-" + Path.GetFileNameWithoutExtension(LocalFile);
             }
         }
 
@@ -210,5 +273,74 @@ namespace MakeAuto
             // 生成修改单组件包信息
             SetComs();
         }
+
+
+        #region 递交组件版本比较
+
+        public bool ValidateVersion()
+        {
+            bool ret = true, ret1 = true;
+            foreach (CommitCom c in ComComms)
+            {
+                // 这里的校验主要校验版本，集成编译之后，对于SO，还要校验大小
+                // 根据文件类型调用不同方法校验版本
+                switch (c.ctype)
+                {
+                    case ComType.Dll:
+                    case ComType.Exe:
+                        ret1 = ValidateDll(c);
+                        break;
+                    case ComType.SO:  // SO 文件只有一个版本信息
+                    case ComType.Ini: // Ini 文件有多个版本信息
+                    case ComType.Patch: // Patch 文件有多行版本信息
+                    case ComType.Sql:
+                        ret1 = ValidateSO(c);
+                        break;
+                    case ComType.Ssql:  // 小包无版本
+                        break;
+                    default:
+                        break;
+                }
+
+                if (ret1 == false)
+                    ret = ret1;
+            }
+
+            return ret;
+
+        }
+
+        public bool ValidateSO(CommitCom c)
+        {
+            // 版本比较 
+            // 取压缩包的 SO 测试下正则表达式，同时比较版本信息
+            StreamReader sr = new StreamReader(SCMAmendDir + "/" + c.cname);
+            string input = sr.ReadToEnd();
+            //string pattern = @"V(\d+\.){3}\d+"; // V6.1.31.16
+            string pattern = c.cver;
+            Regex rgx = new Regex(pattern, RegexOptions.IgnoreCase);
+            // 确保版本逆序，只取第一个
+            Match m = rgx.Match(input);
+
+            sr.Close();
+            return m.Success;
+        }
+
+        public bool ValidateDll(CommitCom c)
+        {
+            // 获取文件版本信息
+            FileVersionInfo DllVer = FileVersionInfo.GetVersionInfo(
+                Path.Combine(SCMAmendDir + Path.DirectorySeparatorChar + c.cname));
+            
+            // cver的 V 去掉，从第一个开始比较
+            return DllVer.FileVersion == c.cver.Substring(1);
+        }
+
+        public void WriteLog(InfoType type, string LogContent, string Title = "")
+        {
+            MAConf.instance.WriteLog(type, LogContent, Title);
+        }
+
+        #endregion
     }
 }
