@@ -4,6 +4,8 @@ using System.Collections;
 using System.Text;
 using System.IO;
 using EnterpriseDT.Net.Ftp;
+using System.Diagnostics;
+
 
 namespace MakeAuto
 {
@@ -13,9 +15,12 @@ namespace MakeAuto
         // 定义保存 Excel 列表的东东
         ArrayList alModule = new ArrayList();
 
+        // 配置实例
+        private MAConf mc = MAConf.instance;
+
         // 宏助手
         private ExcelMacroHelper eh = ExcelMacroHelper.instance;
-        private MAConf mc = MAConf.instance;
+
         AmendPack ap = AmendPack.instance;
 
         // 当前活动ExcelFile;
@@ -29,6 +34,7 @@ namespace MakeAuto
         public frmMakeAuto()
         {
             InitializeComponent();
+            mc.ErrorOut = txtLog;
         }
 
         private void btnSO_Click(object sender, EventArgs e)
@@ -47,6 +53,11 @@ namespace MakeAuto
 
             // 执行编译
             currSsh.Compile(dl);
+        }
+
+        public void WriteLog(InfoType type, string LogContent, string Title = "")
+        {
+            mc.WriteLog(type, LogContent, Title);
         }
 
         private void btnAS_Click(object sender, EventArgs e)
@@ -342,19 +353,7 @@ namespace MakeAuto
             }
         }
 
-        public void WriteLog(InfoType type, string LogContent,string Title="")
-        {
-            // 日志通用记法
-            if (Title == "")
-            {
-                Title = "日志";
-            }
 
-            txtLog.Text += DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "  " 
-                + "[" + Enum.GetName(typeof(InfoType), type) + "]" 
-                + "[" + Title + "]"
-                + "[" + LogContent + "]" + "\r\n";
-        }
 
         private void button4_Click(object sender, EventArgs e)
         {
@@ -379,9 +378,9 @@ namespace MakeAuto
             // 输出递交包，到本地集成环境处理，需要使用ftp连接
             FTPConnection ftp = mc.ftp;
             FtpConf fc = mc.fc;
-            int ver = 0, maxver = 0, dt;
-            string currVerFile;
+            int ver = 0, maxver = 0;
             int k, k1;
+            bool ReSCM = false; 
 
             if(ftp.IsConnected == false)
             {
@@ -390,7 +389,9 @@ namespace MakeAuto
 
 
             #region 取递交版本信息，确认要输出哪个版本的压缩包，确保只刷出最大的版本
-            if (ftp.DirectoryExists(fc.ServerDir + ap.CommitPath) == false)
+            // 这个地方，应该是如果存在集成的文件夹，就刷出集成的文件夹，
+            // 对于V1，是全部都需要集成，对于Vn(n>1)，只集成变动的部分就可以了
+            if (ftp.DirectoryExists(ap.RemoteDir) == false)
             {
                 MessageBox.Show("FTP路径" + fc.ServerDir + ap.CommitPath + "不存在！");
                 return;
@@ -398,10 +399,10 @@ namespace MakeAuto
             ftp.ChangeWorkingDirectory(fc.ServerDir);
             // 不使用 true 列举不出目录，只显示文件，很奇怪
             //string[] files = ftp.GetFiles(fc.ServerDir + ap.CommitPath, true); 
-            string[] files = ftp.GetFiles(fc.ServerDir + ap.CommitPath);
+            string[] files = ftp.GetFiles(ap.RemoteDir);
             
             // 获取当前的版本信息，先标定版本信息
-            currVerFile = files[0];
+            ap.currVerFile = files[0];
             foreach (string s in files) //查找子目录
             {
                 // 跳过 src 之类的东东
@@ -417,39 +418,90 @@ namespace MakeAuto
                     continue;
                 }
                 
-
                 // 取递交版本
                 ver = int.Parse(s.Substring(k + 1, k1 - k - 1));
                 if(ver > maxver)
                 {
-                    currVerFile = s;
+                    ap.currVerFile = s;
                     maxver = ver;
                 }
             }
             
-            // 如果输出文件不为空，则退出代码
+            // 如果输出文件为空，则退出代码
             if(maxver <= 0) 
             {
                 return;
             }
-            #endregion
-
-            #region 刷出代码，此时，已经标定了版本，可以输出集成代码，先标定文件名
-            string LocalDir = fc.LocalDir + ap.CommitPath;
-            string RemotDir = fc.ServerDir + ap.CommitPath;
-            if (!Directory.Exists(LocalDir))
+            else if (maxver == 1)  // V1 所有的代码都需要重新集成
             {
-                Directory.CreateDirectory(LocalDir);
+                ReSCM = true;
             }
-            ftp.DownloadFile(LocalDir + "\\" + currVerFile, RemotDir + "/" + currVerFile);
             #endregion
 
-            #region 压缩包刷出之后，解压缩包
-            // 开启进程执行 winrar
-            // 获取 Winrar 的路径
-
+            #region 下载递交包
+            if (!Directory.Exists(ap.LocalDir))
+            {
+                Directory.CreateDirectory(ap.LocalDir);
+            }
+            
+            // 本地文件名称，如果版本是 1，那么下载递交文件，如果 > 1，那么下载上一次集成的文件，根据变动记录来处理
+            ftp.DownloadFile(ap.LocalFile, ap.RemoteFile);
             #endregion
 
+            #region 下载压缩包之后，解压缩包，重命名文件夹为集成-*，
+            // 获取解压文件夹名称
+
+            // 检查文件夹是否存在，如果存在，就先执行删除 
+            // E:\xgd\融资融券\20111123054-国金短信\20111123054-国金短信-李景杰-20120117-V1
+            if (Directory.Exists(ap.AmendDir))
+            {
+                Directory.Delete(ap.AmendDir, true);
+            }
+
+            // 检查集成文件夹是否存在，存在则执行删除
+            // E:\xgd\融资融券\20111123054-国金短信\集成-20111123054-国金短信-李景杰-20120117-V1
+            if (Directory.Exists(ap.SCMAmendDir))
+            {
+                Directory.Delete(ap.SCMAmendDir, true);  
+            }
+
+            Directory.CreateDirectory(ap.SCMAmendDir);
+
+            // 开启进程执行 rar解压缩
+            // 获取 Winrar 的路径（通过注册表或者是配置，这里直接根据xml来处理）
+            // 实例化 Process 类，启动执行进程  
+            Process p = new Process();
+            try
+            {  
+                p.StartInfo.FileName = mc.rar;           // rar程序名  
+                // 解压缩的参数
+                p.StartInfo.Arguments = " E -y -ep " + ap.LocalFile + " " + ap.SCMAmendDir;   // 设置执行参数  
+                p.StartInfo.UseShellExecute = false;        // 关闭Shell的使用  
+                p.StartInfo.RedirectStandardInput = true; // 重定向标准输入
+                p.StartInfo.RedirectStandardOutput = true;  //重定向标准出  
+                p.StartInfo.RedirectStandardError = true; //重定向错误输出  
+                p.StartInfo.CreateNoWindow = true;             // 不显示窗口 
+                p.Start();    // 启动
+                //return p.StandardOutput.ReadToEnd();        //從输出流取得命令执行结果
+            }
+            catch (Exception ex)
+            {
+                WriteLog(InfoType.Error, "执行rar失败" + ex.Message);
+                MessageBox.Show("执行rar失败" + ex.Message);
+            }
+            #endregion
+        }
+
+        private void button7_Click(object sender, EventArgs e)
+        {
+            // 解压缩代码没有问题，就可以执行编译过程
+            // 此处跳过，先不执行
+
+        }
+
+        private void button8_Click(object sender, EventArgs e)
+        {
+            ap.ValidateVersion();
         }
 
     }

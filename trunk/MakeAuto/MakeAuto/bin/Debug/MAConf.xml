@@ -17,8 +17,9 @@
     </Conns>
     <Smallball host="192.168.51.46" port="1021" user="GuangFa" pass="laisha">
         <BaseDir ServerDir ="/d:/测试代码站点/产品一部" LocalDir="E:\xgd" />
+        <RAR Path="C:\Program Files\WinRAR\Rar.exe" />
     </Smallball>
-    <SAW CmdBin="D:\Program Files\Dynamsoft\SourceAnywhere for VSS Professional Client\SAWVCmd.exe" >
+    <SAW SAWVCmd="D:\Program Files\Dynamsoft\SourceAnywhere for VSS Professional Client\SAWVCmd.exe" >
         <SCMS>
             <SCM name="HSTRADES11" server="cm02.hundsun.com" port="8884" alias="" WorkingDir="E:\VSS\HSTRADWS11" />
         </SCMS>
