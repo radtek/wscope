@@ -95,7 +95,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
-    <Compile Include="SAW.cs" />
+    <Compile Include="SAWV.cs" />
     <Compile Include="AmendPack.cs" />
     <Compile Include="SshConn.cs" />
   </ItemGroup>
@@ -116,6 +116,9 @@
   <ItemGroup>
     <Reference Include="ChilkatDotNet4">
       <HintPath>C:\Program Files\Chilkat Software Inc\Chilkat.NET-v4.0\ChilkatDotNet4.dll</HintPath>
+    </Reference>
+    <Reference Include="ChnCharInfo">
+      <HintPath>C:\Program Files\Microsoft Visual Studio International Pack\Simplified Chinese Pin-Yin Conversion Library\ChnCharInfo.dll</HintPath>
     </Reference>
     <Reference Include="edtFTPnet">
       <HintPath>C:\Documents and Settings\gaohu\My Documents\下载\edtftpnet\edtftpnet-2.2.2\bin\edtFTPnet.dll</HintPath>
@@ -139,6 +142,15 @@
       <VersionMinor>5</VersionMinor>
       <Lcid>0</Lcid>
       <WrapperTool>primary</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
+    <COMReference Include="SAWVSDKLib">
+      <Guid>{F8E3E44D-0723-4B39-ABAB-BAC8580EC6E8}</Guid>
+      <VersionMajor>1</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>tlbimp</WrapperTool>
       <Isolated>False</Isolated>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </COMReference>

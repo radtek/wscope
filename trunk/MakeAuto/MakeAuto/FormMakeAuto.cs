@@ -5,7 +5,8 @@ using System.Text;
 using System.IO;
 using EnterpriseDT.Net.Ftp;
 using System.Diagnostics;
-
+using Microsoft.International.Converters.PinYinConverter;
+using SAWVSDKLib;
 
 namespace MakeAuto
 {
@@ -295,13 +296,13 @@ namespace MakeAuto
 
         private void button2_Click(object sender, EventArgs e)
         {
-            foreach (Detail dl in MAConf.instance.Dls)
-            {
-                if (dl.Compile)
-                {
-                    txtLog.Text += dl.Name + "\r\n";
-                }
-            }
+            ArrayList myAL = new ArrayList();
+            myAL.Add("集成-123");
+            myAL.Add("123");
+
+            myAL.Sort();
+            foreach (Object obj in myAL)
+               txtLog.Text += obj + "\r\n";
         }
 
         private void 关于ToolStripMenuItem_Click(object sender, EventArgs e)
@@ -325,7 +326,6 @@ namespace MakeAuto
             clbModule.Items.Clear();
 
             int index;
-
 
             foreach (Detail dl in MAConf.instance.Dls)
             {
@@ -378,9 +378,8 @@ namespace MakeAuto
             // 输出递交包，到本地集成环境处理，需要使用ftp连接
             FTPConnection ftp = mc.ftp;
             FtpConf fc = mc.fc;
-            int ver = 0, maxver = 0;
-            int k, k1;
-            bool ReSCM = false; 
+            int myver, scmver;
+            string s, lastscm;
 
             if(ftp.IsConnected == false)
             {
@@ -397,59 +396,65 @@ namespace MakeAuto
                 return;
             }
             ftp.ChangeWorkingDirectory(fc.ServerDir);
+            
             // 不使用 true 列举不出目录，只显示文件，很奇怪
             //string[] files = ftp.GetFiles(fc.ServerDir + ap.CommitPath, true); 
             string[] files = ftp.GetFiles(ap.RemoteDir);
             
+            // 检查是否存在集成*的文件夹
             // 获取当前的版本信息，先标定版本信息
-            ap.currVerFile = files[0];
-            foreach (string s in files) //查找子目录
+            ArrayList myAL = new ArrayList();
+            ArrayList SCMAL = new ArrayList();
+            foreach (string f in files) //查找子目录
             {
                 // 跳过 src 之类的东东
-                if (s.IndexOf(ap.MainNo) < 0)
+                if (f.IndexOf(ap.MainNo) < 0)
                     continue;
-                
-                // 标定版本
-                k = s.LastIndexOf('V') > 0 ? s.LastIndexOf('V') : s.LastIndexOf('v');
-                k1 = s.LastIndexOf(".");
 
-                if (k < 0 || k1 < 0)
-                {
-                    continue;
-                }
-                
-                // 取递交版本
-                ver = int.Parse(s.Substring(k + 1, k1 - k - 1));
-                if(ver > maxver)
-                {
-                    ap.currVerFile = s;
-                    maxver = ver;
-                }
+                if (f.IndexOf("集成") == 0)
+                    SCMAL.Add(f);
+                else
+                  myAL.Add(f);
             }
-            
-            // 如果输出文件为空，则退出代码
-            if(maxver <= 0) 
-            {
-                return;
-            }
-            else if (maxver == 1)  // V1 所有的代码都需要重新集成
-            {
-                ReSCM = true;
-            }
-            #endregion
 
-            #region 下载递交包
+            if (myAL.Count > 0)
+            {
+                myAL.Sort();
+
+
+                s = myAL[myAL.Count - 1].ToString();
+                ap.currVerFile = s;
+
+                // 取递交版本号 20111207012-委托管理-高虎-20120116-V13.rar --> 20111207012-委托管理-高虎-20120116-V13 -> 13
+                s = s.Substring(0, s.LastIndexOf('.'));
+                myver = int.Parse(s.Substring(s.LastIndexOf('V') + 1));
+            }
+            else myver = 0;
+
+            if (SCMAL.Count > 0)
+            {
+                SCMAL.Sort();
+
+
+                s = SCMAL[SCMAL.Count - 1].ToString();
+
+                ap.SCMcurrVerFile = s;
+
+                // 取递交版本号 20111207012-委托管理-高虎-20120116-V13.rar --> 20111207012-委托管理-高虎-20120116-V13 -> 13
+                s = s.Substring(0, s.LastIndexOf('.'));
+                scmver = int.Parse(s.Substring(s.LastIndexOf('V') + 1));
+
+                
+            }
+            else scmver = 0;
+
+            // 下载递交包
             if (!Directory.Exists(ap.LocalDir))
             {
                 Directory.CreateDirectory(ap.LocalDir);
             }
-            
-            // 本地文件名称，如果版本是 1，那么下载递交文件，如果 > 1，那么下载上一次集成的文件，根据变动记录来处理
             ftp.DownloadFile(ap.LocalFile, ap.RemoteFile);
-            #endregion
 
-            #region 下载压缩包之后，解压缩包，重命名文件夹为集成-*，
-            // 获取解压文件夹名称
 
             // 检查文件夹是否存在，如果存在，就先执行删除 
             // E:\xgd\融资融券\20111123054-国金短信\20111123054-国金短信-李景杰-20120117-V1
@@ -462,32 +467,66 @@ namespace MakeAuto
             // E:\xgd\融资融券\20111123054-国金短信\集成-20111123054-国金短信-李景杰-20120117-V1
             if (Directory.Exists(ap.SCMAmendDir))
             {
-                Directory.Delete(ap.SCMAmendDir, true);  
+                Directory.Delete(ap.SCMAmendDir, true);
             }
-
             Directory.CreateDirectory(ap.SCMAmendDir);
 
-            // 开启进程执行 rar解压缩
-            // 获取 Winrar 的路径（通过注册表或者是配置，这里直接根据xml来处理）
-            // 实例化 Process 类，启动执行进程  
-            Process p = new Process();
-            try
-            {  
-                p.StartInfo.FileName = mc.rar;           // rar程序名  
-                // 解压缩的参数
-                p.StartInfo.Arguments = " E -y -ep " + ap.LocalFile + " " + ap.SCMAmendDir;   // 设置执行参数  
-                p.StartInfo.UseShellExecute = false;        // 关闭Shell的使用  
-                p.StartInfo.RedirectStandardInput = true; // 重定向标准输入
-                p.StartInfo.RedirectStandardOutput = true;  //重定向标准出  
-                p.StartInfo.RedirectStandardError = true; //重定向错误输出  
-                p.StartInfo.CreateNoWindow = true;             // 不显示窗口 
-                p.Start();    // 启动
-                //return p.StandardOutput.ReadToEnd();        //從输出流取得命令执行结果
-            }
-            catch (Exception ex)
+            // 如果还没有集成过，那么执行集成
+            if (scmver == 0)
             {
-                WriteLog(InfoType.Error, "执行rar失败" + ex.Message);
-                MessageBox.Show("执行rar失败" + ex.Message);
+                // 下载压缩包之后，解压缩包，重命名文件夹为集成-*，
+                ap.UnRar(ap.LocalFile, ap.SCMAmendDir);
+            }
+            else if (scmver == myver) // 如果相等，则是重新集成，不处理
+            {
+                
+            }
+            else if (scmver < myver) // 否则，递交了新的版本，刷新递交包，重新命名集成包
+            {
+                // 复制上一次集成文件夹为本次集成文件夹
+                s = SCMAL[SCMAL.Count - 1].ToString();
+                s = s.Substring(0, s.LastIndexOf('.'));
+                
+                lastscm = ap.LocalDir + Path.DirectorySeparatorChar + s;
+                if (Directory.Exists(lastscm))
+                {
+                    DirectoryCopy(lastscm, ap.SCMAmendDir, false);
+                }
+                
+                // 如果存在 src 压缩文件夹，解压缩 src 文件夹
+                string srcrar = ap.SCMAmendDir + Path.DirectorySeparatorChar + "src-V" + scmver.ToString() + ".rar";
+                if (File.Exists(srcrar))
+                {
+                    ap.UnRar(srcrar, ap.SCMAmendDir);
+                    File.Delete(srcrar);
+                }
+
+                
+                // 对于下载的递交文件，解压缩readme到集成文件夹，以便根据本次变动取出需要重新集成的文件
+                ap.UnRar(ap.LocalFile, ap.SCMAmendDir, "Readme-" + ap.MainNo.ToString() + "*.txt");
+
+                // 读取readme，重新集成
+                try
+                {
+                    // Create an instance of StreamReader to read from a file.
+                    // The using statement also closes the StreamReader.
+                    using (StreamReader sr = new StreamReader("TestFile.txt"))
+                    {
+                        string line;
+                        // Read and display lines from the file until the end of 
+                        // the file is reached.
+                        while ((line = sr.ReadLine()) != null)
+                        {
+                            Console.WriteLine(line);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Let the user know what went wrong.
+                    Console.WriteLine("The file could not be read:");
+                    Console.WriteLine(ex.Message);
+                }
             }
             #endregion
         }
@@ -504,5 +543,102 @@ namespace MakeAuto
             ap.ValidateVersion();
         }
 
+        private static void DirectoryCopy(
+        string sourceDirName, string destDirName, bool copySubDirs)
+        {
+            DirectoryInfo dir = new DirectoryInfo(sourceDirName);
+            DirectoryInfo[] dirs = dir.GetDirectories();
+
+            // If the source directory does not exist, throw an exception.
+            if (!dir.Exists)
+            {
+                throw new DirectoryNotFoundException(
+                    "Source directory does not exist or could not be found: "
+                    + sourceDirName);
+            }
+
+            // If the destination directory does not exist, create it.
+            if (!Directory.Exists(destDirName))
+            {
+                Directory.CreateDirectory(destDirName);
+            }
+
+
+            // Get the file contents of the directory to copy.
+            FileInfo[] files = dir.GetFiles();
+
+            foreach (FileInfo file in files)
+            {
+                // Create the path to the new copy of the file.
+                string temppath = Path.Combine(destDirName, file.Name);
+
+                // Copy the file.
+                file.CopyTo(temppath, false);
+            }
+
+            // If copySubDirs is true, copy the subdirectories.
+            if (copySubDirs)
+            {
+
+                foreach (DirectoryInfo subdir in dirs)
+                {
+                    // Create the subdirectory.
+                    string temppath = Path.Combine(destDirName, subdir.Name);
+
+                    // Copy the subdirectories.
+                    DirectoryCopy(subdir.FullName, temppath, copySubDirs);
+                }
+            }
+        }
+
+        private void button9_Click(object sender, EventArgs e)
+        {
+            // 测试 SAW 功能
+            SAWVSDK sv = new SAWVSDK();
+            bool bc, btrial, bcanceled;
+            int days, CResu;
+            string Result;
+            Enum_EncryptType eEncry;
+            CResu = sv.ConnectToServer("cm02.hundsun.com", 8884, out bc,
+                out eEncry, out btrial, out days,
+                out bcanceled, out Result, Enum_ProxyType.Enum_NOPROXY,
+                "", 0, "", "");
+            if (CResu == 0)
+            {
+                txtLog.Text += "OK" + "\r\n";
+                // 登录
+                SAWVKeyInfoSet sk = new SAWVKeyInfoSet();
+                CResu = sv.Login("gaohu", "Hundsun_2", "10106-证券一部-2006版", 
+                    sk, out bc, out days, out bcanceled, out Result);
+
+                if (CResu == 0)
+                {
+                    txtLog.Text += "OK1" + "\r\n";
+                }
+                else
+                {
+                    txtLog.Text += "False1" + Result + "\r\n";
+                }
+
+                // 获取文件历史
+                SAWVProjectHistorySet hisset;
+                CResu = sv.GetProjectHistory("$/HSTRADES11/Documents/D2.Designs/详细设计/后端/", true, false,
+                    out hisset, "",
+                    DateTime.Now.AddDays(-7), DateTime.Now, 
+                    out bcanceled, out Result);
+
+                txtLog.Text += hisset.Count.ToString() + "\r\n";
+                foreach (SAWVProjectHistory his in hisset)
+                {
+                    txtLog.Text += his.Version.ToString() + "\t" + his.Action + "\t" + his.Comment + "\t" + his.DateAction.ToString()
+                        + "\t" + his.UserName + "\t" + his.FileName + "\r\n"; 
+                }
+
+            }
+            else
+            {
+                txtLog.Text += "False" + Result + "\r\n";
+            }
+        }
     }
 }

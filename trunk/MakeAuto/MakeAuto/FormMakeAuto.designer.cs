@@ -72,6 +72,8 @@
             this.label2 = new System.Windows.Forms.Label();
             this.txtAmendList = new System.Windows.Forms.TextBox();
             this.tabPage3 = new System.Windows.Forms.TabPage();
+            this.button8 = new System.Windows.Forms.Button();
+            this.button7 = new System.Windows.Forms.Button();
             this.button6 = new System.Windows.Forms.Button();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
             this.label6 = new System.Windows.Forms.Label();
@@ -82,8 +84,7 @@
             this.txbAmenNo = new System.Windows.Forms.TextBox();
             this.btnReadInfo = new System.Windows.Forms.Button();
             this.cmsNotify = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.button7 = new System.Windows.Forms.Button();
-            this.button8 = new System.Windows.Forms.Button();
+            this.button9 = new System.Windows.Forms.Button();
             this.menuStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -107,10 +108,11 @@
             this.txtLog.Multiline = true;
             this.txtLog.Name = "txtLog";
             this.txtLog.ReadOnly = true;
-            this.txtLog.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.txtLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
             this.txtLog.Size = new System.Drawing.Size(740, 118);
             this.txtLog.TabIndex = 0;
             this.txtLog.TabStop = false;
+            this.txtLog.WordWrap = false;
             this.txtLog.TextChanged += new System.EventHandler(this.txtLog_TextChanged);
             // 
             // menuStrip1
@@ -247,7 +249,7 @@
             this.tabPage1.Location = new System.Drawing.Point(4, 21);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(618, 226);
+            this.tabPage1.Size = new System.Drawing.Size(732, 226);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "编译集成";
             this.tabPage1.UseVisualStyleBackColor = true;
@@ -364,7 +366,7 @@
             this.tabPage2.Location = new System.Drawing.Point(4, 21);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(618, 226);
+            this.tabPage2.Size = new System.Drawing.Size(732, 226);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "修改递交";
             this.tabPage2.UseVisualStyleBackColor = true;
@@ -512,6 +514,7 @@
             // 
             // tabPage3
             // 
+            this.tabPage3.Controls.Add(this.button9);
             this.tabPage3.Controls.Add(this.button8);
             this.tabPage3.Controls.Add(this.button7);
             this.tabPage3.Controls.Add(this.button6);
@@ -524,6 +527,26 @@
             this.tabPage3.TabIndex = 2;
             this.tabPage3.Text = "集成打包";
             this.tabPage3.UseVisualStyleBackColor = true;
+            // 
+            // button8
+            // 
+            this.button8.Location = new System.Drawing.Point(398, 129);
+            this.button8.Name = "button8";
+            this.button8.Size = new System.Drawing.Size(75, 23);
+            this.button8.TabIndex = 30;
+            this.button8.Text = "版本对比";
+            this.button8.UseVisualStyleBackColor = true;
+            this.button8.Click += new System.EventHandler(this.button8_Click);
+            // 
+            // button7
+            // 
+            this.button7.Location = new System.Drawing.Point(398, 82);
+            this.button7.Name = "button7";
+            this.button7.Size = new System.Drawing.Size(75, 23);
+            this.button7.TabIndex = 29;
+            this.button7.Text = "编译";
+            this.button7.UseVisualStyleBackColor = true;
+            this.button7.Click += new System.EventHandler(this.button7_Click);
             // 
             // button6
             // 
@@ -599,7 +622,7 @@
             this.txbAmenNo.Name = "txbAmenNo";
             this.txbAmenNo.Size = new System.Drawing.Size(121, 21);
             this.txbAmenNo.TabIndex = 12;
-            this.txbAmenNo.Text = "20111123054";
+            this.txbAmenNo.Text = "20111223029";
             // 
             // btnReadInfo
             // 
@@ -616,25 +639,15 @@
             this.cmsNotify.Name = "cmsNotify";
             this.cmsNotify.Size = new System.Drawing.Size(61, 4);
             // 
-            // button7
+            // button9
             // 
-            this.button7.Location = new System.Drawing.Point(398, 82);
-            this.button7.Name = "button7";
-            this.button7.Size = new System.Drawing.Size(75, 23);
-            this.button7.TabIndex = 29;
-            this.button7.Text = "编译";
-            this.button7.UseVisualStyleBackColor = true;
-            this.button7.Click += new System.EventHandler(this.button7_Click);
-            // 
-            // button8
-            // 
-            this.button8.Location = new System.Drawing.Point(398, 129);
-            this.button8.Name = "button8";
-            this.button8.Size = new System.Drawing.Size(75, 23);
-            this.button8.TabIndex = 30;
-            this.button8.Text = "版本对比";
-            this.button8.UseVisualStyleBackColor = true;
-            this.button8.Click += new System.EventHandler(this.button8_Click);
+            this.button9.Location = new System.Drawing.Point(588, 167);
+            this.button9.Name = "button9";
+            this.button9.Size = new System.Drawing.Size(75, 23);
+            this.button9.TabIndex = 31;
+            this.button9.Text = "test";
+            this.button9.UseVisualStyleBackColor = true;
+            this.button9.Click += new System.EventHandler(this.button9_Click);
             // 
             // frmMakeAuto
             // 
@@ -732,6 +745,7 @@
         private System.Windows.Forms.Button button6;
         private System.Windows.Forms.Button button7;
         private System.Windows.Forms.Button button8;
+        private System.Windows.Forms.Button button9;
     }
 }
 
