@@ -74,7 +74,7 @@
     <Compile Include="AboutBoxMakeAuto.Designer.cs">
       <DependentUpon>AboutBoxMakeAuto.cs</DependentUpon>
     </Compile>
-    <Compile Include="ExcelFile.cs" />
+    <Compile Include="Detail.cs" />
     <Compile Include="ExcelMacroHelper.cs" />
     <Compile Include="FormMakeAuto.cs">
       <SubType>Form</SubType>
