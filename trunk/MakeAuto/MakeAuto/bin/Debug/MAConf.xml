@@ -21,7 +21,7 @@
     </Smallball>
     <SAW SAWVCmd="D:\Program Files\Dynamsoft\SourceAnywhere for VSS Professional Client\SAWVCmd.exe" >
         <SCMS>
-            <SCM name="HSTRADES11" server="cm02.hundsun.com" port="8884" alias="" WorkingDir="E:\VSS\HSTRADWS11" />
+            <SCM Amend="广发版技术支持测试" name="HSTRADES11" server="cm02.hundsun.com" port="8884" database="10106-证券一部-2006版" user="gaohu"  pass="Hundsun_2" WorkingDir="E:\VSS\HSTRADES11" />
         </SCMS>
     </SAW>
 </MakeAuto>

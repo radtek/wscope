@@ -6,8 +6,6 @@ using SAWVSDKLib;
 
 namespace MakeAuto
 {
-
-
     /// <summary>
     /// 对应VSS的一些操作，包括刷新文件，获取版本，检入检出等，使用
     /// </summary>
@@ -65,6 +63,30 @@ namespace MakeAuto
             return this.LoggedIn;
         }
 
+        // 获取修改单详细设计说明书
+        public Boolean GetAmendDetail(string AmendNo, string FileName, string AmendVersion, string UserNmae = "")
+        {
+            SAWVFileHistorySet hisset = GetFileHistory(FileName, UserName);
+            int FileVersion = 0;
+            foreach (SAWVFileHistory his in hisset)
+            {
+                // 20111215020-V6.1.4.10-V1
+                if (his.Comment.IndexOf(AmendNo + "-" + AmendVersion) >= 0)
+                {
+                    FileVersion = his.Version;  // 得到要Get文件的版本
+                    break;
+                }
+            }
+
+            if (FileVersion == 0)
+                return false;
+
+            // 获取历史文件
+            string Project = FileName.Substring(0, FileName.LastIndexOf("/"));
+            string File = FileName.Substring(FileName.LastIndexOf("/"));
+            GetOldVersionFile(Project, File, FileVersion);
+            return true;
+        }
 
         public SAWVFileHistorySet GetFileHistory(String FileName, string UserName = "")
         {
@@ -77,6 +99,27 @@ namespace MakeAuto
             return hisset;
         }
 
+        // 获取指定版本文件，检出详细设计说明书
+        private Boolean GetOldVersionFile(String ProjectName, String FileName, int Version)
+        {
+            // 暂时只对06版有效，因为目录是固定的，需要写死
+            string detail = MAConf.instance.DetailFile;
+            string LocalDir = detail.Substring(0, detail.LastIndexOf(@"\") + 1);
+
+            // 获取历史代码
+            int Result = sv.GetOldVersionFile(ProjectName, FileName, Version,
+                LocalDir + @"后端\" + FileName, false, 
+                Enum_WritableFileHandling.Enum_WritableFileHandlingCanceled,
+                Enum_EOL.Enum_CRLF, 
+                Enum_SetLocalFileTime.Enum_SetLocalFileTimeCurrent,
+                "", "", out Canceled, 
+                out ResultDescription, OpertationResult);
+
+            if (Result != 0 || OpertationResult.OperationResult != 0)
+                return false;
+            else
+                return true;
+        }
 
         // SAWVSDK 对象
         private SAWVSDK sv;
@@ -87,16 +130,18 @@ namespace MakeAuto
         public String UserName { get; private set; }
         public String Password { get; private set; }
         public String DatabaseName { get; private set; }
+        public Boolean ConnectedToServer {get; private set;}
+        public Boolean LoggedIn { get; private set; }
 
         private Enum_EncryptType EncryptType;
         private Boolean OnlyTrial;
         private int LeftTrialDays;
 
-        public Boolean ConnectedToServer {get; private set;}
-        public Boolean LoggedIn { get; private set; }
         private Boolean Canceled;
         private String ResultDescription;
         private Boolean MustChangePassword; 
         private int ExpireDays;
+
+        private SAWVOperationResult OpertationResult;
     }
 }
