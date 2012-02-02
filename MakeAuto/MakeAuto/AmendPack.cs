@@ -26,6 +26,14 @@ namespace MakeAuto
         Ini = 7,
     }
 
+    enum ComStatus
+    {
+        NoChange = 0,
+        Add = 1,
+        Modify = 2,
+        Delete = 3,
+    }
+
     // 递交程序项
     class CommitCom
     {
@@ -40,10 +48,15 @@ namespace MakeAuto
         // 对应VSS路径（暂时不用）
         //public string SAWPath;
 
-        public CommitCom(string name, string version)
+        //
+        public ComStatus cstatus { get; set; }
+
+        public CommitCom(string name, string version, ComStatus status = ComStatus.NoChange)
         {
             cname = name;
             cver = version;
+            cstatus = status;
+
             if (cname.IndexOf("libs") > -1)
                 ctype = ComType.SO;
             else if (cname.IndexOf("sql") > -1)
@@ -111,6 +124,8 @@ namespace MakeAuto
             //为上面的连接指定Command对象
             sqlcomm = sqlconn.CreateCommand();
 
+            MyAL = new ArrayList();
+            ScmAL = new ArrayList();
         }
 
         // 类初始化
@@ -150,6 +165,8 @@ namespace MakeAuto
 
             // 从CommitPath中分解递交项和主单号 /融资融券/20111123054-国金短信，分解得到 20111123054
             MainNo = CommitPath.Substring(CommitPath.LastIndexOf("/") + 1, 11);
+            // Readme 文件名称
+            Readme = "Readme-" + CommitDir + ".txt";
 
             sqldr.Close();
 
@@ -277,8 +294,8 @@ namespace MakeAuto
 
             // 检查是否存在集成*的文件夹
             // 获取当前的版本信息，先标定版本信息
-            ArrayList myAL = new ArrayList();
-            ArrayList SCMAL = new ArrayList();
+            MyAL.Clear();
+            ScmAL.Clear();
             foreach (string f in files) //查找子目录
             {
                 // 跳过 src 之类的东东
@@ -286,17 +303,17 @@ namespace MakeAuto
                     continue;
 
                 if (f.IndexOf("集成") == 0)
-                    SCMAL.Add(f);
+                    ScmAL.Add(f);
                 else
-                    myAL.Add(f);
+                    MyAL.Add(f);
             }
 
-            if (myAL.Count > 0)
+            if (MyAL.Count > 0)
             {
-                myAL.Sort();
+                MyAL.Sort();
 
 
-                s = myAL[myAL.Count - 1].ToString();
+                s = MyAL[MyAL.Count - 1].ToString();
                 currVerFile = s;
 
                 // 取递交版本号 
@@ -306,11 +323,11 @@ namespace MakeAuto
             }
             else myver = 0;
 
-            if (SCMAL.Count > 0)
+            if (ScmAL.Count > 0)
             {
-                SCMAL.Sort();
+                ScmAL.Sort();
 
-                s = SCMAL[SCMAL.Count - 1].ToString();
+                s = ScmAL[ScmAL.Count - 1].ToString();
 
                 SCMcurrVerFile = s;
 
@@ -352,6 +369,12 @@ namespace MakeAuto
             {
                 // 下载压缩包之后，解压缩包，重命名文件夹为集成-*，
                 UnRar(LocalFile, SCMAmendDir);
+
+                // 所有递交组件标记为新增
+                foreach (CommitCom c in ComComms)
+                {
+                    c.cstatus = ComStatus.Add;
+                }
             }
             else if (scmver == myver) // 如果相等，则是重新集成，不处理
             {
@@ -378,38 +401,69 @@ namespace MakeAuto
                 }
 
                 // 对于下载的递交文件，解压缩readme到集成文件夹，以便根据本次变动取出需要重新集成的文件
-                string readme = "Readme-" + CommitDir + ".txt";
-                UnRar(LocalFile, SCMAmendDir, readme);
+                UnRar(LocalFile, SCMAmendDir, Readme);
             }
         }
             
-        // 根据 Readme 重新集成
+        // 根据 Readme 置重新集成状态
         public void ReSCM()
         {
-            string readme = "Readme-" + CommitDir + ".txt";
             // 读取readme，重新集成
             try
             {
                 // Create an instance of StreamReader to read from a file.
                 // The using statement also closes the StreamReader.
-                using (StreamReader sr = new StreamReader(SCMAmendDir + "/" + readme))
+                using (StreamReader sr = new StreamReader(SCMAmendDir + "/" + Readme))
                 {
-                    string line;
+                    string line, name, version, des;
+                    int index, index1;
+                    CommitCom com;
                     // 读取本次修改
                     while ((line = sr.ReadLine()) != null)
                     {
+                        // 对于V1递交，不需要处理
+                        if(line.IndexOf("本次修改(V1)") >=0)
+                            return;
+
+                        // 跳过前导行
                         if (line.IndexOf("本次修改") < 0)
                         {
                             continue;
                         }
 
-                        // 此时读取到了本次修改，可以接着向下读取变更内容
-
+                        if (line.Trim() == string.Empty)
+                            continue;
 
                         // 到集成注意，退出
                         if (line.IndexOf("集成注意") >= 0)
                         {
                             break;
+                        }
+
+                        // 此时读取到了本次修改，可以接着向下读取变
+                        index = line.IndexOf("[");
+                        index1 = line.IndexOf("]");
+                        name = line.Substring(0, index).Trim();
+                        version = line.Substring(index + 1, index1 - index -1 );      
+                        des = line.Substring(index1 + 1).Trim();
+
+                        if (ComComms[name] == null)
+                        {
+                            CommitCom c = new CommitCom(name, version, ComStatus.Add);
+                            ComComms.Add(c);
+                            
+                        }
+                        else
+                        {
+                            com = ComComms[name];
+                            if (des.IndexOf("本次取消") >= 0)
+                            {
+                                com.cstatus = ComStatus.Delete;
+                            }
+                            else
+                            {
+                                com.cstatus = ComStatus.Modify;
+                            }
                         }
                     }
                 }
@@ -417,8 +471,19 @@ namespace MakeAuto
             catch (Exception ex)
             {
                 // Let the user know what went wrong.
-                Console.WriteLine("The file could not be read:");
-                Console.WriteLine(ex.Message);
+                WriteLog(InfoType.Error, "ReSCM异常" + Readme + ex.Message);
+            }
+        }
+
+        // 集成所有递交组件
+        public void DoWork()
+        {
+            foreach (CommitCom c in ComComms)
+            {
+                // 生成，包含如下
+                // 1.刷出代码 2.编译 3.拷贝文件到集成目录
+                // 对于 小包，如果有变动，则直接拷贝递交的就可以了，其他的需要重新集成
+
             }
         }
 
@@ -619,7 +684,9 @@ namespace MakeAuto
 
         private int myver;
         private int scmver;
-        private ArrayList myAL = new ArrayList();
-        private ArrayList SCMAL = new ArrayList();
+        private ArrayList MyAL;
+        private ArrayList ScmAL;
+
+        private string Readme;  // readme文件名称
     }
 }

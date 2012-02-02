@@ -5,7 +5,6 @@ using System.Text;
 using System.IO;
 using System.Diagnostics;
 using Microsoft.International.Converters.PinYinConverter;
-using SAWVSDKLib;
 
 namespace MakeAuto
 {
