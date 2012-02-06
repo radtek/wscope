@@ -1,0 +1,328 @@
+深圳中小板ETF网下股票认购企业版柜台业务指引 
+
+--------------------------------------------------------------------------------
+ 
+
+　　一．前言 
+　　原定于2006 年5月22日开始募集，截止日为2006年6月16日的深圳中小板基金（159902）截止到2006年5月31日，合计认购份额已经超过13亿（未经审计）。基金份额总额和认购户数均已达到《中华人民共和国证券投资基金法》及《证券投资基金运作管理办法》规定的开放式基金基金合同生效条件。经请示中国证监会同意，决定提前结束本基金的募集，仅限20060605一天进行网下股份认购。 
+　　为配合各企业版用户在柜台系统内顺利进行中小板ETF认购业务，特制定本认购业务指引。 
+　　二、中小板ETF股票认购业务的委托方式支持 
+　　股票认购：只支持柜台的专门的网下股票认购菜单(通过综合管理平台中的证券-ETF业务-网下股票认购菜单)进行，认购代码159902。 
+　　四、中小板ETF认购业务准备 
+　　中小板ETF代码信息设置 
+　　进入综合管理平台中的证券-ETF业务-代码信息设置’菜单的代码信息页面检查或修改中小板ETF的代码信息，具体如下： 
+　　交易类别：深圳； 一级代码：159902；基金代码：159902； 
+　　资金代码：159902； 认购代码：159902；认购款代码：159902 
+　　网下股票认购单位：100； 网下股票认购下限：1000；网下股票认购上限：0 
+　　中小板ETF成份股信息设置 
+　　一般基金公司和交易所会提供中小板ETF成分股信息文件列表，该文件可通过行情组件（加载etf.dll）自动转入。在网下股份认购期间如果交易所和基金公司没有提供该文件的话，可通过柜台系统手工添加成分股信息。 
+　　进入综合管理平台中的证券-ETF业务-代码信息设置’菜单的成份信息页面增加中小板ETF的成份股代码信息，具体如下：点击下面的‘成分股增加’按钮，成份股票代码输入深证ETF的成分股代码，如002001。关于深证中小板ETF的成分股代码可见交易所相关文档。 
+　　注：网下股票认购时用的股票代码必须在中小板ETF成份股信息设置的范围内。 
+　　中小板ETF交易日期的设置 
+　　在进行中小板ETF股票认购前，券商必须首先设置中小板ETF交易日期阶段，各业务处理根据设置的交易日期阶段判断业务是否有效，日终处理也根据设置来正确处理业务结算处理。通过‘证券-ETF业务-交易日期设置’菜单来实现。 
+　　具体方法如下： 
+　　进入综合管理平台中的证券-ETF业务-交易日期设置’菜单设置中小板ETF的日期阶段，点击阶段日期增加按钮， 
+　　交易类别：选择深圳； 
+　　证券代码：159902 
+　　阶段类型：选择 ‘网下股票认购’ 
+　　起始日期：20060605 
+　　结束日期：20060605 
+　　按以上方法增加 ： 
+　　交易类别 基金代码 阶段类型 起始日期 截止日期 
+　　深圳 159902 网下股票认购 20060605 20060605 
+　　深圳 159902 网下股票申报 20060605 20060605 
+　　深圳 159902 网下股票过户日 20060607 20060607 
+　　中小板ETF的网下股票认购费用 
+　　中小板ETF网下股票认购费可以采用以现金或基金份额支付两种方式，一般采用由基金公司从基金份额中扣除的方式，柜台不支持网下股票认购的费用收取；在进行网下股票申报时，需要填入费用比例，基金公司将按该费用比例从股民的基金份额中扣除。 
+　　五、网下股份认购操作流程 
+　　网下股份认购登记 
+　　认购时间：为2006年06月5日。 
+　　通过证券综合管理平台－证券－ETF业务－网下股份认购菜单进行，委托要素如下： 
+　　认购代码： 159902 
+　　撤销登记：根据需要选择，认购时选择登记； 
+　　当日认购的数据申报前可以在系统内部进行撤销。 
+　　股票代码：股票认购时所用的成分股代码。股票认购时所用的成分股代码，必须为在代 
+　　码信息设置中存在的成分股代码。 
+　　委托数量：成分股数量，单位股，最低认购申报股数为1000股,超过1000股的部分须为100股的整数倍。 
+　　说明： 
+　　1、 网下股票认购的撤销只能在当日认购的数据申报前可以在系统内部进行撤销，非当日的认购不能撤销。 
+　　2、 撤销时可以撤销认购汇总的部分数量。 
+　　3、 认购登记时将冻结客户对应股票的数量，撤销时减少冻结的数量。 
+　　网下股份认购申报 
+　　网下股票认购申报的作用就是将客户网下股票认购的累计数量转入基金发布公司的接口文件中。步骤如下： 
+　　1、通过证券综合管理平台－证券－ETF业务－网下股票申报菜单进行，各个要素如下： 
+　　营业部号：选择导出数据所属的营业部 
+　　导出接口类别：选择3 基金公司接口－100 
+　　认购代码：159902 
+　　导出限制：0－未导出的部分，即只导出未报的股票认购记录，2－已经导出的部分，即只导出已报的股票认购记录；一般全部选中即可，即导出所有的认购数据。 
+　　起始委托号：指写入基金公司接口文件中的起始委托编号。 
+　　代销机构代码：由基金公司公布。 
+　　费用比例：认购时的费用比例，该参数写入基金公司接口库，如：0.005，小数点后最多4位。 
+　　导出路径：填写股票认购申报生成的文件路径，如：d:\，生成的文件名为‘代销机构代码＋EFUNDGP_＋YYYYMMDD.DBF’，如：602EFUNDGP_20060605.dbf，其中文件库结构和文件名均会自动创建，多次生成时系统会先自动清空。 
+　　2、网下股票认购委托需在认购当日申报到接口库中，由总部合并，通过email方式提交给基金公司。 
+　　说明：股票认购申报只申报当日的认购委托数据，非当日的认购在认购日日终时如果为未报，则系统自动作废。 
+　　网下股票认购的查询 
+　　通过证券综合管理平台－证券－ETF业务－网下认购信息查询菜单的网下股票认购份额和网下股票认购流水页面进行查询。 
+　　网下股票认购流水－查询客户网下股票认购的登记和撤销的流水信息； 
+　　网下股票认购份额－查询客户的股票认购份额，同一天，同一客户同一认购代码为一条记录，登记和撤销通过委托数量进行加减。确认状态表示该认购认购份额记录所处的状态，如：未报、已报、确认、作废等。 
+　　六、日终处理 
+　　股票认购 
+　　股票过户日（L＋2日）：（网下股票过户日）处理sjsgf数据，gfywlb=41 
+　　1） 根据网下股票过户日日期，按原记录数量解冻stock中的股票冻结数量。 
+　　2） 生成‘托管转出’的流水，减少股票数量。 
+　　注：L日指网下股票发行最后一日，20060605。 
+　　份额登记日：sjsgf数据，gfywlb＝01 
+　　生成’新股入帐‘的业务流水，增加159902的证券余额。 
+　　 
+　　恒生电子股份有限公司 
+　　证券行业维护中心 
+　　
+ 
+  
+发布日期：2006-06-03 
+客服中心：zq 
+
+
+
+
+
+
+  -- 网下股份认购申报日解冻未申报的冻结				
+  declare cursor c_etfexchdate is				
+    select stock_code				
+      from afofetfexchdate				
+      where stage_kind = '3'				
+        and exchange_type = @exchange_type				
+        -- 200061218 胡玉柱将原来的区间改为在截止后的5天内检查未报				
+        and @init_date between end_date and to_number(to_char(to_date(end_date, 'yyyymmdd') + 5, 'yyyymmdd'));				
+        -- and @init_date between begin_date and end_date;				
+  begin				
+    for v_etfexchdate in c_etfexchdate loop				
+      @stock_code := v_etfexchdate.stock_code;				
+  				
+      -- 取一级代码;				
+      begin				
+        select stock_code_3 into @stock_code_3				
+          from afofetfcode				
+        where exchange_type = @exchange_type				
+              and stock_code_0 = @stock_code;				
+      exception				
+        when others then				
+          [报错返回][321518][一级代码不存在][@stock_code]				
+      end;				
+      				
+      declare cursor c_etfustockinfo is				
+        select fund_account, exchange_type, stock_account, entrust_amount, component_code, branch_no           from afofetfustockinfo				
+          where stock_code = @stock_code_3				
+            and exchange_type = @exchange_type				
+            and prev_status = '0';				
+      begin				
+        for v_etfustockinfo in c_etfustockinfo loop				
+          @fund_account        := v_etfustockinfo.fund_account;				
+          @stock_account       := v_etfustockinfo.stock_account;				
+          @entrust_amount      := v_etfustockinfo.entrust_amount;				
+          @component_code      := v_etfustockinfo.component_code;				
+          @branch_no           := v_etfustockinfo.branch_no;				
+          @remark              := '股票认购未申报自动解冻';				
+          @frozen_amount       := -1 * abs(@entrust_amount);				
+          @business_flag       := 0;				
+          @business_type       := ' ';				
+          @occur_amount        := 0;				
+          [过程_证券_子系统流水号获取][serial_counter_no=1]				
+          [插入表记录][preclear][stock_code=@component_code,frozen_code=@component_code,clear_balance=0,frozen_balance=0,unfrozen_balance=0,correct_balance=0,unfrozen_amount=0,correct_amount=0,bank_no=0,square_flag=0,real_status=0]				
+          				
+          update afofetfustockinfo				
+          set prev_status = '5',				
+              report_date        = @init_date,				
+              remark             = '自动解冻'				
+           where fund_account = @fund_account				
+             and stock_account = @stock_account				
+             and stock_code = @stock_code_3				
+             and exchange_type = @exchange_type				
+             and component_code = @component_code;				
+        end loop;				
+      end;				
+    end loop;				
+  end;				
+  				
+  -- 网下股份认购确认日解冻已申报的冻结;				
+  declare cursor c_etfexchdate is				
+      select stock_code				
+      from afofetfexchdate				
+      where (exchange_type = '1' and stage_kind = '4' or exchange_type = '2' and stage_kind = '6')				
+        and exchange_type = @exchange_type				
+        and @init_date between begin_date and end_date;				
+  begin				
+    for v_etfexchdate in c_etfexchdate loop				
+      @stock_code := v_etfexchdate.stock_code;				
+      -- 取一级代码;				
+      begin				
+        select stock_code_3 into @stock_code_3				
+        from afofetfcode				
+        where exchange_type = @exchange_type				
+          and stock_code_0 = @stock_code;				
+      exception				
+        when others then				
+          [报错返回][321518][一级代码不存在][@stock_code]				
+      end;				
+      				
+      declare cursor c_etfustockinfo is				
+        select fund_account,        exchange_type,      stock_account,				
+               entrust_amount,      component_code,     branch_no				
+          from afofetfustockinfo				
+          where stock_code = @stock_code_3				
+            and exchange_type = @exchange_type				
+            and prev_status = '2';				
+      begin				
+        for v_etfustockinfo in c_etfustockinfo loop				
+          @fund_account          := v_etfustockinfo.fund_account;				
+          @stock_account         := v_etfustockinfo.stock_account;				
+          @entrust_amount      := v_etfustockinfo.entrust_amount;				
+          @component_code      := v_etfustockinfo.component_code;				
+          @branch_no           := v_etfustockinfo.branch_no;				
+          @occur_amount        := 0;				
+          @frozen_amount       := -1 * abs(@entrust_amount);				
+          @business_flag       := 0;				
+          @business_type       := ' ';				
+          @remark              := '股票认购未确认自动解冻';				
+				
+          [过程_证券_子系统流水号获取][serial_counter_no=1]				
+          [插入表记录][preclear][stock_code=@component_code,frozen_code=@component_code,clear_balance=0,frozen_balance=0,unfrozen_balance=0,correct_balance=0,unfrozen_amount=0,correct_amount=0,bank_no=0,square_flag=0,real_status=0]				
+  				
+          update afofetfustockinfo				
+          set entrust_status = case when exchange_type = '1' then '3' else '4' end,				
+              remark = case when exchange_type = '1' then '日终确认' else '日终交收' end				
+          where fund_account = @fund_account				
+            and stock_account = @stock_account				
+            and stock_code = @stock_code_3				
+            and exchange_type = @exchange_type				
+            and component_code = @component_code;				
+        end loop;				
+      end;				
+    end loop;    				
+  end;				
+  				
+  -- 基金份额调整日解冻已冻结				
+  -- v2.2.20041213 魏  业 网下股票认购股票过户日，自动解冻和自动扣除股份;				
+  declare cursor c_etfexchdate is				
+    select stock_code				
+      from afofetfexchdate				
+      where stage_kind = '6'				
+        and exchange_type = @exchange_type				
+        and @init_date between begin_date and end_date;				
+  begin				
+    for v_etfexchdate in c_etfexchdate loop				
+      @stock_code := v_etfexchdate.stock_code;				
+      -- 取一级代码;				
+      begin				
+        select stock_code_3 into @stock_code_3				
+          from afofetfcode				
+          where exchange_type = @exchange_type				
+            and stock_code_0 = @stock_code;				
+      exception				
+        when others then				
+          [报错返回][321518][一级代码不存在][@stock_code]				
+      end;				
+      				
+      declare cursor c_etfustockinfo is				
+        select fund_account,        exchange_type,      stock_account,				
+               confirm_amount,      unfrozen_amount,    component_code,   branch_no				
+          from afofetfustockinfo				
+          where stock_code = @stock_code_3				
+            and exchange_type = @exchange_type				
+            and prev_status = '3';				
+      begin				
+        for v_etfustockinfo in c_etfustockinfo loop				
+          @fund_account     := v_etfustockinfo.fund_account;				
+          @stock_account    := v_etfustockinfo.stock_account;				
+          @confirm_amount   := v_etfustockinfo.confirm_amount - v_etfustockinfo.unfrozen_amount;				
+          @component_code   := v_etfustockinfo.component_code;				
+          @branch_no        := v_etfustockinfo.branch_no;				
+          @post_balance := 0;				
+          @post_amount := 0;				
+          				
+          @frozen_amount    := - abs(@confirm_amount);				
+          begin				
+            select stock_type, stock_name into @stock_type__comp, @stock_name__comp from stkcode				
+              where exchange_type = @exchange_type				
+                and stock_code = @component_code;				
+          exception				
+            when others then				
+              null;				
+          end;				
+          				
+          if @frozen_amount <> 0 then				
+            @business_flag := 4084;				
+            @remark := '股票认购过户解冻';				
+            @business_type := '9';				
+            @entrust_bs := '1';				
+            @occur_amount    := 0;				
+            @clear_balance := 0;				
+          				
+            [过程_证券_子系统流水号获取][serial_counter_no=1]				
+            [插入表记录][preclear][real_status=0,stock_type=@stock_type__comp,report_account=@stock_account,stock_code=@component_code,stock_name=@stock_name__comp,entrust_date=@init_date,business_times=1]				
+          end if;				
+				
+          -- 在认购过户日自动解冻和扣除股票， 有调整在g4中处理， 这里不再依赖g4文件				
+          @frozen_amount    := 0;				
+          @occur_amount     := - abs(@confirm_amount);				
+          @remark           := '股票认购过户';				
+          @money_type       := '0';				
+          @entrust_way      :='4';				
+          @business_type    := '7';				
+          @business_flag    := 4010;				
+          @occur_balance    := 0;				
+          @frozen_balance   := 0;				
+          @unfrozen_balance := 0;				
+				
+          if @occur_amount <> 0 then        				
+            @clear_balance := @occur_balance;				
+            [过程_证券_子系统流水号获取][serial_counter_no=1]				
+            [插入表记录][preclear][real_status=0,stock_type=@stock_type__comp,report_account=@stock_account,stock_code=@component_code,stock_name=@stock_name__comp,business_type='7',entrust_date=@init_date,business_times=1,entrust_bs=2,report_unit=1]				
+          end if;				
+				
+          update afofetfustockinfo				
+          set confirm_amount     = confirm_amount - nvl(unfrozen_amount, 0),				
+              prev_status = '4',				
+              report_date        = @init_date,				
+              remark             = '日终交收'				
+          where fund_account = @fund_account				
+            and stock_account = @stock_account				
+            and stock_code = @stock_code_3				
+            and exchange_type = @exchange_type				
+            and component_code = @component_code;				
+        end loop;				
+      end;				
+    end loop;				
+  end;				
+  				
+  update afofetfentrustdetail				
+    set clear_date = @init_date				
+    where exchange_type = @exchange_type 				
+      and (prev_status = '2' or to_date(@init_date,'yyyymmdd') - to_date(entrust_date, 'yyyymmdd') >= 10);				
+				
+  update afofetfentrust				
+    set clear_date = @init_date				
+    where exchange_type = @exchange_type				
+      and (prev_status = '2' or to_date(@init_date,'yyyymmdd') - to_date(init_date, 'yyyymmdd') >= 10);				
+				
+  update afofetfentrust				
+    set clear_date = 0				
+    where prev_status = '1'				
+      and exchange_type = @exchange_type;				
+  [事务处理结束]				
+				
+									
+
+
+[插入表记录][preclear][stock_code=@component_code,frozen_code=@component_code,clear_balance=0,frozen_balance=0,unfrozen_balance=0,correct_balance=0,unfrozen_amount=0,correct_amount=0,bank_no=0,square_flag=0,real_status=0]		 
+[插入表记录][preclear][stock_code=@component_code,frozen_code=@component_code,clear_balance=0,frozen_balance=0,unfrozen_balance=0,correct_balance=0,unfrozen_amount=0,correct_amount=0,bank_no=0,square_flag=0,real_status=0]
+[插入表记录][preclear][real_status=0,stock_type=@stock_type__comp,report_account=@stock_account,stock_code=@component_code,stock_name=@stock_name__comp,entrust_date=@init_date,business_times=1]				
+[插入表记录][preclear][real_status=0,stock_type=@stock_type__comp,report_account=@stock_account,stock_code=@component_code,stock_name=@stock_name__comp,business_type='7',entrust_date=@init_date,business_times=1,entrust_bs=2,report_unit=1]				
+                    
+
+
+
+1.过程中的字符型，在调用[插入表记录][preclear][real_status=0]是要写成整型数据，如果写成了字符型，反而会生成整型的数据。
+2.函数中的字符型，在调用时，要明确指出类型，否则字符会被做为字符串，插入时会报错。
+3.过程中的插入表记录是有初值的，函数里的插入表记录是没有初值的，默认都是为空或者0，没有空格的初值。
