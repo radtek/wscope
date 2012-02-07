@@ -1,5 +1,0 @@
-hs|grep hs|grep fa|awk {'print $2'} |xargs kill
-
-SJSHB=d:\dbf\sjshb.DBF;SJSWT=d:\dbf\sjswt.DBF;HSFLAG=d:\dbf\hsflag21.DBF;QHSFLAG=d:\dbf\qhsflag.dbf;
-
-SJSZHWT=d:\dbf\sjszhwt.dbf;SJSZHHB=d:\dbf\sjszhhb.dbf;HSFLAG=d:\dbf\HSFLAGzh.DBF;QHSFLAG=d:\dbf\QHSFLAGzh.DBF;
