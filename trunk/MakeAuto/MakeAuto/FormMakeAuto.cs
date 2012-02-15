@@ -294,13 +294,11 @@ namespace MakeAuto
 
         private void button2_Click(object sender, EventArgs e)
         {
-            ArrayList myAL = new ArrayList();
-            myAL.Add("集成-123");
-            myAL.Add("123");
-
-            myAL.Sort();
-            foreach (Object obj in myAL)
-               txtLog.Text += obj + "\r\n";
+            
+            MAConf.instance.WriteLog("test");
+            //
+            //Debug.WriteLine("good");
+            
         }
 
         private void 关于ToolStripMenuItem_Click(object sender, EventArgs e)
@@ -373,7 +371,12 @@ namespace MakeAuto
 
         private void button6_Click(object sender, EventArgs e)
         {
-            
+            ap.DownloadPack();
+            txtLog.Text += "111\r\n";
+            ap.ProcessPack();
+            txtLog.Text += "222\r\n";
+            ap.ProcessReadMe();
+            txtLog.Text += "333\r\n";
         }
 
         private void button7_Click(object sender, EventArgs e)

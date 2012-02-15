@@ -85,6 +85,8 @@
             this.txbAmenNo = new System.Windows.Forms.TextBox();
             this.btnReadInfo = new System.Windows.Forms.Button();
             this.cmsNotify = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.label7 = new System.Windows.Forms.Label();
+            this.textBox2 = new System.Windows.Forms.TextBox();
             this.menuStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -570,6 +572,8 @@
             // 
             // groupBox4
             // 
+            this.groupBox4.Controls.Add(this.label7);
+            this.groupBox4.Controls.Add(this.textBox2);
             this.groupBox4.Controls.Add(this.label6);
             this.groupBox4.Controls.Add(this.txbMainNo);
             this.groupBox4.Controls.Add(this.txbCommitPath);
@@ -632,7 +636,7 @@
             this.txbAmenNo.Name = "txbAmenNo";
             this.txbAmenNo.Size = new System.Drawing.Size(121, 21);
             this.txbAmenNo.TabIndex = 12;
-            this.txbAmenNo.Text = "20111223029";
+            this.txbAmenNo.Text = "20111125026";
             // 
             // btnReadInfo
             // 
@@ -648,6 +652,22 @@
             // 
             this.cmsNotify.Name = "cmsNotify";
             this.cmsNotify.Size = new System.Drawing.Size(61, 4);
+            // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(192, 49);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(53, 12);
+            this.label7.TabIndex = 24;
+            this.label7.Text = "递交版本";
+            // 
+            // textBox2
+            // 
+            this.textBox2.Location = new System.Drawing.Point(246, 44);
+            this.textBox2.Name = "textBox2";
+            this.textBox2.Size = new System.Drawing.Size(66, 21);
+            this.textBox2.TabIndex = 23;
             // 
             // frmMakeAuto
             // 
@@ -746,6 +766,8 @@
         private System.Windows.Forms.Button button7;
         private System.Windows.Forms.Button button8;
         private System.Windows.Forms.Button button9;
+        private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.TextBox textBox2;
     }
 }
 
