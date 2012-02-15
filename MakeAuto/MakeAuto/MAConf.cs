@@ -6,6 +6,7 @@ using System.IO;
 using System.Windows.Forms;
 using System.Data;
 using EnterpriseDT.Net.Ftp;
+using System.Diagnostics;
 
 namespace MakeAuto
 {
@@ -66,6 +67,15 @@ namespace MakeAuto
             Dls = new Details();
             fc = new FtpConf();
             ftp = new FTPConnection();
+            // 添加调试
+            //Debug.Listeners.Add(new TextWriterTraceListener(
+            //    "Log"+ "\\" + "MakeAuto" + DateTime.Now.ToString("yyyyMMddHHmmss") +".log"));
+            Debug.Listeners.Add(new TextWriterTraceListener(
+                "Log" + "\\" + "MakeAuto" + DateTime.Now.ToString("yyyyMMdd") + ".log"));
+
+
+            // 自动写入文件
+            Debug.AutoFlush = true;
 
             XmlDocument xmldoc = new XmlDocument();
             xmldoc.Load(conf);
@@ -328,6 +338,11 @@ namespace MakeAuto
                 + "[" + Enum.GetName(typeof(InfoType), type) + "]"
                 + "[" + Title + "]"
                 + "[" + LogContent + "]" + "\r\n";
+        }
+
+        public void WriteLog(string info)
+        {
+            Debug.WriteLine(info);
         }
     }
 }

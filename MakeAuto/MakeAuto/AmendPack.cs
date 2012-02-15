@@ -26,12 +26,45 @@ namespace MakeAuto
         Ini = 7,
     }
 
+    enum CodeStatus
+    {
+        Nothing = 0,
+        Old = 1,
+        New = 2,
+        Unkown = 3,
+    }
+
     enum ComStatus
     {
         NoChange = 0,
         Add = 1,
         Modify = 2,
         Delete = 3,
+    }
+
+    enum ScmType
+    {
+        Nothing = 0,
+        NewScm = 1, // 全新递交，仅对于V1和V1重复集成
+        ReScm = 2, // 重新集成
+        BugScm = 3, // 补丁修复递交，如V2, V3等
+    }
+
+    // 集成处理的状态，其实就是处理的流程和函数的调用顺序，暂时还没有用到
+    enum ScmStatus
+    {
+        Nothing = 0,
+        ReadInfo = 1,
+        DownLoadPack,
+        ProcessPack,
+        ReNewReadMe,
+        ProcessReadMe,
+        GetFile,
+        Compile,
+        ReNewFile,
+        TarPack,
+        UpLoad,
+        Over,
     }
 
     // 递交程序项
@@ -46,9 +79,12 @@ namespace MakeAuto
         // 对应 源代码名称
         //public string srcName;
         // 对应VSS路径（暂时不用）
-        //public string SAWPath;
+        public string SAWPath;
 
-        //
+        // 代码生成状态
+        public CodeStatus codestatus { get; set; }
+
+        // 组件状态
         public ComStatus cstatus { get; set; }
 
         public CommitCom(string name, string version, ComStatus status = ComStatus.NoChange)
@@ -56,6 +92,7 @@ namespace MakeAuto
             cname = name;
             cver = version;
             cstatus = status;
+            codestatus = CodeStatus.Old;  // 默认递交需要刷新代码
 
             if (cname.IndexOf("libs") > -1)
                 ctype = ComType.SO;
@@ -176,6 +213,7 @@ namespace MakeAuto
         // 设置递交组件
         private void SetComs()
         {
+            ComComms.Clear();
             // 查询出的组件是如下的一段
             // config.ini  [V6.1.4.7]  GJShortMessage.dll  [V6.1.4.1]  HsNoticeSvr.exe  [V6.1.4.6] 
             // 需要进行分解，操作如下
@@ -312,7 +350,6 @@ namespace MakeAuto
             {
                 MyAL.Sort();
 
-
                 s = MyAL[MyAL.Count - 1].ToString();
                 currVerFile = s;
 
@@ -364,8 +401,25 @@ namespace MakeAuto
             }
             Directory.CreateDirectory(SCMAmendDir);
 
-            // 如果还没有集成过，那么执行集成
+            // 决定是新集成还是修复集成还是重新集成
             if (scmver == 0)
+            {
+                scmtype = ScmType.NewScm;
+            }
+            else if (scmver == myver)
+            {
+                if (scmver == 1)
+                    scmtype = ScmType.NewScm;  // 对于V1的重新集成，作为新集成处理
+                else scmtype = ScmType.ReScm;
+            }
+            else if (scmver < myver)
+            {
+                scmtype = ScmType.BugScm;  // 修复集成
+
+            }
+
+            // 如果还没有集成过，那么执行集成
+            if (scmtype == ScmType.NewScm)
             {
                 // 下载压缩包之后，解压缩包，重命名文件夹为集成-*，
                 UnRar(LocalFile, SCMAmendDir);
@@ -376,11 +430,31 @@ namespace MakeAuto
                     c.cstatus = ComStatus.Add;
                 }
             }
-            else if (scmver == myver) // 如果相等，则是重新集成，不处理
+            else if (scmtype == ScmType.ReScm)
             {
+                // 获取 ScmAL中倒数第二个项，以重新执行集成
+                s = ScmAL[ScmAL.Count - 2].ToString();
+                s = s.Substring(0, s.LastIndexOf('.'));
+
+                lastscm = LocalDir + Path.DirectorySeparatorChar + s;
+                if (Directory.Exists(lastscm))
+                {
+                    DirectoryCopy(lastscm, SCMAmendDir, false);
+                }
+
+                // 如果存在 src 压缩文件夹，解压缩 src 文件夹
+                string srcrar = SCMAmendDir + Path.DirectorySeparatorChar + "src-V" + scmver.ToString() + ".rar";
+                if (File.Exists(srcrar))
+                {
+                    UnRar(srcrar, SCMAmendDir);
+                    File.Delete(srcrar);
+                }
+
+                // 对于下载的递交文件，解压缩readme到集成文件夹，以便根据本次变动取出需要重新集成的文件
+                UnRar(LocalFile, SCMAmendDir, Readme);
 
             }
-            else if (scmver < myver) // 否则，递交了新的版本，刷新递交包，重新命名集成包
+            else if (scmtype == ScmType.BugScm) // 否则，递交了新的版本，刷新递交包，重新命名集成包
             {
                 // 复制上一次集成文件夹为本次集成文件夹
                 s = SCMcurrVerFile;
@@ -406,18 +480,20 @@ namespace MakeAuto
         }
             
         // 根据 Readme 置重新集成状态
-        public void ReSCM()
+        public void ProcessReadMe()
         {
             // 读取readme，重新集成
             try
             {
                 // Create an instance of StreamReader to read from a file.
                 // The using statement also closes the StreamReader.
-                using (StreamReader sr = new StreamReader(SCMAmendDir + "/" + Readme))
+                using (StreamReader sr = new StreamReader(SCMAmendDir + "/" + Readme, Encoding.GetEncoding("gb2312")))
                 {
                     string line, name, version, des;
-                    int index, index1;
+                    int index, index1, step = 0;
+                    // step 1-本次修改 2-集成注意 3-涉及程序 4-存放路径 5-修改说明
                     CommitCom com;
+                    bool Find;
                     // 读取本次修改
                     while ((line = sr.ReadLine()) != null)
                     {
@@ -425,45 +501,85 @@ namespace MakeAuto
                         if(line.IndexOf("本次修改(V1)") >=0)
                             return;
 
-                        // 跳过前导行
-                        if (line.IndexOf("本次修改") < 0)
-                        {
-                            continue;
-                        }
-
+                        // 跳过空格
                         if (line.Trim() == string.Empty)
                             continue;
 
-                        // 到集成注意，退出
-                        if (line.IndexOf("集成注意") >= 0)
+                        // 跳过前导行
+                        if (line.IndexOf("本次修改") >= 0)
                         {
-                            break;
-                        }
-
-                        // 此时读取到了本次修改，可以接着向下读取变
-                        index = line.IndexOf("[");
-                        index1 = line.IndexOf("]");
-                        name = line.Substring(0, index).Trim();
-                        version = line.Substring(index + 1, index1 - index -1 );      
-                        des = line.Substring(index1 + 1).Trim();
-
-                        if (ComComms[name] == null)
-                        {
-                            CommitCom c = new CommitCom(name, version, ComStatus.Add);
-                            ComComms.Add(c);
-                            
-                        }
-                        else
-                        {
-                            com = ComComms[name];
-                            if (des.IndexOf("本次取消") >= 0)
+                            do
                             {
-                                com.cstatus = ComStatus.Delete;
-                            }
-                            else
+                                // 此时读取到了本次修改，可以接着向下读取变
+                                // libs_secupubflow.10.so                                      [V6.1.4.12][V6.1.4.5005]
+                                index = line.IndexOf("[");  
+                                name = line.Substring(0, index).Trim();
+                                index = line.LastIndexOf("["); // 希望读第一个 "[" 和最后一个 "]" 能够处理掉
+                                index1 = line.LastIndexOf("]");
+                                version = line.Substring(index + 1, index1 - index - 1);
+                                des = line.Substring(index1 + 1).Trim();
+
+                                // 本次修改里可能有多个组件对应的是同一个文件，比如so和sql,对于代码，并不需要刷新两次
+                                Find = false;
+                                foreach (CommitCom c in ComComms)
+                                {
+                                    if (c.cname == name)
+                                    {
+                                        Find = true;
+                                        if (des.IndexOf("本次取消") >= 0)
+                                        {
+                                            c.cstatus = ComStatus.Delete;
+                                            c.codestatus = CodeStatus.Old;
+                                        }
+                                        else
+                                        {
+                                            c.cstatus = ComStatus.Modify;
+                                            c.codestatus = CodeStatus.Old;
+                                            c.cver = version;  // 有可能像上面一样版本发生变动了
+                                        }
+                                    }
+                                }
+
+                                if (Find == false)  // 这种应该是本次新增的文件才回到这里来
+                                {
+                                    com = new CommitCom(name, version, ComStatus.Add);
+                                    com.cstatus = ComStatus.Add;
+                                    com.codestatus = CodeStatus.New;
+                                    ComComms.Add(com);
+                                }
+                            } while ((line = sr.ReadLine()) != null);
+                        }
+                        // 集成注意，退出
+                        else if (line.IndexOf("涉及的程序及文件") >= 0)
+                        {
+                            do
                             {
-                                com.cstatus = ComStatus.Modify;
-                            }
+                                // 读取源代码路径，小包下面没有路径，不用读取
+                                if (line.IndexOf("小包-") < 0)
+                                {
+                                    // 连续读取两行，一行文件说明和版本，一行存放路径
+                                    index = line.IndexOf("[");
+                                    name = line.Substring(0, index).Trim();
+                                    index = line.LastIndexOf("["); // 希望读第一个 "[" 和最后一个 "]" 能够处理掉
+                                    index1 = line.LastIndexOf("]");
+                                    version = line.Substring(index + 1, index1 - index - 1);
+
+                                    line = sr.ReadLine().Trim();
+
+                                    // 本次修改里可能有多个组件对应的是同一个文件，比如so和sql,对于代码，并不需要刷新两次
+                                    foreach (CommitCom c in ComComms)
+                                    {
+                                        if (c.cname == name)
+                                        {
+                                            c.SAWPath = line.Substring(1, line.Length - 2); // 去除头部和尾部的 [] 
+                                        }
+                                    }
+                                }
+                            } while ((line = sr.ReadLine()) != null);
+                        }
+                        else 
+                        {
+                            continue;
                         }
                     }
                 }
@@ -471,7 +587,20 @@ namespace MakeAuto
             catch (Exception ex)
             {
                 // Let the user know what went wrong.
-                WriteLog(InfoType.Error, "ReSCM异常" + Readme + ex.Message);
+                WriteLog(InfoType.Error, "ReSCM异常: " + Readme + " " + ex.Message);
+            }
+
+            // 输出下处理结果
+            foreach (CommitCom c in ComComms)
+            {
+                Debug.WriteLine(c.cname);
+                Debug.Indent();
+                Debug.WriteLine(Enum.GetName(typeof(CodeStatus), c.codestatus));
+                Debug.WriteLine(Enum.GetName(typeof(ComStatus), c.cstatus));
+                Debug.WriteLine(Enum.GetName(typeof(ComType), c.ctype));
+                Debug.WriteLine(c.cver);
+                Debug.WriteLine(c.SAWPath);
+                Debug.Unindent();
             }
         }
 
@@ -688,5 +817,9 @@ namespace MakeAuto
         private ArrayList ScmAL;
 
         private string Readme;  // readme文件名称
+
+        public ScmType scmtype;
+
+        public ScmStatus scmstatus;
     }
 }
