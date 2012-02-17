@@ -342,7 +342,7 @@ namespace MakeAuto
 
         public void WriteLog(string info)
         {
-            Debug.WriteLine(info);
+            Debug.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " " + info);
         }
     }
 }

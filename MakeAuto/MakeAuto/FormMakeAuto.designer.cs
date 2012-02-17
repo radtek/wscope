@@ -72,6 +72,7 @@
             this.label2 = new System.Windows.Forms.Label();
             this.txtAmendList = new System.Windows.Forms.TextBox();
             this.tabPage3 = new System.Windows.Forms.TabPage();
+            this.button10 = new System.Windows.Forms.Button();
             this.button9 = new System.Windows.Forms.Button();
             this.button8 = new System.Windows.Forms.Button();
             this.button7 = new System.Windows.Forms.Button();
@@ -85,8 +86,11 @@
             this.txbAmenNo = new System.Windows.Forms.TextBox();
             this.btnReadInfo = new System.Windows.Forms.Button();
             this.cmsNotify = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.txtSubmitVer = new System.Windows.Forms.TextBox();
             this.label7 = new System.Windows.Forms.Label();
-            this.textBox2 = new System.Windows.Forms.TextBox();
+            this.label8 = new System.Windows.Forms.Label();
+            this.txtScmVer = new System.Windows.Forms.TextBox();
+            this.button11 = new System.Windows.Forms.Button();
             this.menuStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -516,6 +520,8 @@
             // 
             // tabPage3
             // 
+            this.tabPage3.Controls.Add(this.button11);
+            this.tabPage3.Controls.Add(this.button10);
             this.tabPage3.Controls.Add(this.button9);
             this.tabPage3.Controls.Add(this.button8);
             this.tabPage3.Controls.Add(this.button7);
@@ -530,6 +536,16 @@
             this.tabPage3.Text = "集成打包";
             this.tabPage3.UseVisualStyleBackColor = true;
             // 
+            // button10
+            // 
+            this.button10.Location = new System.Drawing.Point(398, 82);
+            this.button10.Name = "button10";
+            this.button10.Size = new System.Drawing.Size(75, 23);
+            this.button10.TabIndex = 32;
+            this.button10.Text = "解包处理";
+            this.button10.UseVisualStyleBackColor = true;
+            this.button10.Click += new System.EventHandler(this.button10_Click);
+            // 
             // button9
             // 
             this.button9.Location = new System.Drawing.Point(572, 177);
@@ -542,7 +558,7 @@
             // 
             // button8
             // 
-            this.button8.Location = new System.Drawing.Point(398, 120);
+            this.button8.Location = new System.Drawing.Point(398, 177);
             this.button8.Name = "button8";
             this.button8.Size = new System.Drawing.Size(75, 23);
             this.button8.TabIndex = 30;
@@ -552,7 +568,7 @@
             // 
             // button7
             // 
-            this.button7.Location = new System.Drawing.Point(398, 82);
+            this.button7.Location = new System.Drawing.Point(398, 148);
             this.button7.Name = "button7";
             this.button7.Size = new System.Drawing.Size(75, 23);
             this.button7.TabIndex = 29;
@@ -572,8 +588,10 @@
             // 
             // groupBox4
             // 
+            this.groupBox4.Controls.Add(this.label8);
+            this.groupBox4.Controls.Add(this.txtScmVer);
             this.groupBox4.Controls.Add(this.label7);
-            this.groupBox4.Controls.Add(this.textBox2);
+            this.groupBox4.Controls.Add(this.txtSubmitVer);
             this.groupBox4.Controls.Add(this.label6);
             this.groupBox4.Controls.Add(this.txbMainNo);
             this.groupBox4.Controls.Add(this.txbCommitPath);
@@ -653,21 +671,49 @@
             this.cmsNotify.Name = "cmsNotify";
             this.cmsNotify.Size = new System.Drawing.Size(61, 4);
             // 
+            // txtSubmitVer
+            // 
+            this.txtSubmitVer.Location = new System.Drawing.Point(65, 100);
+            this.txtSubmitVer.Name = "txtSubmitVer";
+            this.txtSubmitVer.ReadOnly = true;
+            this.txtSubmitVer.Size = new System.Drawing.Size(66, 21);
+            this.txtSubmitVer.TabIndex = 23;
+            // 
             // label7
             // 
             this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(192, 49);
+            this.label7.Location = new System.Drawing.Point(11, 105);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(53, 12);
             this.label7.TabIndex = 24;
             this.label7.Text = "递交版本";
             // 
-            // textBox2
+            // label8
             // 
-            this.textBox2.Location = new System.Drawing.Point(246, 44);
-            this.textBox2.Name = "textBox2";
-            this.textBox2.Size = new System.Drawing.Size(66, 21);
-            this.textBox2.TabIndex = 23;
+            this.label8.AutoSize = true;
+            this.label8.Location = new System.Drawing.Point(140, 107);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(53, 12);
+            this.label8.TabIndex = 26;
+            this.label8.Text = "集成版本";
+            // 
+            // txtScmVer
+            // 
+            this.txtScmVer.Location = new System.Drawing.Point(194, 102);
+            this.txtScmVer.Name = "txtScmVer";
+            this.txtScmVer.ReadOnly = true;
+            this.txtScmVer.Size = new System.Drawing.Size(66, 21);
+            this.txtScmVer.TabIndex = 25;
+            // 
+            // button11
+            // 
+            this.button11.Location = new System.Drawing.Point(398, 111);
+            this.button11.Name = "button11";
+            this.button11.Size = new System.Drawing.Size(75, 23);
+            this.button11.TabIndex = 33;
+            this.button11.Text = "ReadMe";
+            this.button11.UseVisualStyleBackColor = true;
+            this.button11.Click += new System.EventHandler(this.button11_Click);
             // 
             // frmMakeAuto
             // 
@@ -766,8 +812,12 @@
         private System.Windows.Forms.Button button7;
         private System.Windows.Forms.Button button8;
         private System.Windows.Forms.Button button9;
+        private System.Windows.Forms.Button button10;
+        private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.TextBox txtScmVer;
         private System.Windows.Forms.Label label7;
-        private System.Windows.Forms.TextBox textBox2;
+        private System.Windows.Forms.TextBox txtSubmitVer;
+        private System.Windows.Forms.Button button11;
     }
 }
 
