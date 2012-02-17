@@ -366,17 +366,17 @@ namespace MakeAuto
             {
                 txtLog.Text += c.cname + "\t" + c.cver + "\t" + Enum.GetName(typeof(ComType), c.ctype) + "\r\n";
             }
+            ap.QueryFTP();
+            Debug.WriteLine("查询FTP");
 
+            txtSubmitVer.Text = ap.SubmitVer.ToString();
+            txtScmVer.Text = ap.ScmVer.ToString();
         }
 
         private void button6_Click(object sender, EventArgs e)
         {
             ap.DownloadPack();
             txtLog.Text += "111\r\n";
-            ap.ProcessPack();
-            txtLog.Text += "222\r\n";
-            ap.ProcessReadMe();
-            txtLog.Text += "333\r\n";
         }
 
         private void button7_Click(object sender, EventArgs e)
@@ -396,6 +396,18 @@ namespace MakeAuto
         {
             // 测试 SAW 功能
             
+        }
+
+        private void button10_Click(object sender, EventArgs e)
+        {
+            ap.ProcessPack();
+            txtLog.Text += "222\r\n";
+        }
+
+        private void button11_Click(object sender, EventArgs e)
+        {
+            ap.ProcessReadMe();
+            txtLog.Text += "333\r\n";
         }
     }
 }

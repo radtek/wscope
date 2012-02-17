@@ -161,8 +161,8 @@ namespace MakeAuto
             //为上面的连接指定Command对象
             sqlcomm = sqlconn.CreateCommand();
 
-            MyAL = new ArrayList();
-            ScmAL = new ArrayList();
+            SubmitL = new ArrayList();
+            ScmL = new ArrayList();
         }
 
         // 类初始化
@@ -304,7 +304,8 @@ namespace MakeAuto
         }
         #endregion
 
-        public void DownloadPack()
+        // 获取FTP递交信息
+        public bool QueryFTP()
         {
             // 输出递交包，到本地集成环境处理，需要使用ftp连接
             FTPConnection ftp = MAConf.instance.ftp;
@@ -322,7 +323,7 @@ namespace MakeAuto
             if (ftp.DirectoryExists(RemoteDir) == false)
             {
                 System.Windows.Forms.MessageBox.Show("FTP路径" + fc.ServerDir + CommitPath + "不存在！");
-                return;
+                return false;
             }
             ftp.ChangeWorkingDirectory(fc.ServerDir);
 
@@ -332,8 +333,8 @@ namespace MakeAuto
 
             // 检查是否存在集成*的文件夹
             // 获取当前的版本信息，先标定版本信息
-            MyAL.Clear();
-            ScmAL.Clear();
+            SubmitL.Clear();
+            ScmL.Clear();
             foreach (string f in files) //查找子目录
             {
                 // 跳过 src 之类的东东
@@ -341,46 +342,89 @@ namespace MakeAuto
                     continue;
 
                 if (f.IndexOf("集成") == 0)
-                    ScmAL.Add(f);
+                    ScmL.Add(f);
                 else
-                    MyAL.Add(f);
+                    SubmitL.Add(f);
             }
 
-            if (MyAL.Count > 0)
+            if (SubmitL.Count > 0)
             {
-                MyAL.Sort();
+                SubmitL.Sort();
 
-                s = MyAL[MyAL.Count - 1].ToString();
+                s = SubmitL[SubmitL.Count - 1].ToString();
                 currVerFile = s;
 
                 // 取递交版本号 
                 // 20111207012-委托管理-高虎-20120116-V13.rar --> 20111207012-委托管理-高虎-20120116-V13 -> 13
                 s = s.Substring(0, s.LastIndexOf('.'));
-                myver = int.Parse(s.Substring(s.LastIndexOf('V') + 1));
+                SubmitVer = int.Parse(s.Substring(s.LastIndexOf('V') + 1));
             }
-            else myver = 0;
+            else SubmitVer = 0;
 
-            if (ScmAL.Count > 0)
+            if (ScmL.Count > 0)
             {
-                ScmAL.Sort();
+                ScmL.Sort();
 
-                s = ScmAL[ScmAL.Count - 1].ToString();
+                s = ScmL[ScmL.Count - 1].ToString();
 
                 SCMcurrVerFile = s;
 
                 // 取递交版本号 
                 // 20111207012-委托管理-高虎-20120116-V13.rar --> 20111207012-委托管理-高虎-20120116-V13 -> 13
                 s = s.Substring(0, s.LastIndexOf('.'));
-                scmver = int.Parse(s.Substring(s.LastIndexOf('V') + 1));
+                ScmVer = int.Parse(s.Substring(s.LastIndexOf('V') + 1));
             }
-            else scmver = 0;
+            else ScmVer = 0;
+
+            return true;
+        }
+
+        public bool DownloadPack()
+        {
+            // 输出递交包，到本地集成环境处理，需要使用ftp连接
+            FTPConnection ftp = MAConf.instance.ftp;
+            FtpConf fc = MAConf.instance.fc;
+            string scmfile, scmremote, scmdir;
+
+            if (ftp.IsConnected == false)
+            {
+                ftp.Connect();
+            }
+
+            if (ftp.DirectoryExists(RemoteDir) == false)
+            {
+                System.Windows.Forms.MessageBox.Show("FTP路径" + fc.ServerDir + CommitPath + "不存在！");
+                return false;
+            }
+            ftp.ChangeWorkingDirectory(fc.ServerDir);
 
             // 下载递交包
             if (!Directory.Exists(LocalDir))
             {
                 Directory.CreateDirectory(LocalDir);
             }
+
+            // 递交包只需要同时下载集成包
             ftp.DownloadFile(LocalFile, RemoteFile);
+
+            // 集成包需要全部下载下来
+            foreach (string s in ScmL)
+            {
+                scmfile = LocalDir + "\\" + s;
+                scmremote = RemoteDir + "\\" + s;
+                if (!File.Exists(scmfile))
+                {
+                    ftp.DownloadFile(scmfile, scmremote);
+                }
+
+                // 如果没有对应的文件夹，那么需要解压缩文件夹
+                scmdir = LocalDir + "\\" + Path.GetFileNameWithoutExtension(scmfile);
+                if (!Directory.Exists(scmdir))
+                {
+                    UnRar(scmfile, scmdir);
+                }
+            }
+            return true;
         }
 
         public void ProcessPack()
@@ -402,23 +446,54 @@ namespace MakeAuto
             Directory.CreateDirectory(SCMAmendDir);
 
             // 决定是新集成还是修复集成还是重新集成
-            if (scmver == 0)
+            if (ScmVer == 0)
             {
                 scmtype = ScmType.NewScm;
             }
-            else if (scmver == myver)
+            else if (ScmVer == SubmitVer)
             {
-                if (scmver == 1)
-                    scmtype = ScmType.NewScm;  // 对于V1的重新集成，作为新集成处理
-                else scmtype = ScmType.ReScm;
+                scmtype = ScmType.ReScm;
             }
-            else if (scmver < myver)
+            else if (ScmVer < SubmitVer)
             {
                 scmtype = ScmType.BugScm;  // 修复集成
-
             }
 
-            // 如果还没有集成过，那么执行集成
+            // 对于重新集成，先删除掉上一次集成的软件包，然后按照新集成处理
+            if (scmtype == ScmType.ReScm)
+            {
+                // 删除ftp软件包，删除本地软件包
+                FTPConnection ftp = MAConf.instance.ftp;
+                if (ftp.IsConnected == false)
+                {
+                    ftp.Connect();
+                }
+                Debug.WriteLine("删除本地集成包" + SCMLocalFile);
+                //File.Delete(SCMLocalFile);
+                Debug.WriteLine("删除服务器集成包" + SCMRemoteFile);
+                //ftp.DeleteFile(SCMRemoteFile);
+
+                // 重新标定 scmver
+                ScmL.RemoveAt(ScmL.Count -1);
+                if(ScmL.Count > 0)
+                {
+                    s = ScmL[ScmL.Count - 1].ToString();
+                    SCMcurrVerFile = s;
+                    // 取递交版本号
+                    // 20111207012-委托管理-高虎-20120116-V13.rar --> 20111207012-委托管理-高虎-20120116-V13 -> 13
+                    s = s.Substring(0, s.LastIndexOf('.'));
+                    ScmVer = int.Parse(s.Substring(s.LastIndexOf('V') + 1));
+
+                    scmtype = ScmType.BugScm;
+                }
+                else 
+                {
+                    ScmVer = 0;
+                    scmtype = ScmType.NewScm;
+                }
+            }
+
+            // 根据集成类型执行集成操作
             if (scmtype == ScmType.NewScm)
             {
                 // 下载压缩包之后，解压缩包，重命名文件夹为集成-*，
@@ -430,31 +505,7 @@ namespace MakeAuto
                     c.cstatus = ComStatus.Add;
                 }
             }
-            else if (scmtype == ScmType.ReScm)
-            {
-                // 获取 ScmAL中倒数第二个项，以重新执行集成
-                s = ScmAL[ScmAL.Count - 2].ToString();
-                s = s.Substring(0, s.LastIndexOf('.'));
-
-                lastscm = LocalDir + Path.DirectorySeparatorChar + s;
-                if (Directory.Exists(lastscm))
-                {
-                    DirectoryCopy(lastscm, SCMAmendDir, false);
-                }
-
-                // 如果存在 src 压缩文件夹，解压缩 src 文件夹
-                string srcrar = SCMAmendDir + Path.DirectorySeparatorChar + "src-V" + scmver.ToString() + ".rar";
-                if (File.Exists(srcrar))
-                {
-                    UnRar(srcrar, SCMAmendDir);
-                    File.Delete(srcrar);
-                }
-
-                // 对于下载的递交文件，解压缩readme到集成文件夹，以便根据本次变动取出需要重新集成的文件
-                UnRar(LocalFile, SCMAmendDir, Readme);
-
-            }
-            else if (scmtype == ScmType.BugScm) // 否则，递交了新的版本，刷新递交包，重新命名集成包
+            else // 重新集成和bug集成处理相同
             {
                 // 复制上一次集成文件夹为本次集成文件夹
                 s = SCMcurrVerFile;
@@ -467,7 +518,7 @@ namespace MakeAuto
                 }
 
                 // 如果存在 src 压缩文件夹，解压缩 src 文件夹
-                string srcrar = SCMAmendDir + Path.DirectorySeparatorChar + "src-V" + scmver.ToString() + ".rar";
+                string srcrar = SCMAmendDir + Path.DirectorySeparatorChar + "src-V" + ScmVer.ToString() + ".rar";
                 if (File.Exists(srcrar))
                 {
                     UnRar(srcrar, SCMAmendDir);
@@ -479,10 +530,12 @@ namespace MakeAuto
             }
         }
             
-        // 根据 Readme 置重新集成状态
+        // 根据 Readme 置重新集成状态，这里分成两步，因为数据库里读出来的递交组件不可靠
+        // 如果一张修改单不递交，只是生成下 readme，数据库就会更新掉递交的组件，
+        // 所以直接使用数据库的stuff字段有问题，调整为使用readme处理
         public void ProcessReadMe()
         {
-            // 读取readme，重新集成
+            // 读取readme，重新集成，由于小球上查询的数据库记录的信息冗余，
             try
             {
                 // Create an instance of StreamReader to read from a file.
@@ -501,15 +554,19 @@ namespace MakeAuto
                         if(line.IndexOf("本次修改(V1)") >=0)
                             return;
 
-                        // 跳过空格
+                        // 跳过空行
                         if (line.Trim() == string.Empty)
                             continue;
 
                         // 跳过前导行
                         if (line.IndexOf("本次修改") >= 0)
                         {
-                            do
+                            while((line = sr.ReadLine()) != null)
                             {
+                                // 跳过空行
+                                if (line.Trim() == string.Empty)
+                                    continue;
+
                                 // 此时读取到了本次修改，可以接着向下读取变
                                 // libs_secupubflow.10.so                                      [V6.1.4.12][V6.1.4.5005]
                                 index = line.IndexOf("[");  
@@ -547,13 +604,17 @@ namespace MakeAuto
                                     com.codestatus = CodeStatus.New;
                                     ComComms.Add(com);
                                 }
-                            } while ((line = sr.ReadLine()) != null);
+                            } 
                         }
                         // 集成注意，退出
                         else if (line.IndexOf("涉及的程序及文件") >= 0)
                         {
-                            do
+                            while((line = sr.ReadLine()) != null)
                             {
+                                // 跳过空行
+                                if (line.Trim() == string.Empty)
+                                    continue;
+
                                 // 读取源代码路径，小包下面没有路径，不用读取
                                 if (line.IndexOf("小包-") < 0)
                                 {
@@ -575,7 +636,7 @@ namespace MakeAuto
                                         }
                                     }
                                 }
-                            } while ((line = sr.ReadLine()) != null);
+                            }
                         }
                         else 
                         {
@@ -680,9 +741,19 @@ namespace MakeAuto
         // 解压缩
         private void UnRar(string rarfile, string dir, string file = "")
         {
+            if (!File.Exists(rarfile))
+            {
+                return;
+            }
+
+            if (!Directory.Exists(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
+            
             // 开启进程执行 rar解压缩
             // 获取 Winrar 的路径（通过注册表或者是配置，这里直接根据xml来处理）
-            // 实例化 Process 类，启动执行进程  
+            // 实例化 Process 类，启动执行进程
             Process p = new Process();
             try
             {
@@ -770,12 +841,22 @@ namespace MakeAuto
             }
         }
 
+        public string SCMLocalFile
+        {
+            get { return LocalDir + "\\" + SCMcurrVerFile; }
+        }
+
         public string RemoteFile
         {
             get 
             {
                 return RemoteDir + "\\" + currVerFile;
             }
+        }
+
+        public string SCMRemoteFile
+        {
+            get { return RemoteDir + "\\" + SCMcurrVerFile; }
         }
  
         // 本地修改单V*文件夹路径，不带最后的 /
@@ -811,10 +892,10 @@ namespace MakeAuto
         private SqlCommand sqlcomm;
         private SqlDataReader sqldr;
 
-        private int myver;
-        private int scmver;
-        private ArrayList MyAL;
-        private ArrayList ScmAL;
+        public int SubmitVer {get; private set;}
+        public int ScmVer { get; private set; }
+        private ArrayList SubmitL;
+        private ArrayList ScmL;
 
         private string Readme;  // readme文件名称
 
