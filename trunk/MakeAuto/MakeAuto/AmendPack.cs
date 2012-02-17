@@ -28,7 +28,7 @@ namespace MakeAuto
 
     enum CodeStatus
     {
-        Nothing = 0,
+        NoChange = 0,
         Old = 1,
         New = 2,
         Unkown = 3,
@@ -87,12 +87,13 @@ namespace MakeAuto
         // 组件状态
         public ComStatus cstatus { get; set; }
 
-        public CommitCom(string name, string version, ComStatus status = ComStatus.NoChange)
+        public CommitCom(string name, string version, ComStatus status = ComStatus.NoChange, CodeStatus codestatus = CodeStatus.NoChange)
         {
             cname = name;
             cver = version;
             cstatus = status;
-            codestatus = CodeStatus.Old;  // 默认递交需要刷新代码
+            this.codestatus = codestatus;
+            SAWPath = "";
 
             if (cname.IndexOf("libs") > -1)
                 ctype = ComType.SO;
@@ -535,6 +536,88 @@ namespace MakeAuto
         // 所以直接使用数据库的stuff字段有问题，调整为使用readme处理
         public void ProcessReadMe()
         {
+            // 读取readme分成两步，先重新生成递交组件，然后检测修改
+            PrecessComs();
+        }
+
+        private void ProcessComs()
+        {
+            // 读取readme，重新集成，由于小球上查询的数据库记录的信息冗余，
+            try
+            {
+                // Create an instance of StreamReader to read from a file.
+                // The using statement also closes the StreamReader.
+                using (StreamReader sr = new StreamReader(SCMAmendDir + "/" + Readme, Encoding.GetEncoding("gb2312")))
+                {
+                    string line, name, version;
+                    int index, index1;
+
+                    // 读到时停止
+                    while ((line = sr.ReadLine()) != null && line.IndexOf("涉及的程序及文件: ") < 0)
+                        ;
+
+                    sr.ReadLine(); // 跳过"涉及的程序及文件 ..."这行字
+
+                    // 处理递交的组件
+                    while ((line = sr.ReadLine()) != null)
+                    {
+                        // 跳过空行
+                        if (line.Trim() == string.Empty)
+                            continue;
+
+                        if (line.IndexOf("存放路径: ") > 0)
+                            break;
+
+                        // 连续读取两行，一行文件说明和版本，一行存放路径
+                        // 读取源代码路径，小包下面没有路径，不用读取
+                        index = line.IndexOf("[");
+                        name = line.Substring(0, index).Trim();
+                        index = line.LastIndexOf("["); // 希望读第一个 "[" 和最后一个 "]" 能够处理掉
+                        index1 = line.LastIndexOf("]");
+                        version = line.Substring(index + 1, index1 - index - 1);
+                       
+                        // 本次修改里可能有多个组件对应的是同一个文件，比如so和sql,对于代码，并不需要刷新两次
+                        CommitCom c = new CommitCom(name, version);
+
+                        if (line.IndexOf("小包-") < 0)
+                        {
+                            line = sr.ReadLine().Trim();
+                            c.SAWPath = line.Substring(1, line.Length - 2); // 去除头部和尾部的 []
+                        }
+                        else 
+                        {
+                            c.SAWPath = "";
+                        }
+                        ComComms.Add(c);  
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Let the user know what went wrong.
+                WriteLog(InfoType.Error, "ReSCM异常: " + Readme + " " + ex.Message);
+            }
+
+            // 输出下处理结果
+            Debug.WriteLine("组件信息：");
+            foreach (CommitCom c in ComComms)
+            {
+                Debug.WriteLine(c.cname);
+                Debug.Indent();
+                Debug.WriteLine(Enum.GetName(typeof(CodeStatus), c.codestatus));
+                Debug.WriteLine(Enum.GetName(typeof(ComStatus), c.cstatus));
+                Debug.WriteLine(Enum.GetName(typeof(ComType), c.ctype));
+                Debug.WriteLine(c.cver);
+                Debug.WriteLine(c.SAWPath);
+                Debug.Unindent();
+            }
+        }
+
+        private void ProcessMods()
+        {
+
+            ComComms.Clear();
+
             // 读取readme，重新集成，由于小球上查询的数据库记录的信息冗余，
             try
             {
