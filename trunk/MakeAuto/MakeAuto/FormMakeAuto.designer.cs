@@ -72,12 +72,17 @@
             this.label2 = new System.Windows.Forms.Label();
             this.txtAmendList = new System.Windows.Forms.TextBox();
             this.tabPage3 = new System.Windows.Forms.TabPage();
+            this.button11 = new System.Windows.Forms.Button();
             this.button10 = new System.Windows.Forms.Button();
             this.button9 = new System.Windows.Forms.Button();
             this.button8 = new System.Windows.Forms.Button();
             this.button7 = new System.Windows.Forms.Button();
             this.button6 = new System.Windows.Forms.Button();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
+            this.label8 = new System.Windows.Forms.Label();
+            this.txtScmVer = new System.Windows.Forms.TextBox();
+            this.label7 = new System.Windows.Forms.Label();
+            this.txtSubmitVer = new System.Windows.Forms.TextBox();
             this.label6 = new System.Windows.Forms.Label();
             this.txbMainNo = new System.Windows.Forms.TextBox();
             this.txbCommitPath = new System.Windows.Forms.TextBox();
@@ -86,11 +91,6 @@
             this.txbAmenNo = new System.Windows.Forms.TextBox();
             this.btnReadInfo = new System.Windows.Forms.Button();
             this.cmsNotify = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.txtSubmitVer = new System.Windows.Forms.TextBox();
-            this.label7 = new System.Windows.Forms.Label();
-            this.label8 = new System.Windows.Forms.Label();
-            this.txtScmVer = new System.Windows.Forms.TextBox();
-            this.button11 = new System.Windows.Forms.Button();
             this.menuStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -536,6 +536,16 @@
             this.tabPage3.Text = "集成打包";
             this.tabPage3.UseVisualStyleBackColor = true;
             // 
+            // button11
+            // 
+            this.button11.Location = new System.Drawing.Point(398, 111);
+            this.button11.Name = "button11";
+            this.button11.Size = new System.Drawing.Size(75, 23);
+            this.button11.TabIndex = 33;
+            this.button11.Text = "ReadMe";
+            this.button11.UseVisualStyleBackColor = true;
+            this.button11.Click += new System.EventHandler(this.button11_Click);
+            // 
             // button10
             // 
             this.button10.Location = new System.Drawing.Point(398, 82);
@@ -568,7 +578,7 @@
             // 
             // button7
             // 
-            this.button7.Location = new System.Drawing.Point(398, 148);
+            this.button7.Location = new System.Drawing.Point(398, 140);
             this.button7.Name = "button7";
             this.button7.Size = new System.Drawing.Size(75, 23);
             this.button7.TabIndex = 29;
@@ -604,6 +614,40 @@
             this.groupBox4.TabIndex = 27;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "修改单";
+            // 
+            // label8
+            // 
+            this.label8.AutoSize = true;
+            this.label8.Location = new System.Drawing.Point(140, 107);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(53, 12);
+            this.label8.TabIndex = 26;
+            this.label8.Text = "集成版本";
+            // 
+            // txtScmVer
+            // 
+            this.txtScmVer.Location = new System.Drawing.Point(194, 102);
+            this.txtScmVer.Name = "txtScmVer";
+            this.txtScmVer.ReadOnly = true;
+            this.txtScmVer.Size = new System.Drawing.Size(66, 21);
+            this.txtScmVer.TabIndex = 25;
+            // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(11, 105);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(53, 12);
+            this.label7.TabIndex = 24;
+            this.label7.Text = "递交版本";
+            // 
+            // txtSubmitVer
+            // 
+            this.txtSubmitVer.Location = new System.Drawing.Point(65, 100);
+            this.txtSubmitVer.Name = "txtSubmitVer";
+            this.txtSubmitVer.ReadOnly = true;
+            this.txtSubmitVer.Size = new System.Drawing.Size(66, 21);
+            this.txtSubmitVer.TabIndex = 23;
             // 
             // label6
             // 
@@ -670,50 +714,6 @@
             // 
             this.cmsNotify.Name = "cmsNotify";
             this.cmsNotify.Size = new System.Drawing.Size(61, 4);
-            // 
-            // txtSubmitVer
-            // 
-            this.txtSubmitVer.Location = new System.Drawing.Point(65, 100);
-            this.txtSubmitVer.Name = "txtSubmitVer";
-            this.txtSubmitVer.ReadOnly = true;
-            this.txtSubmitVer.Size = new System.Drawing.Size(66, 21);
-            this.txtSubmitVer.TabIndex = 23;
-            // 
-            // label7
-            // 
-            this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(11, 105);
-            this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(53, 12);
-            this.label7.TabIndex = 24;
-            this.label7.Text = "递交版本";
-            // 
-            // label8
-            // 
-            this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(140, 107);
-            this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(53, 12);
-            this.label8.TabIndex = 26;
-            this.label8.Text = "集成版本";
-            // 
-            // txtScmVer
-            // 
-            this.txtScmVer.Location = new System.Drawing.Point(194, 102);
-            this.txtScmVer.Name = "txtScmVer";
-            this.txtScmVer.ReadOnly = true;
-            this.txtScmVer.Size = new System.Drawing.Size(66, 21);
-            this.txtScmVer.TabIndex = 25;
-            // 
-            // button11
-            // 
-            this.button11.Location = new System.Drawing.Point(398, 111);
-            this.button11.Name = "button11";
-            this.button11.Size = new System.Drawing.Size(75, 23);
-            this.button11.TabIndex = 33;
-            this.button11.Text = "ReadMe";
-            this.button11.UseVisualStyleBackColor = true;
-            this.button11.Click += new System.EventHandler(this.button11_Click);
             // 
             // frmMakeAuto
             // 

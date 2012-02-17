@@ -537,11 +537,14 @@ namespace MakeAuto
         public void ProcessReadMe()
         {
             // 读取readme分成两步，先重新生成递交组件，然后检测修改
-            PrecessComs();
+            ProcessComs();
+            ProcessMods();
         }
 
         private void ProcessComs()
         {
+            // 清除掉组件列表，重新添加
+            ComComms.Clear();
             // 读取readme，重新集成，由于小球上查询的数据库记录的信息冗余，
             try
             {
@@ -559,14 +562,11 @@ namespace MakeAuto
                     sr.ReadLine(); // 跳过"涉及的程序及文件 ..."这行字
 
                     // 处理递交的组件
-                    while ((line = sr.ReadLine()) != null)
+                    while ((line = sr.ReadLine()) != null && line.IndexOf("存放路径: ") < 0)
                     {
                         // 跳过空行
                         if (line.Trim() == string.Empty)
                             continue;
-
-                        if (line.IndexOf("存放路径: ") > 0)
-                            break;
 
                         // 连续读取两行，一行文件说明和版本，一行存放路径
                         // 读取源代码路径，小包下面没有路径，不用读取
@@ -595,7 +595,7 @@ namespace MakeAuto
             catch (Exception ex)
             {
                 // Let the user know what went wrong.
-                WriteLog(InfoType.Error, "ReSCM异常: " + Readme + " " + ex.Message);
+                WriteLog(InfoType.Error, "ProcessComs异常: " + Readme + " " + ex.Message);
             }
 
             // 输出下处理结果
@@ -615,8 +615,16 @@ namespace MakeAuto
 
         private void ProcessMods()
         {
-
-            ComComms.Clear();
+            // 如果是第一次递交，那么不管修改是什么，都需要重新集成
+            if (scmtype == ScmType.NewScm)
+            {
+                foreach (CommitCom c in ComComms)
+                {
+                    c.codestatus = CodeStatus.Old;
+                    c.cstatus = ComStatus.Add;
+                }
+                return;
+            }
 
             // 读取readme，重新集成，由于小球上查询的数据库记录的信息冗余，
             try
@@ -628,102 +636,45 @@ namespace MakeAuto
                     string line, name, version, des;
                     int index, index1, step = 0;
                     // step 1-本次修改 2-集成注意 3-涉及程序 4-存放路径 5-修改说明
-                    CommitCom com;
-                    bool Find;
-                    // 读取本次修改
-                    while ((line = sr.ReadLine()) != null)
-                    {
-                        // 对于V1递交，不需要处理
-                        if(line.IndexOf("本次修改(V1)") >=0)
-                            return;
+                    CommitCom c;
 
+                    // 读到时停止
+                    while ((line = sr.ReadLine()) != null && line.IndexOf("本次修改") < 0)
+                        ;
+
+                    sr.ReadLine(); // 跳过"本次修改 ..."这行字
+
+                    // 处理递交的组件
+                    while ((line = sr.ReadLine()) != null && line.IndexOf("集成注意：") < 0)
+                    {
                         // 跳过空行
                         if (line.Trim() == string.Empty)
                             continue;
 
-                        // 跳过前导行
-                        if (line.IndexOf("本次修改") >= 0)
-                        {
-                            while((line = sr.ReadLine()) != null)
-                            {
-                                // 跳过空行
-                                if (line.Trim() == string.Empty)
-                                    continue;
-
-                                // 此时读取到了本次修改，可以接着向下读取变
-                                // libs_secupubflow.10.so                                      [V6.1.4.12][V6.1.4.5005]
-                                index = line.IndexOf("[");  
-                                name = line.Substring(0, index).Trim();
-                                index = line.LastIndexOf("["); // 希望读第一个 "[" 和最后一个 "]" 能够处理掉
-                                index1 = line.LastIndexOf("]");
-                                version = line.Substring(index + 1, index1 - index - 1);
-                                des = line.Substring(index1 + 1).Trim();
-
-                                // 本次修改里可能有多个组件对应的是同一个文件，比如so和sql,对于代码，并不需要刷新两次
-                                Find = false;
-                                foreach (CommitCom c in ComComms)
-                                {
-                                    if (c.cname == name)
-                                    {
-                                        Find = true;
-                                        if (des.IndexOf("本次取消") >= 0)
-                                        {
-                                            c.cstatus = ComStatus.Delete;
-                                            c.codestatus = CodeStatus.Old;
-                                        }
-                                        else
-                                        {
-                                            c.cstatus = ComStatus.Modify;
-                                            c.codestatus = CodeStatus.Old;
-                                            c.cver = version;  // 有可能像上面一样版本发生变动了
-                                        }
-                                    }
-                                }
-
-                                if (Find == false)  // 这种应该是本次新增的文件才回到这里来
-                                {
-                                    com = new CommitCom(name, version, ComStatus.Add);
-                                    com.cstatus = ComStatus.Add;
-                                    com.codestatus = CodeStatus.New;
-                                    ComComms.Add(com);
-                                }
-                            } 
-                        }
-                        // 集成注意，退出
-                        else if (line.IndexOf("涉及的程序及文件") >= 0)
-                        {
-                            while((line = sr.ReadLine()) != null)
-                            {
-                                // 跳过空行
-                                if (line.Trim() == string.Empty)
-                                    continue;
-
-                                // 读取源代码路径，小包下面没有路径，不用读取
-                                if (line.IndexOf("小包-") < 0)
-                                {
-                                    // 连续读取两行，一行文件说明和版本，一行存放路径
-                                    index = line.IndexOf("[");
-                                    name = line.Substring(0, index).Trim();
-                                    index = line.LastIndexOf("["); // 希望读第一个 "[" 和最后一个 "]" 能够处理掉
-                                    index1 = line.LastIndexOf("]");
-                                    version = line.Substring(index + 1, index1 - index - 1);
-
-                                    line = sr.ReadLine().Trim();
-
-                                    // 本次修改里可能有多个组件对应的是同一个文件，比如so和sql,对于代码，并不需要刷新两次
-                                    foreach (CommitCom c in ComComms)
-                                    {
-                                        if (c.cname == name)
-                                        {
-                                            c.SAWPath = line.Substring(1, line.Length - 2); // 去除头部和尾部的 [] 
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        else 
-                        {
+                        // 跳过可能的文件名称行，不知道readme里为啥有这种数据
+                        if (line.Trim().LastIndexOf("[V") < 0)
                             continue;
+
+                        // 连续读取两行，一行文件说明和版本，一行存放路径
+                        // 读取源代码路径，小包下面没有路径，不用读取
+                        index = line.IndexOf("[");
+                        name = line.Substring(0, index).Trim();
+                        index = line.LastIndexOf("["); // 希望读第一个 "[" 和最后一个 "]" 能够处理掉
+                        index1 = line.LastIndexOf("]");
+                        version = line.Substring(index + 1, index1 - index - 1);
+                        des = line.Substring(index1 + 1).Trim();
+
+                        // 这里如果返回了两个，那就是有异常
+                        c = ComComms[name];
+                        if (des.IndexOf("本次取消") >= 0)
+                        {
+                            c.cstatus = ComStatus.Delete;
+                            c.codestatus = CodeStatus.New;
+                        }
+                        else
+                        {
+                            c.cstatus = ComStatus.Modify;
+                            c.codestatus = CodeStatus.Old;
                         }
                     }
                 }
@@ -731,10 +682,11 @@ namespace MakeAuto
             catch (Exception ex)
             {
                 // Let the user know what went wrong.
-                WriteLog(InfoType.Error, "ReSCM异常: " + Readme + " " + ex.Message);
+                WriteLog(InfoType.Error, "ProcessMods异常: " + Readme + " " + ex.Message);
             }
 
             // 输出下处理结果
+            Debug.WriteLine("ProcessMods...");
             foreach (CommitCom c in ComComms)
             {
                 Debug.WriteLine(c.cname);
