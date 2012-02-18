@@ -50,7 +50,6 @@
             this.tbModule = new System.Windows.Forms.TextBox();
             this.clbModule = new System.Windows.Forms.CheckedListBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
-            this.button2 = new System.Windows.Forms.Button();
             this.btnSql = new System.Windows.Forms.Button();
             this.btnHyper = new System.Windows.Forms.Button();
             this.btnSO = new System.Windows.Forms.Button();
@@ -58,7 +57,6 @@
             this.button5 = new System.Windows.Forms.Button();
             this.btnProC = new System.Windows.Forms.Button();
             this.tabPage2 = new System.Windows.Forms.TabPage();
-            this.button4 = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.comboBox1 = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
@@ -281,7 +279,6 @@
             // 
             // groupBox2
             // 
-            this.groupBox2.Controls.Add(this.button2);
             this.groupBox2.Controls.Add(this.btnSql);
             this.groupBox2.Controls.Add(this.btnHyper);
             this.groupBox2.Controls.Add(this.btnSO);
@@ -294,16 +291,6 @@
             this.groupBox2.TabIndex = 22;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "操作";
-            // 
-            // button2
-            // 
-            this.button2.Location = new System.Drawing.Point(100, 143);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(75, 23);
-            this.button2.TabIndex = 23;
-            this.button2.Text = "button2";
-            this.button2.UseVisualStyleBackColor = true;
-            this.button2.Click += new System.EventHandler(this.button2_Click);
             // 
             // btnSql
             // 
@@ -367,7 +354,6 @@
             // 
             // tabPage2
             // 
-            this.tabPage2.Controls.Add(this.button4);
             this.tabPage2.Controls.Add(this.groupBox1);
             this.tabPage2.Controls.Add(this.groupBox3);
             this.tabPage2.Location = new System.Drawing.Point(4, 21);
@@ -377,16 +363,6 @@
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "修改递交";
             this.tabPage2.UseVisualStyleBackColor = true;
-            // 
-            // button4
-            // 
-            this.button4.Location = new System.Drawing.Point(364, 17);
-            this.button4.Name = "button4";
-            this.button4.Size = new System.Drawing.Size(75, 23);
-            this.button4.TabIndex = 25;
-            this.button4.Text = "test";
-            this.button4.UseVisualStyleBackColor = true;
-            this.button4.Click += new System.EventHandler(this.button4_Click);
             // 
             // groupBox1
             // 
@@ -798,11 +774,9 @@
         private System.Windows.Forms.Button btnModPre;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.TextBox txtAmendList;
-        private System.Windows.Forms.Button button2;
         private System.Windows.Forms.ToolStripMenuItem 关于ToolStripMenuItem;
         private System.Windows.Forms.CheckedListBox clbModule;
         private System.Windows.Forms.TextBox tbModule;
-        private System.Windows.Forms.Button button4;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.ComboBox comboBox1;
         private System.Windows.Forms.Label label1;

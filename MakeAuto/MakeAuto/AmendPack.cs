@@ -50,13 +50,18 @@ namespace MakeAuto
         DownLoadPack,
         ProcessPack,
         ReNewReadMe,
+        ProcessComs,
+        ProcessMods,
+        PostComs,
         ProcessReadMe,
+        ProcessSAWPath,
         GetFile,
         Compile,
         ReNewFile,
         TarPack,
         UpLoad,
         Over,
+        Error,
     }
 
     // 递交程序项
@@ -101,7 +106,6 @@ namespace MakeAuto
                 ctype = ComType.Dll;
             else if (cname.IndexOf("ini") > -1)
                 ctype = ComType.Ini;
-
         }
     }
 
@@ -137,6 +141,7 @@ namespace MakeAuto
 
             SubmitL = new ArrayList();
             ScmL = new ArrayList();
+            SAWFiles = new SAWFileList();
         }
 
         // 类初始化
@@ -512,6 +517,39 @@ namespace MakeAuto
             // 读取readme分成两步，先重新生成递交组件，然后检测修改
             ProcessComs();
             ProcessMods();
+            PostComs();
+            ProcessSAWPath();
+            // 输出下处理结果
+            Debug.WriteLine("ProcessReadMe:Coms...");
+            foreach (CommitCom c in ComComms)
+            {
+                Debug.WriteLine("名称：" + c.cname);
+                Debug.Indent();
+                Debug.WriteLine("状态：" + Enum.GetName(typeof(ComStatus), c.cstatus));
+                Debug.WriteLine("版本：" + c.cver);
+                Debug.WriteLine("路径：" + c.path);
+                if (c.sawfile == null)
+                {
+                    Debug.WriteLine("本地路径：test__");
+                    Debug.WriteLine("SAW路径：test__");
+                }
+                else
+                {
+                    Debug.WriteLine("本地路径：" + c.sawfile.LocalPath);
+                    Debug.WriteLine("SAW路径：" + c.sawfile.SAWPath);
+                }
+                Debug.Unindent();
+            }
+            Debug.WriteLine("ProcessReadMe:SAWFiles...");
+            foreach (SAWFile s in SAWFiles)
+            {
+                Debug.WriteLine("路径：" + s.Path);
+                Debug.Indent();
+                Debug.WriteLine("本地路径：" + s.LocalPath);
+                Debug.WriteLine("SAW路径：" + s.SAWPath);
+                Debug.WriteLine("文件状态：" + Enum.GetName(typeof(FileStatus), s.fstatus));
+                Debug.Unindent();
+            }
         }
 
         private void ProcessComs()
@@ -572,7 +610,7 @@ namespace MakeAuto
             }
 
             // 输出下处理结果
-            Debug.WriteLine("组件信息：");
+            Debug.WriteLine("ProcessComs...");
             foreach (CommitCom c in ComComms)
             {
                 Debug.WriteLine(c.cname);
@@ -643,8 +681,15 @@ namespace MakeAuto
                         version = line.Substring(index + 1, index1 - index - 1);
                         des = line.Substring(index1 + 1).Trim();
 
-                        // 这里如果返回了两个，那就是有异常
+                        // 这里如果返回了两个或者没找到，那就是有异常
                         c = ComComms[name];
+                        if (c == null)
+                        {
+                            WriteLog(InfoType.Error, "ProcessMods未能找到组件");
+                            scmstatus = ScmStatus.Error;
+                            return;
+                        }
+
                         if (des.IndexOf("本次取消") >= 0)
                         {
                             c.cstatus = ComStatus.Delete;
@@ -652,17 +697,6 @@ namespace MakeAuto
                         else
                         {
                             c.cstatus = ComStatus.Modify;
-                            // 标记文件需要刷新，添加到文件状态列表中
-                            if (SAWFiles[c.path] == null)
-                            {
-                                SAWFile f = new SAWFile(c.path, FileStatus.Old);
-                                SAWFiles.Add(f);
-                            }
-                            else
-                            {
-                                // 如果第一个文件不是更新，那就改成需要更新，但是不会有这种情况吧，所以直接改掉好了。
-                                SAWFiles[c.path].fstatus = FileStatus.Old;
-                            }
                         }
                     }
                 }
@@ -672,23 +706,20 @@ namespace MakeAuto
                 // Let the user know what went wrong.
                 WriteLog(InfoType.Error, "ProcessMods异常: " + Readme + " " + ex.Message);
             }
-
-            // 输出下处理结果
-            Debug.WriteLine("ProcessMods...");
-            foreach (SAWFile s in SAWFiles)
-            {
-                Debug.WriteLine(s.Path);
-                Debug.Indent();
-                Debug.WriteLine(s.SAWPath);
-                Debug.WriteLine(s.LocalPath);
-                Debug.WriteLine(Enum.GetName(typeof(FileStatus), s.fstatus));
-                Debug.Unindent();
-            }
         }
         
         // 后处理组件，删除不需要的内容
         public void PostComs()
         {
+            if (scmstatus == ScmStatus.Error)
+            {
+                return;
+            }
+            else
+            {
+                scmstatus = ScmStatus.PostComs;
+            }
+
             // 如果是删除的，那么删除文件（对于so，需要删除src文件）
             foreach (CommitCom c in ComComms)
             {
@@ -717,22 +748,68 @@ namespace MakeAuto
                 if (c.cstatus == ComStatus.Delete)
                     ComComms.Remove(c);
             }
+
+            // 处理 SAWFile
+            foreach (CommitCom c in ComComms)
+            {
+                // 标记文件需要刷新，添加到文件状态列表中
+                if (SAWFiles[c.path] == null)
+                {
+                    SAWFile f = new SAWFile(c.path, FileStatus.Old);
+                    f.Version = c.cver;
+                    SAWFiles.Add(f);                    
+                    c.sawfile = f;
+                }
+                else
+                {
+                    // 如果第一个文件不是更新，那就改成需要更新，但是不会有这种情况吧，所以直接改掉好了。
+                    SAWFile f = SAWFiles[c.path];
+                    f.fstatus = FileStatus.Old;
+                    f.Version = c.cver;
+                    c.sawfile = f;
+                }
+            }
         }
 
         // 处理 SAWPath，设置检出代码的路径
         public void ProcessSAWPath()
         {
-
-            // 处理SAW代码的路径，这个特别对06版使用，其他的不行
-            foreach (CommitCom c in ComComms)
+            
+            if(scmstatus == ScmStatus.Error)
             {
-                // 暂时只对06版有效，因为目录是固定的，需要写死
-                if (c.ctype == ComType.SO)
+                return;
+            }
+            else
+            {
+                scmstatus = ScmStatus.ProcessSAWPath;
+            }
+
+            // 确认修改单的配置库
+            sv = MAConf.instance.SAWs.GetByAmend(AmendSubject);
+            if(sv == null)
+            {
+                Debug.WriteLine("获取对应配置库失败");
+                scmstatus = ScmStatus.Error;
+                return;
+            }
+
+            // 处理SAW代码的路径，暂时只对06版有效，因为目录是固定的，需要写死
+            foreach (SAWFile s in SAWFiles)
+            {
+                if (s.Path.IndexOf("小包-") >= 0)
+                    continue;
+
+                // 根据 s 的名称来处理，这是一段很纠结的代码
+                if (s.Path.IndexOf("金融产品销售系统_详细设计说明书") >= 0) // 
                 {
-                    //c.SAWPath = MAConf.instance.DetailFile.Substring(0, detail.LastIndexOf(@"\") + 1) + "后端\\" + FileName;
+                    s.LocalPath = sv.Workspace + @"HSTRADES11\Documents\D2.Designs\详细设计\后端\" + s.Path;
+                    s.SAWPath = @"$/" + @"HSTRADES11\Documents\D2.Designs\详细设计\后端\\" + s.Path;
                 }
-                else 
-                { }
+                else
+                {
+                    s.LocalPath = sv.Workspace + @"HSTRADES11\" + s.Path;
+                    s.SAWPath = @"$/" + @"HSTRADES11\" + s.Path;
+                }
             }
         }
 
@@ -742,7 +819,10 @@ namespace MakeAuto
             // 这个地方由于没有历史性刷出的办法，对于DLL，可能需要两遍代码刷出，第一遍，先刷出最新版，第二遍，根据递交的版本历史，
             // 把在这个版本之后修改的刷回去
             // 需要注意的是ReadMe中的路径是不全的，这个很恶心
-            
+            foreach (SAWFile s in SAWFiles)
+            {
+                sv.GetAmendCode(AmendNo, s);
+            }
 
         }
 
@@ -810,6 +890,11 @@ namespace MakeAuto
         public void WriteLog(InfoType type, string LogContent, string Title = "")
         {
             MAConf.instance.WriteLog(type, LogContent, Title);
+        }
+
+        public void WriteLog(string info)
+        {
+            MAConf.instance.WriteLog(info);
         }
 
         // 打包压缩
@@ -883,7 +968,7 @@ namespace MakeAuto
             } 
         }
 
-        public string CommitModule // 融资融券 广发版技术支持测试
+        public string AmendSubject // 融资融券 广发版技术支持测试
         {
             get
             {
@@ -984,5 +1069,7 @@ namespace MakeAuto
         public ScmType scmtype;
 
         public ScmStatus scmstatus;
+
+        public SAWV sv;
     }
 }

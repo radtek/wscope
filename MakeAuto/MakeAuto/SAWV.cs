@@ -1,6 +1,7 @@
 ﻿using System;
 using SAWVSDKLib;
 using System.Collections;
+using System.Diagnostics;
 
 namespace MakeAuto
 {
@@ -9,24 +10,24 @@ namespace MakeAuto
     /// </summary>
     class SAWV
     {
-        // 占位
-        // 单例化 SAWV
-        public static readonly SAWV instance = new SAWV();
-
-        private SAWV()
+        public SAWV(string name, string server, int port, string database, string user, string password)
         {
             sv = new SAWVSDK();
             ConnectedToServer = false;
             LoggedIn = false;
+
+            Name = name;
+            ServerIP = server;
+            ServerPort = port;
+            DatabaseName = database;
+            UserName = user;
+            Password = password;
         }
 
         /// <summary>
         /// 连接到服务器
         /// </summary>
-        /// <param name="ServerIP">服务器地址或名称</param>
-        /// <param name="ServerPort">服务器端口</param>
-        /// <returns>是否连接成功</returns>
-        public Boolean ConnectToServer(String ServerIP, int ServerPort)
+        public Boolean ConnectToServer()
         {
             // 测试 SAW 功能
             Boolean bConn = false;
@@ -36,8 +37,6 @@ namespace MakeAuto
                 "", 0, "", "");
             if (Result == 0)
             {
-                this.ServerIP = ServerIP;
-                this.ServerPort = ServerPort;
                 this.ConnectedToServer = bConn;
             }
             return this.ConnectedToServer;
@@ -46,11 +45,7 @@ namespace MakeAuto
         /// <summary>
         /// 登录到数据库
         /// </summary>
-        /// <param name="UserName">用户名</param>
-        /// <param name="Password">密码</param>
-        /// <param name="DatabaseName">数据库名称</param>
-        /// <returns></returns>
-        public Boolean Login(String UserName, String Password, String DatabaseName)
+        public Boolean Login()
         {
             // 登录
             SAWVKeyInfoSet sk = new SAWVKeyInfoSet();
@@ -60,52 +55,99 @@ namespace MakeAuto
             
             if (Result == 0)
             {
-                this.UserName = UserName;
-                this.Password = Password;
-                this.DatabaseName = DatabaseName;
                 this.LoggedIn = true;
             }
             return this.LoggedIn;
         }
 
-        // 获取修改单详细设计说明书
-        public Boolean GetAmendDetail(string AmendNo, string FileName, string AmendVersion, string UserNmae = "")
+        public Boolean GetAmendCode(string AmendNo, SAWFile sf)
         {
-            SAWVFileHistorySet hisset = GetFileHistory(FileName, UserName);
-            int FileVersion = 0;
-            foreach (SAWVFileHistory his in hisset)
+            if (sf.Type == SAWType.File)
             {
-                // 20111215020-V6.1.4.10-V1
-                if (his.Comment.IndexOf(AmendNo + "-" + AmendVersion) >= 0)
+                SAWVFileHistorySet hisset = GetFileHistory(sf.SAWPath);
+                int FileVersion = 0;
+                foreach (SAWVFileHistory his in hisset)
                 {
-                    FileVersion = his.Version;  // 得到要Get文件的版本
-                    break;
+                    // 20111215020-V6.1.4.10-V1
+                    if (his.Comment.IndexOf(AmendNo + "-" + sf.Version) >= 0)
+                    {
+                        FileVersion = his.Version;  // 得到要Get文件的版本
+                        sf.filehis = his;
+                        break;
+                    }
+                }
+
+                if (FileVersion == 0)
+                    return false;
+
+                // 获取历史文件
+                string Project = sf.SAWPath.Substring(0, sf.SAWPath.LastIndexOf("/"));
+                string File = sf.SAWPath.Substring(sf.SAWPath.LastIndexOf("/"));
+                GetOldVersionFile(Project, File, FileVersion, sf.LocalPath);
+            }
+            else  // 对于 Dpr 数据 
+            {
+                // 工程的处理方法，由于不能确定本地的数据是否规范，所以先把所有数据刷到最新版
+                // 然后把本历史之后的数据处理到前一个版本，应该可以解决这个问题
+                int ResultValue = sv.GetLatestProject(sf.SAWPath, sf.LocalPath, false, false,
+                    Enum_WritableFileHandling.Enum_WritableFileHandlingReplace,
+                    Enum_EOL.Enum_CRLF,
+                    Enum_SetLocalFileTime.Enum_SetLocalFileTimeCurrent,
+                    "", "", out Canceled, out ResultDescription, out OperationResultSet);
+
+                if (ResultValue == 0)
+                {
+                    foreach (SAWVOperationResult o in OperationResultSet)
+                    {
+                        if (o.OperationResult != 0)
+                        {
+                            Debug.WriteLine("检出文件" + o.ItemFullName + "失败，" + o.Description);
+                            return false;
+                        }
+                    }
+                }
+                else
+                {
+                    Debug.WriteLine("GetLatestProject 失败，" + ResultDescription);
+                    return false;
+                }
+
+                // 这时工程的代码是新的，然后要获取工程的历史，以确定要刷哪个版本
+                SAWVProjectHistorySet ProjectHistorySet;
+
+                // Read the history information of all the files under project "$/ServerProjectName" on server
+                // 第一个 true 表示包含文件历史
+                ResultValue = sv.GetProjectHistory(sf.SAWPath, true, false,
+                    out ProjectHistorySet, "",
+                    DateTime.Now.AddDays(-7), DateTime.Now, out Canceled, out ResultDescription);
+
+                if (ResultValue != 0)
+                {
+                    Debug.WriteLine("Calling 'GetProjectHistory' function fails.");
+                    return false;
+                }
+
+                foreach (SAWVProjectHistory his in ProjectHistorySet)
+                {
+                    //if(his.DateAction > )
                 }
             }
-
-            if (FileVersion == 0)
-                return false;
-
-            // 获取历史文件
-            string Project = FileName.Substring(0, FileName.LastIndexOf("/"));
-            string File = FileName.Substring(FileName.LastIndexOf("/"));
-            GetOldVersionFile(Project, File, FileVersion);
             return true;
         }
 
         public SAWVFileHistorySet GetFileHistory(String FileName, string UserName = "")
         {
-            // 获取文件历史，可以预期，检入文件的时间和集成的时间之差应该在一个月之内，据此定义时间
+            // 获取文件历史，可以预期，检入文件的时间和集成的时间之差应该在一个星期之内，据此定义时间
             SAWVFileHistorySet hisset;
             Boolean Pinned;
             int Result = sv.GetFileHistory(FileName, out Pinned, out hisset, UserName,
-                DateTime.Now.AddMonths(-1), DateTime.Now, out Canceled, out ResultDescription);
+                DateTime.Now.AddDays(-7), DateTime.Now, out Canceled, out ResultDescription);
 
             return hisset;
         }
 
         // 获取指定版本文件，检出详细设计说明书
-        private Boolean GetOldVersionFile(String ProjectName, String FileName, int Version)
+        private Boolean GetOldVersionFile(String ProjectName, String FileName, int Version, string LocalPath)
         {
             // 暂时只对06版有效，因为目录是固定的，需要写死
             string detail = MAConf.instance.DetailFile;
@@ -113,14 +155,14 @@ namespace MakeAuto
 
             // 获取历史代码
             int Result = sv.GetOldVersionFile(ProjectName, FileName, Version,
-                LocalDir + "后端\\" + FileName, false, 
+                LocalPath, false, 
                 Enum_WritableFileHandling.Enum_WritableFileHandlingCanceled,
                 Enum_EOL.Enum_CRLF, 
                 Enum_SetLocalFileTime.Enum_SetLocalFileTimeCurrent,
                 "", "", out Canceled, 
-                out ResultDescription, OpertationResult);
+                out ResultDescription, OperationResult);
 
-            if (Result != 0 || OpertationResult.OperationResult != 0)
+            if (Result != 0 || OperationResult.OperationResult != 0)
                 return false;
             else
                 return true;
@@ -147,7 +189,40 @@ namespace MakeAuto
         private Boolean MustChangePassword; 
         private int ExpireDays;
 
-        private SAWVOperationResult OpertationResult;
+        private SAWVOperationResult OperationResult;
+        private SAWVOperationResultSet OperationResultSet;
+
+        public string Name;  // 类的主键
+        public string Workspace {get; set;}  // 工作目录
+        public string Amend {get; set;}  // 根据修改单中的这个特性来瞄定数据库
+    }
+
+    class SAWVList : ArrayList
+    {
+        public SAWV this[string name]
+        {
+            get
+            {
+                foreach (SAWV s in this)
+                {
+                    if (s.Name == name)
+                        return s;
+                }
+                return null;
+            }
+        }
+
+        // 根据递交特征来决定连接到哪个库，比如小球的目录， 顶级的是 广发版技术支持测试，
+        // 那就匹配到了 “广发版技术支持测试|融资融券” 上
+        public SAWV GetByAmend(string AmendSub)
+        {
+            foreach (SAWV s in this)
+            {
+                if (s.Amend.IndexOf(AmendSub) >= 0)
+                    return s;
+            }
+            return null;
+        }
     }
 
     enum FileStatus
@@ -188,7 +263,7 @@ namespace MakeAuto
         public string Version;
         public string LocalVersion;
         public FileStatus fstatus;
-        private SAWVFileHistory filehis;
+        public SAWVFileHistory filehis;
     }
 
     class SAWFileList : ArrayList

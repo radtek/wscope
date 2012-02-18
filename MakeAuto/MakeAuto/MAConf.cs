@@ -46,9 +46,12 @@ namespace MakeAuto
         public string rar { get; private set; }
 
         public SshConns Conns;
+
         public Details Dls;
         public FtpConf fc;
         public FTPConnection ftp;
+
+        public SAWVList SAWs;
 
         // 是否显示对应模块
         public bool ShowSecu;
@@ -64,6 +67,7 @@ namespace MakeAuto
         private MAConf()
         {
             Conns = new SshConns();
+            SAWs = new SAWVList();
             Dls = new Details();
             fc = new FtpConf();
             ftp = new FTPConnection();
@@ -140,7 +144,25 @@ namespace MakeAuto
             rar = xn.ChildNodes[1].Attributes["Path"].InnerText;
             
             // 读取VSS配置
+            // 读取Ssh连接配置
+            xn = root.SelectSingleNode("SCMS");
+            xnl = xn.ChildNodes;
+            foreach (XmlNode x in xnl)
+            {
+                SAWV sv = new SAWV(x.Attributes["name"].Value,
+                    x.Attributes["server"].Value,
+                    int.Parse(x.Attributes["port"].Value),
+                    x.Attributes["database"].Value,
+                    x.Attributes["user"].Value,
+                    x.Attributes["pass"].Value);
 
+                // 读取FBASE节点，以决定是否进行编译和重启AS
+                sv.Workspace = x.Attributes["WorkSpace"].Value;
+                sv.Amend = x.Attributes["Amend"].Value;
+
+                // 添加此连接到配置组
+                SAWs.Add(sv);
+            }
         }
 
         // 单例化 MAConf
@@ -338,10 +360,19 @@ namespace MakeAuto
                 + "[" + Enum.GetName(typeof(InfoType), type) + "]"
                 + "[" + Title + "]"
                 + "[" + LogContent + "]" + "\r\n";
+            
+            // 写到调试日志中
+            Debug.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " "
+                + "[" + Enum.GetName(typeof(InfoType), type) + "]"
+                + "[" + Title + "]"
+                + "[" + LogContent + "]");
+
         }
 
         public void WriteLog(string info)
         {
+            ErrorOut.Text += DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "  " + info + "\r\n";
+
             Debug.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " " + info);
         }
     }
