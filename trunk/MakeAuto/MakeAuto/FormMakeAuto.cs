@@ -59,6 +59,11 @@ namespace MakeAuto
             mc.WriteLog(type, LogContent, Title);
         }
 
+        public void WriteLog(string info)
+        {
+            mc.WriteLog(info);
+        }
+
         private void btnAS_Click(object sender, EventArgs e)
         {
             currSsh.RestartAS();
@@ -292,15 +297,6 @@ namespace MakeAuto
             }
         }
 
-        private void button2_Click(object sender, EventArgs e)
-        {
-            
-            MAConf.instance.WriteLog("test");
-            //
-            //Debug.WriteLine("good");
-            
-        }
-
         private void 关于ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             AboutBoxMakeAuto mk = new AboutBoxMakeAuto();
@@ -415,6 +411,7 @@ namespace MakeAuto
             // 从VSS上刷出代码
             // 先处理VSS路径
             ap.GetCode();
+            WriteLog("获取VSS代码");
         }
     }
 }

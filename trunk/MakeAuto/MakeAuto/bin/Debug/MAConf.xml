@@ -19,9 +19,8 @@
         <BaseDir ServerDir ="/d:/测试代码站点/产品一部" LocalDir="E:\xgd" />
         <RAR Path="C:\Program Files\WinRAR\Rar.exe" />
     </Smallball>
-    <SAW SAWVCmd="D:\Program Files\Dynamsoft\SourceAnywhere for VSS Professional Client\SAWVCmd.exe" >
-        <SCMS>
-            <SCM Amend="广发版技术支持测试" name="HSTRADES11" server="cm02.hundsun.com" port="8884" database="10106-证券一部-2006版" user="gaohu"  pass="Hundsun_2" WorkingDir="E:\VSS\HSTRADES11" />
-        </SCMS>
-    </SAW>
+    <SAW SAWVCmd="D:\Program Files\Dynamsoft\SourceAnywhere for VSS Professional Client\SAWVCmd.exe" />
+    <SCMS>
+        <SCM name="HSTRADES11" server="cm02.hundsun.com" port="8884" database="10106-证券一部-2006版" user="gaohu"  pass="Hundsun_2" WorkSpace="E:\VSS\" Amend="广发版技术支持测试|融资融券" />
+    </SCMS>
 </MakeAuto>
