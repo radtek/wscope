@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using SAWVSDKLib;
+using System.Collections;
 
 namespace MakeAuto
 {
@@ -115,7 +113,7 @@ namespace MakeAuto
 
             // 获取历史代码
             int Result = sv.GetOldVersionFile(ProjectName, FileName, Version,
-                LocalDir + @"后端\" + FileName, false, 
+                LocalDir + "后端\\" + FileName, false, 
                 Enum_WritableFileHandling.Enum_WritableFileHandlingCanceled,
                 Enum_EOL.Enum_CRLF, 
                 Enum_SetLocalFileTime.Enum_SetLocalFileTimeCurrent,
@@ -150,5 +148,62 @@ namespace MakeAuto
         private int ExpireDays;
 
         private SAWVOperationResult OpertationResult;
+    }
+
+    enum FileStatus
+    {
+        NoChange = 0,
+        Old = 1,
+        New = 2,
+        Unkown = 3,
+    }
+
+    enum SAWType
+    {
+        Nothing = 0,
+        Project = 1,
+        File = 2,
+    }
+
+    // 这里保存需要从 SAW 刷代码的文件列表
+    class SAWFile
+    {
+        public SAWFile(string path, FileStatus status = FileStatus.NoChange)
+        {
+            Path = path;
+            fstatus = status;
+
+            // 根据最后带不带后缀分析
+            if (System.IO.Path.GetExtension(Path) == string.Empty)
+            {
+                Type = SAWType.Project;
+            }
+            else Type = SAWType.File;
+        }
+
+        public string Path;  // ReadMe 中的路径，可能是文件，也可能是目录，这个类的主键
+        public SAWType Type;   // Project or File ?? 1 - Project 2-File
+        public string SAWPath;
+        public string LocalPath;
+        public string Version;
+        public string LocalVersion;
+        public FileStatus fstatus;
+        private SAWVFileHistory filehis;
+    }
+
+    class SAWFileList : ArrayList
+    {
+        public SAWFile this[string path]
+        {
+            get
+            {
+                foreach (SAWFile s in this)
+                {
+                    if (s.Path == path)
+                        return s;
+                }
+                return null;
+            }
+        }
     }
 }

@@ -71,7 +71,7 @@ namespace MakeAuto
             //Debug.Listeners.Add(new TextWriterTraceListener(
             //    "Log"+ "\\" + "MakeAuto" + DateTime.Now.ToString("yyyyMMddHHmmss") +".log"));
             Debug.Listeners.Add(new TextWriterTraceListener(
-                "Log" + "\\" + "MakeAuto" + DateTime.Now.ToString("yyyyMMdd") + ".log"));
+                "Log" + "\\" + "MakeAuto" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".log"));
 
 
             // 自动写入文件

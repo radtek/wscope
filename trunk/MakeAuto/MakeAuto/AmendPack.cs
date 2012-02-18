@@ -26,14 +26,6 @@ namespace MakeAuto
         Ini = 7,
     }
 
-    enum CodeStatus
-    {
-        NoChange = 0,
-        Old = 1,
-        New = 2,
-        Unkown = 3,
-    }
-
     enum ComStatus
     {
         NoChange = 0,
@@ -76,24 +68,22 @@ namespace MakeAuto
         public string cver;
         // 类型
         public ComType ctype {get; private set;}
-        // 对应 源代码名称
-        //public string srcName;
-        // 对应VSS路径（暂时不用）
-        public string SAWPath;
+        
+        // 对应 源代码路径，这个就是小球里的源代码路径
+        public string path;
 
-        // 代码生成状态
-        public CodeStatus codestatus { get; set; }
+        // SAW文件信息
+        public SAWFile sawfile;
 
         // 组件状态
         public ComStatus cstatus { get; set; }
 
-        public CommitCom(string name, string version, ComStatus status = ComStatus.NoChange, CodeStatus codestatus = CodeStatus.NoChange)
+        public CommitCom(string name, string version, ComStatus status = ComStatus.NoChange)
         {
             cname = name;
             cver = version;
             cstatus = status;
-            this.codestatus = codestatus;
-            SAWPath = "";
+            path = "";
 
             if (cname.IndexOf("libs") > -1)
                 ctype = ComType.SO;
@@ -112,23 +102,6 @@ namespace MakeAuto
             else if (cname.IndexOf("ini") > -1)
                 ctype = ComType.Ini;
 
-        }
-
-        // 取需要刷出的 文件版本 信息
-        public int GetAmendVer(string User, string AmendNo, string FileVersion)
-        {
-            SAWVFileHistorySet hisset = SAWV.instance.GetFileHistory(cname, "");
-            string s = string.Empty;
-            foreach (SAWVFileHistory his in hisset)
-            {
-                s = his.Comment;
-                // 判断找到的条件，修改单符合，文件版本符合，返回递交的文件的版本
-                if (s.IndexOf(AmendNo) > 0 && s.IndexOf(FileVersion) > 0)
-                {
-                    return his.Version;
-                }
-            }
-            return 0;
         }
     }
 
@@ -470,7 +443,7 @@ namespace MakeAuto
                     ftp.Connect();
                 }
                 Debug.WriteLine("删除本地集成包" + SCMLocalFile);
-                //File.Delete(SCMLocalFile);
+                File.Delete(SCMLocalFile);
                 Debug.WriteLine("删除服务器集成包" + SCMRemoteFile);
                 //ftp.DeleteFile(SCMRemoteFile);
 
@@ -576,19 +549,19 @@ namespace MakeAuto
                         index1 = line.LastIndexOf("]");
                         version = line.Substring(index + 1, index1 - index - 1);
                        
-                        // 本次修改里可能有多个组件对应的是同一个文件，比如so和sql,对于代码，并不需要刷新两次
+                        // 生成组件信息
                         CommitCom c = new CommitCom(name, version);
 
                         if (line.IndexOf("小包-") < 0)
                         {
                             line = sr.ReadLine().Trim();
-                            c.SAWPath = line.Substring(1, line.Length - 2); // 去除头部和尾部的 []
+                            c.path = line.Substring(1, line.Length - 2); // 去除头部和尾部的 []
                         }
                         else 
                         {
-                            c.SAWPath = "";
+                            c.path = "";
                         }
-                        ComComms.Add(c);  
+                        ComComms.Add(c);
                     }
                 }
             }
@@ -604,29 +577,35 @@ namespace MakeAuto
             {
                 Debug.WriteLine(c.cname);
                 Debug.Indent();
-                Debug.WriteLine(Enum.GetName(typeof(CodeStatus), c.codestatus));
                 Debug.WriteLine(Enum.GetName(typeof(ComStatus), c.cstatus));
-                Debug.WriteLine(Enum.GetName(typeof(ComType), c.ctype));
                 Debug.WriteLine(c.cver);
-                Debug.WriteLine(c.SAWPath);
+                Debug.WriteLine(c.path);
                 Debug.Unindent();
             }
         }
 
         private void ProcessMods()
         {
+            SAWFiles.Clear();
             // 如果是第一次递交，那么不管修改是什么，都需要重新集成
             if (scmtype == ScmType.NewScm)
             {
+                // 标记组件为新增
                 foreach (CommitCom c in ComComms)
                 {
-                    c.codestatus = CodeStatus.Old;
                     c.cstatus = ComStatus.Add;
                 }
+
+                // 标记文件为未刷新
+                foreach (SAWFile s in SAWFiles)
+                {
+                    s.fstatus = FileStatus.Old;
+                }
+
                 return;
             }
 
-            // 读取readme，重新集成，由于小球上查询的数据库记录的信息冗余，
+            // 读取readme，重新集成，由于小球上查询的数据库记录的信息可能不对，需要根据readme的作准
             try
             {
                 // Create an instance of StreamReader to read from a file.
@@ -634,7 +613,7 @@ namespace MakeAuto
                 using (StreamReader sr = new StreamReader(SCMAmendDir + "/" + Readme, Encoding.GetEncoding("gb2312")))
                 {
                     string line, name, version, des;
-                    int index, index1, step = 0;
+                    int index, index1;
                     // step 1-本次修改 2-集成注意 3-涉及程序 4-存放路径 5-修改说明
                     CommitCom c;
 
@@ -669,12 +648,21 @@ namespace MakeAuto
                         if (des.IndexOf("本次取消") >= 0)
                         {
                             c.cstatus = ComStatus.Delete;
-                            c.codestatus = CodeStatus.New;
                         }
                         else
                         {
                             c.cstatus = ComStatus.Modify;
-                            c.codestatus = CodeStatus.Old;
+                            // 标记文件需要刷新，添加到文件状态列表中
+                            if (SAWFiles[c.path] == null)
+                            {
+                                SAWFile f = new SAWFile(c.path, FileStatus.Old);
+                                SAWFiles.Add(f);
+                            }
+                            else
+                            {
+                                // 如果第一个文件不是更新，那就改成需要更新，但是不会有这种情况吧，所以直接改掉好了。
+                                SAWFiles[c.path].fstatus = FileStatus.Old;
+                            }
                         }
                     }
                 }
@@ -687,17 +675,75 @@ namespace MakeAuto
 
             // 输出下处理结果
             Debug.WriteLine("ProcessMods...");
-            foreach (CommitCom c in ComComms)
+            foreach (SAWFile s in SAWFiles)
             {
-                Debug.WriteLine(c.cname);
+                Debug.WriteLine(s.Path);
                 Debug.Indent();
-                Debug.WriteLine(Enum.GetName(typeof(CodeStatus), c.codestatus));
-                Debug.WriteLine(Enum.GetName(typeof(ComStatus), c.cstatus));
-                Debug.WriteLine(Enum.GetName(typeof(ComType), c.ctype));
-                Debug.WriteLine(c.cver);
-                Debug.WriteLine(c.SAWPath);
+                Debug.WriteLine(s.SAWPath);
+                Debug.WriteLine(s.LocalPath);
+                Debug.WriteLine(Enum.GetName(typeof(FileStatus), s.fstatus));
                 Debug.Unindent();
             }
+        }
+        
+        // 后处理组件，删除不需要的内容
+        public void PostComs()
+        {
+            // 如果是删除的，那么删除文件（对于so，需要删除src文件）
+            foreach (CommitCom c in ComComms)
+            {
+                if (c.cstatus == ComStatus.Delete || c.cstatus == ComStatus.Modify)
+                {
+                    // SO删除了，源文件也删除掉
+                    File.Delete(SCMAmendDir + "\\" + c.cname);
+                    if(c.ctype == ComType.SO)
+                    {  
+                        foreach(Detail d in MAConf.instance.Dls)
+                        {
+                            if(d.SO == c.cname)
+                            {
+                                foreach(string s in d.ProcFiles)
+                                {
+                                    File.Delete(SCMAmendDir + "\\" + s);
+                                }
+                            }
+
+                            break;
+                        }
+                    }  
+                }
+
+                // 对于标记为删除的，不需要在列表中维护了
+                if (c.cstatus == ComStatus.Delete)
+                    ComComms.Remove(c);
+            }
+        }
+
+        // 处理 SAWPath，设置检出代码的路径
+        public void ProcessSAWPath()
+        {
+
+            // 处理SAW代码的路径，这个特别对06版使用，其他的不行
+            foreach (CommitCom c in ComComms)
+            {
+                // 暂时只对06版有效，因为目录是固定的，需要写死
+                if (c.ctype == ComType.SO)
+                {
+                    //c.SAWPath = MAConf.instance.DetailFile.Substring(0, detail.LastIndexOf(@"\") + 1) + "后端\\" + FileName;
+                }
+                else 
+                { }
+            }
+        }
+
+        // 刷出VSS代码
+        public void GetCode()
+        {
+            // 这个地方由于没有历史性刷出的办法，对于DLL，可能需要两遍代码刷出，第一遍，先刷出最新版，第二遍，根据递交的版本历史，
+            // 把在这个版本之后修改的刷回去
+            // 需要注意的是ReadMe中的路径是不全的，这个很恶心
+            
+
         }
 
         // 集成所有递交组件
@@ -918,6 +964,7 @@ namespace MakeAuto
         // 修改单递交组件，以字符串对象和对象两种形态体现，调整字符串对象为私有（主要是使用不方便）
         public string ComString {get; private set;}
         public ComList ComComms {get; private set;}
+        public SAWFileList SAWFiles { get; set; }
 
         // sql server 连接串，定义为私有，对外不可见
         private readonly string ConnString = "server=192.168.60.60;database =manage;uid =jiangshen;pwd=jiangshen";

@@ -91,6 +91,7 @@
             this.txbAmenNo = new System.Windows.Forms.TextBox();
             this.btnReadInfo = new System.Windows.Forms.Button();
             this.cmsNotify = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.button12 = new System.Windows.Forms.Button();
             this.menuStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -520,6 +521,7 @@
             // 
             // tabPage3
             // 
+            this.tabPage3.Controls.Add(this.button12);
             this.tabPage3.Controls.Add(this.button11);
             this.tabPage3.Controls.Add(this.button10);
             this.tabPage3.Controls.Add(this.button9);
@@ -538,7 +540,7 @@
             // 
             // button11
             // 
-            this.button11.Location = new System.Drawing.Point(398, 111);
+            this.button11.Location = new System.Drawing.Point(398, 100);
             this.button11.Name = "button11";
             this.button11.Size = new System.Drawing.Size(75, 23);
             this.button11.TabIndex = 33;
@@ -548,7 +550,7 @@
             // 
             // button10
             // 
-            this.button10.Location = new System.Drawing.Point(398, 82);
+            this.button10.Location = new System.Drawing.Point(398, 71);
             this.button10.Name = "button10";
             this.button10.Size = new System.Drawing.Size(75, 23);
             this.button10.TabIndex = 32;
@@ -568,7 +570,7 @@
             // 
             // button8
             // 
-            this.button8.Location = new System.Drawing.Point(398, 177);
+            this.button8.Location = new System.Drawing.Point(398, 187);
             this.button8.Name = "button8";
             this.button8.Size = new System.Drawing.Size(75, 23);
             this.button8.TabIndex = 30;
@@ -578,7 +580,7 @@
             // 
             // button7
             // 
-            this.button7.Location = new System.Drawing.Point(398, 140);
+            this.button7.Location = new System.Drawing.Point(398, 158);
             this.button7.Name = "button7";
             this.button7.Size = new System.Drawing.Size(75, 23);
             this.button7.TabIndex = 29;
@@ -588,7 +590,7 @@
             // 
             // button6
             // 
-            this.button6.Location = new System.Drawing.Point(398, 50);
+            this.button6.Location = new System.Drawing.Point(398, 44);
             this.button6.Name = "button6";
             this.button6.Size = new System.Drawing.Size(75, 23);
             this.button6.TabIndex = 28;
@@ -715,6 +717,16 @@
             this.cmsNotify.Name = "cmsNotify";
             this.cmsNotify.Size = new System.Drawing.Size(61, 4);
             // 
+            // button12
+            // 
+            this.button12.Location = new System.Drawing.Point(398, 129);
+            this.button12.Name = "button12";
+            this.button12.Size = new System.Drawing.Size(75, 23);
+            this.button12.TabIndex = 34;
+            this.button12.Text = "检出代码";
+            this.button12.UseVisualStyleBackColor = true;
+            this.button12.Click += new System.EventHandler(this.button12_Click);
+            // 
             // frmMakeAuto
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -818,6 +830,7 @@
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.TextBox txtSubmitVer;
         private System.Windows.Forms.Button button11;
+        private System.Windows.Forms.Button button12;
     }
 }
 

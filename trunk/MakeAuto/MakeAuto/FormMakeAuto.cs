@@ -401,13 +401,20 @@ namespace MakeAuto
         private void button10_Click(object sender, EventArgs e)
         {
             ap.ProcessPack();
-            txtLog.Text += "222\r\n";
+            txtLog.Text += "解包处理完成\r\n";
         }
 
         private void button11_Click(object sender, EventArgs e)
         {
             ap.ProcessReadMe();
-            txtLog.Text += "333\r\n";
+            txtLog.Text += "ReadMe处理完成\r\n";
+        }
+
+        private void button12_Click(object sender, EventArgs e)
+        {
+            // 从VSS上刷出代码
+            // 先处理VSS路径
+            ap.GetCode();
         }
     }
 }
