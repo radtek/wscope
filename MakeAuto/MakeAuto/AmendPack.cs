@@ -802,13 +802,15 @@ namespace MakeAuto
                 // 根据 s 的名称来处理，这是一段很纠结的代码
                 if (s.Path.IndexOf("金融产品销售系统_详细设计说明书") >= 0) // 
                 {
-                    s.LocalPath = sv.Workspace + @"HSTRADES11\Documents\D2.Designs\详细设计\后端\" + s.Path;
-                    s.SAWPath = @"$/" + @"HSTRADES11\Documents\D2.Designs\详细设计\后端\\" + s.Path;
+                    string temp = @"HSTRADES11\Documents\D2.Designs\详细设计\后端\";
+                    s.LocalPath = sv.Workspace + temp + s.Path;
+                    s.SAWPath = @"$/" + temp.Replace('\\','/') + s.Path;
+                    
                 }
                 else
                 {
-                    s.LocalPath = sv.Workspace + @"HSTRADES11\" + s.Path;
-                    s.SAWPath = @"$/" + @"HSTRADES11\" + s.Path;
+                    s.LocalPath = sv.Workspace + @"HSTRADES11" + s.Path;
+                    s.SAWPath = @"$/" + @"HSTRADES11" + s.Path.Replace('\\', '/');
                 }
             }
         }

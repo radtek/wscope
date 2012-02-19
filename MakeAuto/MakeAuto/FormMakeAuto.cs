@@ -30,10 +30,12 @@ namespace MakeAuto
 
         //
 
+
         public frmMakeAuto()
         {
             InitializeComponent();
             mc.ErrorOut = txtLog;
+            currSsh = (SshConn)mc.Conns[0];
         }
 
         private void btnSO_Click(object sender, EventArgs e)

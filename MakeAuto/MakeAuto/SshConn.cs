@@ -43,6 +43,8 @@ namespace MakeAuto
             this.pass = pass;
             this.compile = compile;
             this.restartAs = restartAs;
+            ssh = new Chilkat.Ssh();
+            sftp = new Chilkat.SFtp();
         }
 
         /// <summary>
@@ -59,7 +61,7 @@ namespace MakeAuto
             }
 
             // 无连接时建立连接
-            ssh = new Chilkat.Ssh();
+            //ssh = new Chilkat.Ssh();
 
             //  Any string automatically begins a fully-functional 30-day trial.
             bool success;
@@ -214,7 +216,7 @@ namespace MakeAuto
                 return true;
             }
             
-            sftp = new Chilkat.SFtp();
+            //sftp = new Chilkat.SFtp();
 
             //  Any string automatically begins a fully-functional 30-day trial.
             bool success;
