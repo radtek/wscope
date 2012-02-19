@@ -1,20 +1,19 @@
 @echo off
 
 rem %1 指定第一个参数，指定使用Delphi 5还是Delphi 6 来编译
-rem %2 指定编译的工程目录
-rem %3 指定编译的工程名称
-rem %4 指定输出的目录
+rem %2 指定编译的工程名称
+rem %3 指定输出的目录
 set DelphiVer=%1
-set ProDir=%2
-set ProName=%3
-set OutPut=%4
+set ProDir=%~dp2
+set ProName=%~nx2
+set OutPut=%3
 
 rem 编译DLL: 
-rem cm 6 E:\VSS\HSTRADES11\Sources\ClientCom\Subsys\Secu\CbpETF C_CbpETF.dpr C:\src
+rem cm 6 E:\VSS\HSTRADES11\Sources\ClientCom\Subsys\Secu\CbpETF\C_CbpETF.dpr C:\src
 rem 编译HsSettle: 
-rem cm 6 E:\VSS\HsSettle\Sources\ClientCom\HsSettle HsSettle.dpr C:\src
+rem cm 6 E:\VSS\HsSettle\Sources\ClientCom\HsSettle\HsSettle.dpr C:\src
 rem 编译HsTools: 
-rem cm 5 E:\VSS\HSTRADES11\Sources\ClientCom\Subsys\TOOLS HsTools.dpr C:\src
+rem cm 5 E:\VSS\HSTRADES11\Sources\ClientCom\Subsys\TOOLS\HsTools.dpr C:\src
 
 rem 这里指定Control的位置，需要自行调整
 set DCC5=D:\Program Files\Borland\Delphi5\Bin\DCC32.EXE
@@ -50,6 +49,8 @@ rem -U 指定还从哪里查找使用的单元文件
 rem 这里替换 C_CbpETF为其他DLL
 rem echo "%DCC%" -B "%ProName%" -U"%UPath%" -E"%OutPut%"
 "%DCC%" -B "%ProName%" -U"%UPath%" -E"%OutPut%"
+rem 如果编译失败，那么需要用户确认来进行处理
+if ERRORLEVEL 1 echo. & pause
 
 popd
 rem 输出一行空行，且暂停

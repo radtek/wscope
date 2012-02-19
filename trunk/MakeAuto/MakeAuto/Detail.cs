@@ -94,16 +94,39 @@ namespace MakeAuto
         {
             get
             {
-                foreach (Detail a in this)
+                foreach (Detail d in this)
                 {
-                    if (a.Name == name)
+                    if (d.Name == name)
                     {
-                        return a;
+                        return d;
                     }
                 }
 
                 return null;
             }
+        }
+
+        public Detail FindBySo(string name)
+        {
+            foreach (Detail d in this)
+            {
+                if (d.SO == name)
+                    return d;
+            }
+            return null;
+        }
+
+        public Detail FindBySql(string name)
+        {
+            foreach (Detail d in this)
+            {
+                if (d.Sql == name)
+                {
+                    return d;
+                }
+            }
+
+            return null;
         }
     }
 }

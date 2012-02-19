@@ -14,6 +14,9 @@
       <Conn name="dev" host="192.168.87.244" port="22" user="gftrade" pass="handsome">
         <FBASE compile="false" restartas="false" />
       </Conn>
+      <Conn name="scm" host="192.168.87.244" port="22" user="gftrade" pass="handsome">
+        <FBASE compile="false" restartas="false" />
+      </Conn>
     </Conns>
     <Smallball host="192.168.51.46" port="1021" user="GuangFa" pass="laisha">
         <BaseDir ServerDir ="/d:/测试代码站点/产品一部" LocalDir="E:\xgd" />

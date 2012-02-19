@@ -30,8 +30,9 @@ namespace MakeAuto
     {
         NoChange = 0,
         Add = 1,
-        Modify = 2,
-        Delete = 3,
+        Modify,
+        Delete,
+        Normal, // 处理完成后变成正常状态
     }
 
     enum ScmType
@@ -774,7 +775,6 @@ namespace MakeAuto
         // 处理 SAWPath，设置检出代码的路径
         public void ProcessSAWPath()
         {
-            
             if(scmstatus == ScmStatus.Error)
             {
                 return;
@@ -824,8 +824,42 @@ namespace MakeAuto
             foreach (SAWFile s in SAWFiles)
             {
                 sv.GetAmendCode(AmendNo, s);
+                s.fstatus = FileStatus.New;
             }
 
+        }
+
+        public void Compile()
+        {
+            foreach (CommitCom c in ComComms)
+            {
+                // 小包直接跳过
+                if (c.ctype == ComType.Ssql)
+                {
+                    c.cstatus = ComStatus.Normal;
+                    continue;
+                }
+
+                if (c.cstatus == ComStatus.NoChange)
+                    continue;
+
+                // Patch 和 Ini 刷下来，拷贝过去就可以
+                else if (c.ctype == ComType.Patch || c.ctype == ComType.Ini)
+                {
+                    File.Copy(c.sawfile.LocalPath, SCMAmendDir+ "//" + c.cname, true);
+                }
+                else if (c.ctype == ComType.Dll || c.ctype == ComType.Exe)
+                {
+                    CompileDpr(c);
+                }
+                else if (c.ctype == ComType.SO || c.ctype == ComType.Sql)
+                {
+                    // 这里不能并发执行，有可能锁住Excel，可能只能等待执行
+                    CompileExcel(c);
+                }
+
+                c.cstatus = ComStatus.Normal;
+            }
         }
 
         // 集成所有递交组件
@@ -946,6 +980,76 @@ namespace MakeAuto
             catch (Exception ex)
             {
                 WriteLog(InfoType.Error, "执行rar失败" + ex.Message);
+            }
+        }
+
+        // 编译Dll或者Exe
+        public void CompileDpr(CommitCom c)
+        {
+            int DVer = 6;
+            if(c.cname == "HsTools.exe" || c.cname == "HsCentrTrans.exe" || c.cname == "HsCbpTrans.exe")
+            {
+                DVer = 5;
+            }
+
+            Process p = new Process();
+            p.StartInfo.FileName = "cm.bat";
+            p.StartInfo.Arguments = " " + DVer.ToString() + " " + c.sawfile.LocalPath + " " + SCMAmendDir;
+            p.StartInfo.UseShellExecute = false;
+            p.StartInfo.RedirectStandardInput = true;
+            p.StartInfo.RedirectStandardOutput = true;
+            p.StartInfo.RedirectStandardError = true;
+            p.StartInfo.CreateNoWindow = false;
+            p.Start();
+
+            string strOutput = null;
+            strOutput = p.StandardOutput.ReadToEnd();
+            Debug.WriteLine(strOutput);
+            p.WaitForExit();
+            p.Close();
+        }
+
+        // 编译Dll或者Exe
+        public void CompileExcel(CommitCom c)
+        {
+            // 确定详细设计说明书文件
+            Detail d;
+            MacroType m;
+            if (c.ctype == ComType.SO)
+            {
+                m = MacroType.ProC;
+                d = MAConf.instance.Dls.FindBySo(c.cname);
+            }
+            else
+            {
+                m = MacroType.SQL;
+                d = MAConf.instance.Dls.FindBySql(c.cname);
+            }
+
+            if (d == null)
+            {
+                MAConf.instance.WriteLog("查找不对对应的详细设计说明书模块！");
+                return;
+            }
+
+            // 标定index
+            int index = MAConf.instance.Dls.IndexOf(d) + 1;
+            ExcelMacroHelper.instance.ScmRunExcelMacro(m, index, SCMAmendDir);
+
+            if (c.ctype == ComType.SO)
+            {
+                // 编译完成后，需要上传到 ssh 服务器上得到 SO
+                SshConn s = MAConf.instance.Conns["scm"];  // 一定要配置这个
+                if (s == null)
+                {
+                    MAConf.instance.WriteLog("集成ssh配置不存在！");
+                    return;
+                }
+
+                s.localdir = SCMAmendDir + "\\";
+                s.UploadModule(d);
+                s.Compile(d);
+                s.DownloadModule(d);
             }
         }
 

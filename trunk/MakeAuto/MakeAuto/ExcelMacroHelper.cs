@@ -88,13 +88,8 @@ namespace MakeAuto
             // 根据不同功能调用对应的宏
             MacroType m = (MacroType)e.Argument;
             McrType = m;
-            if (m == MacroType.ProC)
-                MacroName = "CreateAs3CodePub";
-            else if (m == MacroType.SQL)
-                MacroName = "CreateSQLCodePub";
-            else if (m == MacroType.Hyper)
-                MacroName = "DocHyberLinkPub";
-
+            MacroName = GetMacroName(m);
+            
             // 对所有选中的模块执行编译
             
             // 统计需要编译的模块数量，保存到 count 变量中
@@ -207,6 +202,40 @@ namespace MakeAuto
             {
                 return -1;
             }
+        }
+
+        public string GetMacroName(MacroType m)
+        {
+            if (m == MacroType.ProC)
+                return "CreateAs3CodePub";
+            else if (m == MacroType.SQL)
+                return "CreateSQLCodePub";
+            else if (m == MacroType.Hyper)
+                return "DocHyberLinkPub";
+            
+            return string.Empty;
+        }
+
+        public bool ScmRunExcelMacro(MacroType m, int FileNo, string outdir)
+        {
+            McrType = m;
+            MacroName = GetMacroName(m);
+
+            try
+            {
+                if (RunExcelMacro(outdir, FileNo, FileNo) != 0)
+                {
+                    MAConf.instance.WriteLog("编译excel失败");
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                MAConf.instance.WriteLog("编译excel异常，" + ex.Message);
+                return false;
+            }
+
+            return true;
         }
 
         /// <summary>
