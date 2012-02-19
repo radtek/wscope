@@ -379,9 +379,7 @@ namespace MakeAuto
 
         private void button7_Click(object sender, EventArgs e)
         {
-            // 解压缩代码没有问题，就可以执行编译过程
-            // 此处跳过，先不执行
-
+            ap.Compile();
         }
 
         private void button8_Click(object sender, EventArgs e)

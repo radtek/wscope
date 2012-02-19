@@ -22,7 +22,7 @@ namespace MakeAuto
         private Chilkat.Ssh ssh;  // ssh组件
         private int sshchannel;  // ssh 频道号
         private Chilkat.SFtp sftp; // sftp组件
-        private int sftpchannel; // sftp 频道号
+        //private int sftpchannel; // sftp 频道号
 
         /// <summary>
         /// 配置一个ssh连接
@@ -43,6 +43,8 @@ namespace MakeAuto
             this.pass = pass;
             this.compile = compile;
             this.restartAs = restartAs;
+            localdir = @"C:\src\";
+            remotedir = @"/home/"+ user +"/src/";
             ssh = new Chilkat.Ssh();
             sftp = new Chilkat.SFtp();
         }
