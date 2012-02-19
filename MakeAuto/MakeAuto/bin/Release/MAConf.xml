@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="gb2312"?>
+<!--连接配置-->
+<MakeAuto>
+    <Part showsecu="true" showcrdt="true" showfutu="false" tmpdir="tmp" />
+    <Detail DetailFile="E:\VSS\HSTRADES11\Documents\D2.Designs\详细设计\金融产品销售系统_详细设计说明书.xls" SrcDir="C:\src\" DetailList="detail.xml"/>
+    <Amend BaseDir="E:\Work\xgd\"  Author="高虎" ModuleList="module.xml"/>
+    <Conns>
+      <Conn name="centos" host="192.168.56.101" port="22" user="handsome" pass="handsome">
+        <FBASE compile="false" restartas="false" />
+      </Conn>
+      <Conn name="rzgh" host="192.168.187.60" port="22" user="handsome" pass="handsome">
+        <FBASE compile="false" restartas="false" />
+      </Conn>
+      <Conn name="dev" host="192.168.87.244" port="22" user="gftrade" pass="handsome">
+        <FBASE compile="false" restartas="false" />
+      </Conn>
+      <Conn name="scm" host="192.168.87.244" port="22" user="gftrade" pass="handsome">
+        <FBASE compile="false" restartas="false" />
+      </Conn>
+    </Conns>
+    <Smallball host="192.168.51.46" port="1021" user="GuangFa" pass="laisha">
+        <BaseDir ServerDir ="/d:/测试代码站点/产品一部" LocalDir="E:\xgd" />
+        <RAR Path="C:\Program Files\WinRAR\Rar.exe" />
+    </Smallball>
+    <SAW SAWVCmd="D:\Program Files\Dynamsoft\SourceAnywhere for VSS Professional Client\SAWVCmd.exe" />
+    <SCMS>
+        <SCM name="HSTRADES11" server="cm02.hundsun.com" port="8884" database="10106-证券一部-2006版" user="gaohu"  pass="Hundsun_2" WorkSpace="E:\VSS\" Amend="广发版技术支持测试|融资融券" />
+    </SCMS>
+</MakeAuto>
