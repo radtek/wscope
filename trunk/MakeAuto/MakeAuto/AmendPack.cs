@@ -753,6 +753,9 @@ namespace MakeAuto
             // 处理 SAWFile
             foreach (CommitCom c in ComComms)
             {
+                if (c.cstatus == ComStatus.NoChange)
+                    continue;
+
                 // 标记文件需要刷新，添加到文件状态列表中
                 if (SAWFiles[c.path] == null)
                 {
@@ -809,8 +812,8 @@ namespace MakeAuto
                 }
                 else
                 {
-                    s.LocalPath = sv.Workspace + @"HSTRADES11" + s.Path;
-                    s.SAWPath = @"$/" + @"HSTRADES11" + s.Path.Replace('\\', '/');
+                    s.LocalPath = sv.Workspace + @"HSTRADES11\" + s.Path;
+                    s.SAWPath = @"$/" + @"HSTRADES11/" + s.Path.Replace('\\', '/');
                 }
             }
         }
@@ -863,15 +866,12 @@ namespace MakeAuto
         }
 
         // 集成所有递交组件
-        public void DoWork()
+        public void DoPacker()
         {
-            foreach (CommitCom c in ComComms)
-            {
-                // 生成，包含如下
-                // 1.刷出代码 2.编译 3.拷贝文件到集成目录
-                // 对于 小包，如果有变动，则直接拷贝递交的就可以了，其他的需要重新集成
+            // 此时，文件夹的组件已完成，对文件夹压包处理
+            // 需要把递交组件和src分别压包，这个与开发递交的组件不同
 
-            }
+
         }
 
         private static void DirectoryCopy(
