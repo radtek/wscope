@@ -130,7 +130,7 @@ namespace MakeAuto
                 // 第一个 true 表示包含文件历史
                 ResultValue = sv.GetProjectHistory(sf.SAWPath, true, false,
                     out ProjectHistorySet, "",
-                    DateTime.Now.AddDays(-7), DateTime.Now, out Canceled, out ResultDescription);
+                    DateTime.Now.AddMonths(-1), DateTime.Now, out Canceled, out ResultDescription);
 
                 if (ResultValue != 0)
                 {
@@ -180,31 +180,28 @@ namespace MakeAuto
             return true;
         }
 
-        public SAWVFileHistorySet GetFileHistory(String FileName, string UserName = "")
+        public SAWVFileHistorySet GetFileHistory(string FileName, string UserName = "")
         {
-            // 获取文件历史，可以预期，检入文件的时间和集成的时间之差应该在一个星期之内，据此定义时间
+            // 获取文件历史，可以预期，检入文件的时间和集成的时间之差应该在一个月之内，据此定义时间
             SAWVFileHistorySet hisset;
             Boolean Pinned;
             int Result = sv.GetFileHistory(FileName, out Pinned, out hisset, UserName,
-                DateTime.Now.AddDays(-7), DateTime.Now, out Canceled, out ResultDescription);
+                DateTime.Now.AddMonths(-1), DateTime.Now, out Canceled, out ResultDescription);
 
             return hisset;
         }
 
         // 获取指定版本文件，检出详细设计说明书
-        private Boolean GetOldVersionFile(String ProjectName, String FileName, int Version, string LocalPath)
+        private Boolean GetOldVersionFile(string ProjectName, string FileName, int Version, string LocalPath)
         {
-            // 暂时只对06版有效，因为目录是固定的，需要写死
-            string detail = MAConf.instance.DetailFile;
-            string LocalDir = detail.Substring(0, detail.LastIndexOf(@"\") + 1);
-
             // 获取历史代码
+            SAWVOperationResult OperationResult = new SAWVOperationResult(); 
             int Result = sv.GetOldVersionFile(ProjectName, FileName, Version,
                 LocalPath, false, 
                 Enum_WritableFileHandling.Enum_WritableFileHandlingCanceled,
                 Enum_EOL.Enum_CRLF, 
                 Enum_SetLocalFileTime.Enum_SetLocalFileTimeCurrent,
-                "", "", out Canceled, 
+                "", "", out Canceled,
                 out ResultDescription, OperationResult);
 
             if (Result != 0 || OperationResult.OperationResult != 0)
@@ -234,7 +231,6 @@ namespace MakeAuto
         private Boolean MustChangePassword; 
         private int ExpireDays;
 
-        private SAWVOperationResult OperationResult;
         private SAWVOperationResultSet OperationResultSet;
 
         public string Name;  // 类的主键

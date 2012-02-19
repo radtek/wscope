@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="gb2312"?>
 <!--excel详细设计说明书-->
-<detail gentime="2012-1-17 22:25:30" detailtime="2012-1-6 20:34:43">
+<detail gentime="2012-2-19 21:29:29" detailtime="2012-2-19 20:53:01">
   <公用模块 file="金融产品销售系统_详细设计说明书_公用模块.xls" sql="user_public" pas="public" />
   <系统管理 file="金融产品销售系统_详细设计说明书_系统管理.xls" sql="user_system" pas="system" />
   <用户管理 file="金融产品销售系统_详细设计说明书_用户管理.xls" sql="user_users" pas="users" />
@@ -141,6 +141,9 @@
   <融资融券日终证券 file="金融产品销售系统_详细设计说明书_融资融券日终.xls" sql="secu_secusz_rzbusin" pas="" />
   <融资融券日终历史 file="金融产品销售系统_详细设计说明书_融资融券日终.xls" sql="his_rzbusin" pas="" />
   <融资融券券源管理 file="金融产品销售系统_详细设计说明书_融资融券券源管理.xls" sql="his_stkres" pas="crdtstkres" />
+  <融资融券系统转融通接口 file="金融产品销售系统_详细设计说明书_融资融券系统转融通接口.xls" sql="crdt_crdtref" pas="crdtref" />
+  <交易系统转融通接口 file="金融产品销售系统_详细设计说明书_交易系统转融通接口.xls" sql="secu_secusz_securef" pas="securef" />
+  <交易系统转融通接口资金 file="金融产品销售系统_详细设计说明书_交易系统转融通接口.xls" sql="fund_securef" pas="" />
   <融资融券非交易过户 file="金融产品销售系统_详细设计说明书_融资融券非交易过户.xls" sql="crdt_transfer" pas="crdttransfer" />
   <期货公用 file="金融产品销售系统_详细设计说明书_期货公用.xls" sql="futures_pub" pas="fupub" />
   <期货参数管理 file="金融产品销售系统_详细设计说明书_期货参数管理.xls" sql="futures_arg" pas="fuarg" />
