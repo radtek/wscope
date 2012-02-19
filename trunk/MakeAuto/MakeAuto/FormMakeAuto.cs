@@ -4,7 +4,6 @@ using System.Collections;
 using System.Text;
 using System.IO;
 using System.Diagnostics;
-using Microsoft.International.Converters.PinYinConverter;
 
 namespace MakeAuto
 {
