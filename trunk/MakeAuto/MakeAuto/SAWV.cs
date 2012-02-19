@@ -62,10 +62,23 @@ namespace MakeAuto
 
         public Boolean GetAmendCode(string AmendNo, SAWFile sf)
         {
+            if (ConnectedToServer == false)
+            {
+                ConnectToServer();
+            }
+            if (LoggedIn == false)
+            {
+                Login();
+            }
+
+            int FileVersion = 0;
+            string FileName;
+            string Project, File;
+            bool Found = false;
             if (sf.Type == SAWType.File)
             {
                 SAWVFileHistorySet hisset = GetFileHistory(sf.SAWPath);
-                int FileVersion = 0;
+                
                 foreach (SAWVFileHistory his in hisset)
                 {
                     // 20111215020-V6.1.4.10-V1
@@ -81,8 +94,8 @@ namespace MakeAuto
                     return false;
 
                 // 获取历史文件
-                string Project = sf.SAWPath.Substring(0, sf.SAWPath.LastIndexOf("/"));
-                string File = sf.SAWPath.Substring(sf.SAWPath.LastIndexOf("/"));
+                Project = sf.SAWPath.Substring(0, sf.SAWPath.LastIndexOf("/"));
+                File = sf.SAWPath.Substring(sf.SAWPath.LastIndexOf("/") + 1);
                 GetOldVersionFile(Project, File, FileVersion, sf.LocalPath);
             }
             else  // 对于 Dpr 数据 
@@ -114,8 +127,6 @@ namespace MakeAuto
 
                 // 这时工程的代码是新的，然后要获取工程的历史，以确定要刷哪个版本
                 SAWVProjectHistorySet ProjectHistorySet;
-
-                // Read the history information of all the files under project "$/ServerProjectName" on server
                 // 第一个 true 表示包含文件历史
                 ResultValue = sv.GetProjectHistory(sf.SAWPath, true, false,
                     out ProjectHistorySet, "",
@@ -127,10 +138,44 @@ namespace MakeAuto
                     return false;
                 }
 
+                // 这里先过一遍，确保能够找到，找不到就不用刷新历史版本了
                 foreach (SAWVProjectHistory his in ProjectHistorySet)
                 {
-                    //if(his.DateAction > )
+                    if (his.Comment.IndexOf(AmendNo + "-" + sf.Version) >= 0)
+                    {
+                        Found = true;
+                        break;
+                    }
                 }
+
+                if (Found == false)
+                {
+                    Debug.WriteLine("无法找到工程信息。");
+                    return false;
+                }
+
+                // 重新检出检出代码
+                Debug.WriteLine("回滚代码...");
+                foreach (SAWVProjectHistory his in ProjectHistorySet)
+                {
+                    if (his.Comment.IndexOf(AmendNo + "-" + sf.Version) >= 0)
+                    {
+                        break;
+                    }
+
+                    FileVersion = his.Version - 1; // 回滚到上一个版本，应该可以吧
+                    FileName = his.FileName;
+                    string LocalPath = FileName.Replace("$/", Workspace);  // 本地路径，替换$/ 为 E:\VSS\
+
+                    // 获取历史文件
+                    Project = FileName.Substring(0, FileName.LastIndexOf("/"));
+                    File = FileName.Substring(FileName.LastIndexOf("/") + 1);
+
+                    Debug.WriteLine("检出代码：" + Project + " " + File + " " +
+                        FileVersion.ToString() + " " + LocalPath);
+                    GetOldVersionFile(Project, File, FileVersion, LocalPath);
+                }
+
             }
             return true;
         }
