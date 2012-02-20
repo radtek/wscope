@@ -17,7 +17,7 @@ namespace MakeAuto
         public string remotedir { get; set; }
 
         // 日志输出的文本框
-        public TextBox txtLog { get; set; } // 日志输出
+        public TextBox rbLog { get; set; } // 日志输出
 
         private Chilkat.Ssh ssh;  // ssh组件
         private int sshchannel;  // ssh 频道号
@@ -62,33 +62,31 @@ namespace MakeAuto
                 return true;
             }
 
-            // 无连接时建立连接
-            //ssh = new Chilkat.Ssh();
-
             //  Any string automatically begins a fully-functional 30-day trial.
             bool success;
             success = ssh.UnlockComponent("30-day trial");
             if (success != true)
             {
-                MessageBox.Show(ssh.LastErrorText);
+                MAConf.instance.WriteLog(ssh.LastErrorText, InfoType.FileLog);
                 return false;
             }
 
             success = ssh.Connect(host, port);
             if (success != true)
             {
-                MessageBox.Show(ssh.LastErrorText);
+                MAConf.instance.WriteLog(ssh.LastErrorText, InfoType.FileLog);
                 return false;
             }
 
             //  Wait a max of 5 seconds when reading responses..
-            ssh.IdleTimeoutMs = 5000;
+            ssh.ConnectTimeoutMs = 10000;
+            ssh.IdleTimeoutMs = 30000;
 
             //  Authenticate using login/password:
             success = ssh.AuthenticatePw(user, pass);
             if (success != true)
             {
-                MessageBox.Show(ssh.LastErrorText);
+                MAConf.instance.WriteLog(ssh.LastErrorText, InfoType.FileLog);
                 return false;
             }
 
@@ -98,7 +96,7 @@ namespace MakeAuto
             channelNum = ssh.OpenSessionChannel();
             if (channelNum < 0)
             {
-                MessageBox.Show(ssh.LastErrorText);
+                MAConf.instance.WriteLog(ssh.LastErrorText, InfoType.FileLog);
                 return false;
             }
 
@@ -129,7 +127,7 @@ namespace MakeAuto
             success = ssh.SendReqPty(channelNum, termType, widthInChars, heightInChars, pixWidth, pixHeight);
             if (success != true)
             {
-                MessageBox.Show(ssh.LastErrorText);
+                MAConf.instance.WriteLog(ssh.LastErrorText, InfoType.FileLog);
                 return false;
             }
 
@@ -137,7 +135,7 @@ namespace MakeAuto
             success = ssh.SendReqShell(channelNum);
             if (success != true)
             {
-                MessageBox.Show(ssh.LastErrorText);
+                MAConf.instance.WriteLog(ssh.LastErrorText, InfoType.FileLog);
                 return false;
             }
 
@@ -170,7 +168,7 @@ namespace MakeAuto
             n = ssh.ChannelReadAndPoll(channelNum, pollTimeoutMs);
             if (n < 0)
             {
-                MessageBox.Show(ssh.LastErrorText);
+                MAConf.instance.WriteLog(ssh.LastErrorText, InfoType.FileLog);
                 return false;
             }
 
@@ -178,7 +176,7 @@ namespace MakeAuto
             success = ssh.ChannelSendClose(channelNum);
             if (success != true)
             {
-                MessageBox.Show(ssh.LastErrorText);
+                MAConf.instance.WriteLog(ssh.LastErrorText, InfoType.FileLog);
                 return false;
             }
 
@@ -188,7 +186,7 @@ namespace MakeAuto
             success = ssh.ChannelReceiveToClose(channelNum);
             if (success != true)
             {
-                MessageBox.Show(ssh.LastErrorText);
+                MAConf.instance.WriteLog(ssh.LastErrorText, InfoType.FileLog);
                 return false;
             }
 
@@ -197,13 +195,13 @@ namespace MakeAuto
             cmdOutput = ssh.GetReceivedText(channelNum, "ansi");
             if (cmdOutput == null)
             {
-                MessageBox.Show(ssh.LastErrorText);
+                MAConf.instance.WriteLog(ssh.LastErrorText, InfoType.FileLog);
                 return false;
             }
 
 
             //  Display the remote shell's command output:
-            // txtLog.Text += cmdOutput + "\r\n";
+            // rbLog.Text += cmdOutput + "\r\n";
 
             //  Disconnect
             ssh.Disconnect();
@@ -225,19 +223,20 @@ namespace MakeAuto
             success = sftp.UnlockComponent("Anything for 30-day trial");
             if (success != true)
             {
-                MessageBox.Show(sftp.LastErrorText);
+                MAConf.instance.WriteLog(sftp.LastErrorText, InfoType.FileLog);
                 return false;
             }
 
             //  Set some timeouts, in milliseconds:
-            sftp.ConnectTimeoutMs = 5000;
-            sftp.IdleTimeoutMs = 10000;
+            sftp.ConnectTimeoutMs = 10000;
+            sftp.IdleTimeoutMs = 30000;
+            sftp.KeepSessionLog = true;
 
             // 连接 SSH 服务器
             success = sftp.Connect(host, port);
             if (success != true)
             {
-                MessageBox.Show(sftp.LastErrorText);
+                MAConf.instance.WriteLog(sftp.LastErrorText, InfoType.FileLog);
                 return false ;
             }
 
@@ -245,7 +244,7 @@ namespace MakeAuto
             success = sftp.AuthenticatePw(user, pass);
             if (success != true)
             {
-                MessageBox.Show(sftp.LastErrorText);
+                MAConf.instance.WriteLog(sftp.LastErrorText, InfoType.FileLog);
                 return false;
             }
 
@@ -253,11 +252,28 @@ namespace MakeAuto
             success = sftp.InitializeSftp();
             if (success != true)
             {
-                MessageBox.Show(sftp.LastErrorText);
+                MAConf.instance.WriteLog(sftp.LastErrorText, InfoType.FileLog);
                 return false;
             }
 
+            sftp.HeartbeatMs = 1000;
+            sftp.OnAbortCheck += new Chilkat.SFtp.AbortCheckEventHandler(sftp_OnAbortCheck);
+            sftp.OnPercentDone += new Chilkat.SFtp.PercentDoneEventHandler(sftp_OnPercentDone);
+
             return true;
+        }
+
+        void sftp_OnAbortCheck(object sender, Chilkat.AbortCheckEventArgs args)
+        {
+            //throw new System.NotImplementedException();
+            //MAConf.instance.WriteLog(args.Abort);
+        }
+
+        void sftp_OnPercentDone(object sender, Chilkat.PercentDoneEventArgs args)
+        {
+            
+            //throw new System.NotImplementedException();
+            //MAConf.instance.WriteLog(args.PercentDone.ToString());
         }
 
         public bool CloseSftp()
@@ -277,7 +293,11 @@ namespace MakeAuto
         public bool RestartAS()
         {
             // 初始化连接，打开shell
-            InitSsh();
+            if (InitSsh() == false)
+            {
+                MAConf.instance.WriteLog("初始化ssh连接失败", InfoType.Error);
+                return false;
+            }
 
             // 执行命令
             // 开启命令，发送重启AS指令
@@ -286,7 +306,7 @@ namespace MakeAuto
             success = ssh.ChannelSendString(channelNum, " gfas \r\n ", "ansi");
             if (success != true)
             {
-                MessageBox.Show(ssh.LastErrorText);
+                MAConf.instance.WriteLog(ssh.LastErrorText, InfoType.FileLog);
                 return false;
             }
 
@@ -296,18 +316,41 @@ namespace MakeAuto
             success = ssh.ChannelSendEof(channelNum);
             if (success != true)
             {
-                MessageBox.Show(ssh.LastErrorText);
+                MAConf.instance.WriteLog(ssh.LastErrorText, InfoType.FileLog);
                 return false;
             }
 
+            int pollTimeoutMs = 1000;
+            int n = ssh.ChannelReadAndPoll(channelNum, pollTimeoutMs);
+            if (n < 0)
+            {
+                MAConf.instance.WriteLog(ssh.LastErrorText, InfoType.FileLog);
+                return false;
+            }
+
+            //  获取输出
+            string cmdOutput = ssh.GetReceivedText(channelNum, "ansi");
+            if (cmdOutput == null)
+            {
+                MAConf.instance.WriteLog(ssh.LastErrorText, InfoType.FileLog);
+                return false;
+            }
+
+            //  Display the remote shell's command output:
+            MAConf.instance.WriteLog(cmdOutput);
+            
             return true;
         }
 
-        public void UploadModule(Detail dl)
+        public bool UploadModule(Detail dl)
         {
             if (sftp.IsConnected == false)
             {
-                InitSftp();
+                if (InitSftp() == false)
+                {
+                    MAConf.instance.WriteLog("初始化sftp连接失败", InfoType.Error);
+                    return false;
+                }
             }
             
             bool success;
@@ -322,34 +365,34 @@ namespace MakeAuto
             success = sftp.UploadFileByName(remotedir + dl.Header, localdir + dl.Header);
             if (success != true)
             {
-                MessageBox.Show(sftp.LastErrorText);
-                return;
+                MAConf.instance.WriteLog(sftp.LastErrorText, InfoType.FileLog);
+                return false;
             }
 
             success = sftp.UploadFileByName(remotedir + dl.Pc, localdir + dl.Pc);
             if (success != true)
             {
-                MessageBox.Show(sftp.LastErrorText);
-                return;
+                MAConf.instance.WriteLog(sftp.LastErrorText, InfoType.FileLog);
+                return false;
             }
 
             success = sftp.UploadFileByName(remotedir + dl.Cpp, localdir + dl.Cpp);
             if (success != true)
             {
-                MessageBox.Show(sftp.LastErrorText);
-                return;
+                MAConf.instance.WriteLog(sftp.LastErrorText, InfoType.FileLog);
+                return false;
             }
 
             success = sftp.UploadFileByName(remotedir + dl.Gcc, localdir + dl.Gcc);
             if (success != true)
             {
-                MessageBox.Show(sftp.LastErrorText);
-                return;
+                MAConf.instance.WriteLog(sftp.LastErrorText, InfoType.FileLog);
+                return false;
             }
             #endregion
 
-            //MessageBox.Show("Success.");
-
+            MAConf.instance.WriteLog("文件上传成功！");
+            return true;
         }
 
         public bool DownloadModule(Detail dl)
@@ -359,17 +402,16 @@ namespace MakeAuto
                 InitSftp();
             }
 
-
             bool success = sftp.DownloadFileByName("/home/" + user + "/appcom/" + dl.SO,
                 localdir + dl.SO);
             if (success != true)
             {
-                MessageBox.Show(sftp.LastErrorText);
+                MAConf.instance.WriteLog(sftp.LastErrorText, InfoType.FileLog);
             }
             return success;
         }
 
-        public void Compile(Detail dl)
+        public bool Compile(Detail dl)
         {
             if (ssh.IsConnected == false)
             {
@@ -384,8 +426,8 @@ namespace MakeAuto
                 "m1 " + dl.Gcc + " \r\n ", "ansi");
             if (success != true)
             {
-                MessageBox.Show(ssh.LastErrorText);
-                return;
+                MAConf.instance.WriteLog(ssh.LastErrorText, InfoType.FileLog);
+                return false;
             }
 
             //  Read the response until we get the shell prompt (assuming it's successful)
@@ -395,11 +437,11 @@ namespace MakeAuto
             if (success != true)
             {
                 //  Check the last-error information and the session log...
-                txtLog.Text += ssh.LastErrorText + "\r\n";
-                txtLog.Text += ssh.SessionLog + "\r\n";
+                MAConf.instance.WriteLog(ssh.LastErrorText);
+                MAConf.instance.WriteLog(ssh.SessionLog);
                 //  Check to see what was received.
-                txtLog.Text += ssh.GetReceivedText(channelNum, "ansi") + "\r\n";
-                return;
+                MAConf.instance.WriteLog(ssh.GetReceivedText(channelNum, "ansi"));
+                return false;
             }
 
             //  获取输出
@@ -407,67 +449,26 @@ namespace MakeAuto
             cmdOutput = ssh.GetReceivedText(channelNum, "ansi");
             if (cmdOutput == null)
             {
-                MessageBox.Show(ssh.LastErrorText);
-                return;
+                MAConf.instance.WriteLog(ssh.LastErrorText, InfoType.FileLog);
+                return false;
             }
-            txtLog.Text += cmdOutput + "\r\n";
 
             // 编译失败，提示用户，编译成功，提示是否重启AS
             int iSucceed = cmdOutput.IndexOf("Succeed");
             if (iSucceed == -1)
             {
-                MessageBox.Show("编译so报错，请参考输出日志！");
+                MAConf.instance.WriteLog("编译so报错，请参考输出日志！", InfoType.Error);
                 //  Display the remote shell's command output:
-                txtLog.Text += cmdOutput + "\r\n";
-                return;
+                MAConf.instance.WriteLog(cmdOutput);
+                return false;
             }
-   
-            DialogResult result = MessageBox.Show("编译成功，重启 AS ?", "重启AS",
-                MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-            if (result != DialogResult.Yes)
+            else
             {
-                
-                //  开启命令，发送重启指令
-                success = ssh.ChannelSendString(channelNum, " gfas \r\n ", "ansi");
-                if (success != true)
-                {
-                    MessageBox.Show(ssh.LastErrorText);
-                    return;
-                }
-
-                success = ssh.ChannelSendEof(channelNum);
-                if (success != true)
-                {
-                    MessageBox.Show(ssh.LastErrorText);
-                    return;
-                }
-
-                int n;
-                int pollTimeoutMs;
-                pollTimeoutMs = 1000;
-                n = ssh.ChannelReadAndPoll(channelNum, pollTimeoutMs);
-                if (n < 0)
-                {
-                    MessageBox.Show(ssh.LastErrorText);
-                    return;
-                }
-
-                //  获取输出
-                cmdOutput = ssh.GetReceivedText(channelNum, "ansi");
-                if (cmdOutput == null)
-                {
-                    MessageBox.Show(ssh.LastErrorText);
-                    return;
-                }
-
-                //  Display the remote shell's command output:
-                txtLog.Text += cmdOutput + "\r\n";
+                MAConf.instance.WriteLog("编译so完成！", InfoType.Info);
+                MAConf.instance.WriteLog(cmdOutput, InfoType.FileLog);
             }
 
-
-            // 日志通用记法
-            //txtLog.Text += DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "  " + "修改单递交准备完成，生成目录：" + CurrVer + "\r\n";
-        
+            return true;
         }        
     }
 

@@ -65,6 +65,8 @@ namespace MakeAuto
         Error,
     }
 
+    //string[] D5Pro = {"HsTools.exe", "HsCentrTrans.exe", "HsCbpTrans.exe", ""}
+
     // 递交程序项
     class CommitCom
     {
@@ -146,48 +148,72 @@ namespace MakeAuto
         }
 
         // 类初始化
-        public void QueryAmend(string AmendNo)
+        public Boolean QueryAmend(string AmendNo)
         {
             this.AmendNo = AmendNo;
             // 查询修改单信息
-            QueryAmendInfo();
-            // 生成修改单组件包信息
-            SetComs();
+            if (QueryAmendInfo() == true)
+            {
+                // 生成修改单组件包信息
+                SetComs();
+                return true;
+            }
+            else return false;
         }
 
         // 根据提供的修改单查询主单号
-        private int QueryAmendInfo()
+        private Boolean QueryAmendInfo()
         {
+            Boolean result = false;
             // 打开连接
-            if (sqlconn.State == ConnectionState.Closed)
+            try
             {
-                sqlconn.Open();
+                if (sqlconn.State == ConnectionState.Closed)
+                {
+                    sqlconn.Open();
+                }
+
+                // 指定查询项 a.reference_stuff as 递交程序项, a.program_path_a as 递交路径
+                sqlcomm.CommandText = ""
+                  + " select a.reference_stuff, a.program_path_a "
+                  + " from manage.dbo.programreworking2 a "
+                  + " where reworking_id = '" + AmendNo + "' ";
+                //为指定的command对象执行DataReader;
+                sqldr = sqlcomm.ExecuteReader();
+
+                // 如果有数据，读取数据
+                while (sqldr.Read())
+                {
+                    // 获取数据
+                    ComString = sqldr["reference_stuff"].ToString().Trim();
+                    CommitPath = sqldr["program_path_a"].ToString().Trim();
+                }
+                  
+                // 从CommitPath中分解递交项和主单号 /融资融券/20111123054-国金短信，分解得到 20111123054
+                MainNo = CommitPath.Substring(CommitPath.LastIndexOf("/") + 1, 11);
+                // Readme 文件名称
+                Readme = "Readme-" + CommitDir + ".txt";
+
+                result = true;
+            }
+            catch (Exception e)
+            {
+                MAConf.instance.WriteLog("查询修改单递交路径失败，" + e.Message, InfoType.Error);
+            }
+            finally
+            {
+                if (sqldr != null)
+                {
+                    sqldr.Close();
+                }
+
+                if (sqlconn != null)
+                {
+                    sqlconn.Close();
+                }
             }
 
-            // 指定查询项 a.reference_stuff as 递交程序项, a.program_path_a as 递交路径
-            sqlcomm.CommandText = ""
-              + " select a.reference_stuff, a.program_path_a "
-              + " from manage.dbo.programreworking2 a "
-              + " where reworking_id = '" + AmendNo + "' ";
-            //为指定的command对象执行DataReader;
-            sqldr = sqlcomm.ExecuteReader();
-
-            // 如果有数据，读取数据
-            while (sqldr.Read())
-            {
-                // 获取数据
-                ComString = sqldr["reference_stuff"].ToString().Trim();
-                CommitPath = sqldr["program_path_a"].ToString().Trim();
-            }
-
-            // 从CommitPath中分解递交项和主单号 /融资融券/20111123054-国金短信，分解得到 20111123054
-            MainNo = CommitPath.Substring(CommitPath.LastIndexOf("/") + 1, 11);
-            // Readme 文件名称
-            Readme = "Readme-" + CommitDir + ".txt";
-
-            sqldr.Close();
-
-            return 0;
+            return result;
         }
 
         // 设置递交组件
@@ -202,7 +228,6 @@ namespace MakeAuto
             int s = 0, e = 0;
             while (cs.Length > 0)
             {
-
                 s = cs.IndexOf("["); // 取第一个版本分隔符号
                 e = cs.IndexOf("]"); // 取版本分隔符号
                 name = cs.Substring(0, s - 1).Trim(); // 程序名称 
@@ -285,7 +310,7 @@ namespace MakeAuto
         #endregion
 
         // 获取FTP递交信息
-        public bool QueryFTP()
+        public Boolean QueryFTP()
         {
             // 输出递交包，到本地集成环境处理，需要使用ftp连接
             FTPConnection ftp = MAConf.instance.ftp;
@@ -607,7 +632,7 @@ namespace MakeAuto
             catch (Exception ex)
             {
                 // Let the user know what went wrong.
-                WriteLog(InfoType.Error, "ProcessComs异常: " + Readme + " " + ex.Message);
+                MAConf.instance.WriteLog("ProcessComs异常: " + Readme + " " + ex.Message, InfoType.Error);
             }
 
             // 输出下处理结果
@@ -686,7 +711,7 @@ namespace MakeAuto
                         c = ComComms[name];
                         if (c == null)
                         {
-                            WriteLog(InfoType.Error, "ProcessMods未能找到组件");
+                            MAConf.instance.WriteLog("ProcessMods未能找到组件", InfoType.Error);
                             scmstatus = ScmStatus.Error;
                             return;
                         }
@@ -705,7 +730,7 @@ namespace MakeAuto
             catch (Exception ex)
             {
                 // Let the user know what went wrong.
-                WriteLog(InfoType.Error, "ProcessMods异常: " + Readme + " " + ex.Message);
+                MAConf.instance.WriteLog("ProcessMods异常: " + Readme + " " + ex.Message, InfoType.Error);
             }
         }
         
@@ -829,7 +854,6 @@ namespace MakeAuto
                 sv.GetAmendCode(AmendNo, s);
                 s.fstatus = FileStatus.New;
             }
-
         }
 
         public void Compile()
@@ -922,17 +946,6 @@ namespace MakeAuto
             }
         }
 
-        // 写日志
-        public void WriteLog(InfoType type, string LogContent, string Title = "")
-        {
-            MAConf.instance.WriteLog(type, LogContent, Title);
-        }
-
-        public void WriteLog(string info)
-        {
-            MAConf.instance.WriteLog(info);
-        }
-
         // 打包压缩
         private void Rar(string path, string dir)
         {
@@ -979,7 +992,7 @@ namespace MakeAuto
             }
             catch (Exception ex)
             {
-                WriteLog(InfoType.Error, "执行rar失败" + ex.Message);
+                MAConf.instance.WriteLog("执行rar失败" + ex.Message, InfoType.Error);
             }
         }
 
@@ -991,6 +1004,8 @@ namespace MakeAuto
             {
                 DVer = 5;
             }
+
+            string dpr = c.sawfile.LocalPath.Remove(c.sawfile.LocalPath.LastIndexOf('.')) + ".dpr";
 
             Process p = new Process();
             p.StartInfo.FileName = "cm.bat";
@@ -1028,13 +1043,14 @@ namespace MakeAuto
 
             if (d == null)
             {
-                MAConf.instance.WriteLog("查找不对对应的详细设计说明书模块！");
+                MAConf.instance.WriteLog("查找不对对应的详细设计说明书模块！", InfoType.Error);
                 return;
             }
 
             // 标定index
             int index = MAConf.instance.Dls.IndexOf(d) + 1;
-            ExcelMacroHelper.instance.ScmRunExcelMacro(m, index, SCMAmendDir);
+            string LocalSrc = SCMAmendDir + "\\";
+            // ExcelMacroHelper.instance.ScmRunExcelMacro(m, index, LocalSrc);
 
             if (c.ctype == ComType.SO)
             {
@@ -1042,11 +1058,11 @@ namespace MakeAuto
                 SshConn s = MAConf.instance.Conns["scm"];  // 一定要配置这个
                 if (s == null)
                 {
-                    MAConf.instance.WriteLog("集成ssh配置不存在！");
+                    MAConf.instance.WriteLog("集成ssh配置不存在！", InfoType.Error);
                     return;
                 }
 
-                s.localdir = SCMAmendDir + "\\";
+                s.localdir = LocalSrc;
                 s.UploadModule(d);
                 s.Compile(d);
                 s.DownloadModule(d);
