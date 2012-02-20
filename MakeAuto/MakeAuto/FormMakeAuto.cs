@@ -33,8 +33,24 @@ namespace MakeAuto
         public frmMakeAuto()
         {
             InitializeComponent();
-            mc.ErrorOut = txtLog;
             currSsh = (SshConn)mc.Conns[0];
+
+            // 注册一个事件处理
+            mc.LogInfo += new InfoHandler(WriteLog);
+            
+        }
+
+        private void WriteLog(string info, InfoType type = InfoType.Info)
+        {
+            if (type == InfoType.FileLog)
+                return;
+
+            if (type == InfoType.Error)
+            {
+                rbLog.SelectionColor = System.Drawing.Color.Red;
+            }
+
+            rbLog.AppendText(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "  " + info + "\r\n");
         }
 
         private void btnSO_Click(object sender, EventArgs e)
@@ -55,16 +71,6 @@ namespace MakeAuto
             currSsh.Compile(dl);
         }
 
-        public void WriteLog(InfoType type, string LogContent, string Title = "")
-        {
-            mc.WriteLog(type, LogContent, Title);
-        }
-
-        public void WriteLog(string info)
-        {
-            mc.WriteLog(info);
-        }
-
         private void btnAS_Click(object sender, EventArgs e)
         {
             currSsh.RestartAS();
@@ -83,17 +89,17 @@ namespace MakeAuto
             if (e.Error != null)
                 MessageBox.Show("Error: " + e.Error.Message);
             else if (e.Cancelled)
-                WriteLog(InfoType.Info, "取消任务");
+                WriteLog("取消任务", InfoType.Info);
             else
-                WriteLog(InfoType.Info, "编译完成");
+                WriteLog("编译完成", InfoType.Info);
         }
 
         private void bgwProc_ProgressChanged(object sender, System.ComponentModel.ProgressChangedEventArgs e)
         {
             // This method runs on the main thread.
             State c = (State)e.UserState;
-            WriteLog(InfoType.Info, "进度：" + e.ProgressPercentage.ToString() + "%, 当前模块：" + c.dl.Name
-                + ",编译信息：" + c.info, "编译");
+            WriteLog("编译进度：" + e.ProgressPercentage.ToString() + "%, 当前模块：" + c.dl.Name
+                + ",编译信息：" + c.info, InfoType.Info);
             
             /* 此处以为托盘化是便利的，但是调试期间不见得，所以先不要这样子处理
             if (e.ProgressPercentage == 0)
@@ -149,8 +155,8 @@ namespace MakeAuto
         private void txtLog_TextChanged(object sender, EventArgs e)
         {
             // 自动滚动到底部
-            txtLog.SelectionStart = txtLog.Text.Length;
-            txtLog.ScrollToCaret(); 
+            rbLog.SelectionStart = rbLog.Text.Length;
+            rbLog.ScrollToCaret(); 
         }
 
         private void frmMakeAuto_SizeChanged(object sender, EventArgs e)
@@ -182,6 +188,8 @@ namespace MakeAuto
         {
             // 释放掉托盘的资源，不然关闭了还是会在通知区域显示
             this.nfnMake.Dispose();
+
+            MAConf.instance.FlushLog();
         }
 
         private void mniAbout_Click(object sender, EventArgs e)
@@ -260,7 +268,7 @@ namespace MakeAuto
                     }
                     else
                     {
-                        WriteLog(InfoType.Info, "文件：" + MAConf.instance.SrcDir + s + "不存在，请确认！", "集成");
+                        WriteLog("文件：" + MAConf.instance.SrcDir + s + "不存在，请确认！", InfoType.Info);
                     }
                 }
 
@@ -273,7 +281,7 @@ namespace MakeAuto
                     }
                     else
                     {
-                        WriteLog(InfoType.Info, "文件：" + MAConf.instance.SrcDir + currDetail.Sql + "不存在，请确认！", "集成");
+                        WriteLog("文件：" + MAConf.instance.SrcDir + currDetail.Sql + "不存在，请确认！", InfoType.Info);
                     }
                 }
 
@@ -285,7 +293,7 @@ namespace MakeAuto
             }
 
             // 日志通用记法
-            WriteLog(InfoType.Info, "修改单递交准备完成，生成目录：" + CurrVer, "集成");
+            WriteLog("修改单递交准备完成，生成目录：" + CurrVer, InfoType.Info);
         }
 
         private void txtAmendList_Validating(object sender, System.ComponentModel.CancelEventArgs e)
@@ -346,71 +354,79 @@ namespace MakeAuto
             }
         }
 
-
-
-        private void button4_Click(object sender, EventArgs e)
-        {
-
-        }
-
         private void btnReadInfo_Click(object sender, EventArgs e)
         {
-            ap.QueryAmend(txbAmenNo.Text);
-            txbMainNo.Text = ap.MainNo;
-            txbCommitPath.Text = ap.CommitPath;
+            mc.WriteLog("查询递交包路径，修改单编号：" + txbAmenNo.Text + "...");
 
-            foreach (CommitCom c in ap.ComComms)
+            if (ap.QueryAmend(txbAmenNo.Text) == true)
             {
-                txtLog.Text += c.cname + "\t" + c.cver + "\t" + Enum.GetName(typeof(ComType), c.ctype) + "\r\n";
+                txbMainNo.Text = ap.MainNo;
+                txbCommitPath.Text = ap.CommitPath;
             }
-            ap.QueryFTP();
-            Debug.WriteLine("查询FTP");
+            else
+            {
+                mc.WriteLog("查询递交路径错误。", InfoType.Error);
+                return;
+            }
 
-            txtSubmitVer.Text = ap.SubmitVer.ToString();
-            txtScmVer.Text = ap.ScmVer.ToString();
+            mc.WriteLog("查询FTP目录信息...");
+
+            if (ap.QueryFTP() == true)
+            {
+                txtSubmitVer.Text = ap.SubmitVer.ToString();
+                txtScmVer.Text = ap.ScmVer.ToString();
+            }
+            else 
+            {
+                mc.WriteLog("查询FTP目录信息错误。", InfoType.Error);
+                return;
+            }
         }
 
         private void button6_Click(object sender, EventArgs e)
         {
+            mc.WriteLog("下载递交包...");
             ap.DownloadPack();
-            txtLog.Text += "111\r\n";
+        }
+
+        private void button10_Click(object sender, EventArgs e)
+        {
+            mc.WriteLog("解包处理...");
+            ap.ProcessPack();
+        }
+
+        private void button11_Click(object sender, EventArgs e)
+        {
+            mc.WriteLog("处理ReadMe...");
+            ap.ProcessReadMe();
+        }
+
+        private void button12_Click(object sender, EventArgs e)
+        {
+            mc.WriteLog("获取VSS代码...");
+            ap.GetCode();
         }
 
         private void button7_Click(object sender, EventArgs e)
         {
+            mc.WriteLog("执行编译...");
             ap.Compile();
         }
 
         private void button8_Click(object sender, EventArgs e)
         {
+            mc.WriteLog("版本对比...");
             ap.ValidateVersion();
         }
 
-        
+        private void button2_Click(object sender, EventArgs e)
+        {
+            // 打包
+        }
+
         private void button9_Click(object sender, EventArgs e)
         {
-            // 测试 SAW 功能
-            
-        }
-
-        private void button10_Click(object sender, EventArgs e)
-        {
-            ap.ProcessPack();
-            txtLog.Text += "解包处理完成\r\n";
-        }
-
-        private void button11_Click(object sender, EventArgs e)
-        {
-            ap.ProcessReadMe();
-            txtLog.Text += "ReadMe处理完成\r\n";
-        }
-
-        private void button12_Click(object sender, EventArgs e)
-        {
-            // 从VSS上刷出代码
-            // 先处理VSS路径
-            ap.GetCode();
-            WriteLog("获取VSS代码");
+            // test
         }
     }
 }

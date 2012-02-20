@@ -30,7 +30,6 @@
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmMakeAuto));
-            this.txtLog = new System.Windows.Forms.TextBox();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.mniSettings = new System.Windows.Forms.ToolStripMenuItem();
             this.mniRefresh = new System.Windows.Forms.ToolStripMenuItem();
@@ -70,6 +69,7 @@
             this.label2 = new System.Windows.Forms.Label();
             this.txtAmendList = new System.Windows.Forms.TextBox();
             this.tabPage3 = new System.Windows.Forms.TabPage();
+            this.button12 = new System.Windows.Forms.Button();
             this.button11 = new System.Windows.Forms.Button();
             this.button10 = new System.Windows.Forms.Button();
             this.button9 = new System.Windows.Forms.Button();
@@ -88,8 +88,9 @@
             this.label5 = new System.Windows.Forms.Label();
             this.txbAmenNo = new System.Windows.Forms.TextBox();
             this.btnReadInfo = new System.Windows.Forms.Button();
+            this.rbLog = new System.Windows.Forms.RichTextBox();
             this.cmsNotify = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.button12 = new System.Windows.Forms.Button();
+            this.button2 = new System.Windows.Forms.Button();
             this.menuStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -103,22 +104,6 @@
             this.tabPage3.SuspendLayout();
             this.groupBox4.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // txtLog
-            // 
-            this.txtLog.BackColor = System.Drawing.SystemColors.Window;
-            this.txtLog.Cursor = System.Windows.Forms.Cursors.Default;
-            this.txtLog.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.txtLog.Location = new System.Drawing.Point(0, 251);
-            this.txtLog.Multiline = true;
-            this.txtLog.Name = "txtLog";
-            this.txtLog.ReadOnly = true;
-            this.txtLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.txtLog.Size = new System.Drawing.Size(740, 118);
-            this.txtLog.TabIndex = 0;
-            this.txtLog.TabStop = false;
-            this.txtLog.WordWrap = false;
-            this.txtLog.TextChanged += new System.EventHandler(this.txtLog_TextChanged);
             // 
             // menuStrip1
             // 
@@ -218,7 +203,6 @@
             // panel1
             // 
             this.panel1.Controls.Add(this.panel2);
-            this.panel1.Controls.Add(this.txtLog);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel1.Location = new System.Drawing.Point(0, 49);
             this.panel1.Name = "panel1";
@@ -228,10 +212,11 @@
             // panel2
             // 
             this.panel2.Controls.Add(this.tcSCM);
+            this.panel2.Controls.Add(this.rbLog);
             this.panel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel2.Location = new System.Drawing.Point(0, 0);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(740, 251);
+            this.panel2.Size = new System.Drawing.Size(740, 369);
             this.panel2.TabIndex = 23;
             // 
             // tcSCM
@@ -243,7 +228,7 @@
             this.tcSCM.Location = new System.Drawing.Point(0, 0);
             this.tcSCM.Name = "tcSCM";
             this.tcSCM.SelectedIndex = 0;
-            this.tcSCM.Size = new System.Drawing.Size(740, 251);
+            this.tcSCM.Size = new System.Drawing.Size(740, 244);
             this.tcSCM.TabIndex = 22;
             // 
             // tabPage1
@@ -254,7 +239,7 @@
             this.tabPage1.Location = new System.Drawing.Point(4, 21);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(732, 226);
+            this.tabPage1.Size = new System.Drawing.Size(732, 219);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "编译集成";
             this.tabPage1.UseVisualStyleBackColor = true;
@@ -359,7 +344,7 @@
             this.tabPage2.Location = new System.Drawing.Point(4, 21);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(732, 226);
+            this.tabPage2.Size = new System.Drawing.Size(732, 219);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "修改递交";
             this.tabPage2.UseVisualStyleBackColor = true;
@@ -497,6 +482,7 @@
             // 
             // tabPage3
             // 
+            this.tabPage3.Controls.Add(this.button2);
             this.tabPage3.Controls.Add(this.button12);
             this.tabPage3.Controls.Add(this.button11);
             this.tabPage3.Controls.Add(this.button10);
@@ -509,10 +495,20 @@
             this.tabPage3.Location = new System.Drawing.Point(4, 21);
             this.tabPage3.Name = "tabPage3";
             this.tabPage3.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage3.Size = new System.Drawing.Size(732, 226);
+            this.tabPage3.Size = new System.Drawing.Size(732, 219);
             this.tabPage3.TabIndex = 2;
             this.tabPage3.Text = "集成打包";
             this.tabPage3.UseVisualStyleBackColor = true;
+            // 
+            // button12
+            // 
+            this.button12.Location = new System.Drawing.Point(398, 129);
+            this.button12.Name = "button12";
+            this.button12.Size = new System.Drawing.Size(75, 23);
+            this.button12.TabIndex = 34;
+            this.button12.Text = "检出代码";
+            this.button12.UseVisualStyleBackColor = true;
+            this.button12.Click += new System.EventHandler(this.button12_Click);
             // 
             // button11
             // 
@@ -546,17 +542,17 @@
             // 
             // button8
             // 
-            this.button8.Location = new System.Drawing.Point(398, 187);
+            this.button8.Location = new System.Drawing.Point(513, 75);
             this.button8.Name = "button8";
             this.button8.Size = new System.Drawing.Size(75, 23);
             this.button8.TabIndex = 30;
-            this.button8.Text = "版本对比";
+            this.button8.Text = "版本校验";
             this.button8.UseVisualStyleBackColor = true;
             this.button8.Click += new System.EventHandler(this.button8_Click);
             // 
             // button7
             // 
-            this.button7.Location = new System.Drawing.Point(398, 158);
+            this.button7.Location = new System.Drawing.Point(513, 17);
             this.button7.Name = "button7";
             this.button7.Size = new System.Drawing.Size(75, 23);
             this.button7.TabIndex = 29;
@@ -688,20 +684,31 @@
             this.btnReadInfo.UseVisualStyleBackColor = true;
             this.btnReadInfo.Click += new System.EventHandler(this.btnReadInfo_Click);
             // 
+            // rbLog
+            // 
+            this.rbLog.BackColor = System.Drawing.SystemColors.Window;
+            this.rbLog.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.rbLog.Location = new System.Drawing.Point(0, 244);
+            this.rbLog.Name = "rbLog";
+            this.rbLog.ReadOnly = true;
+            this.rbLog.Size = new System.Drawing.Size(740, 125);
+            this.rbLog.TabIndex = 24;
+            this.rbLog.Text = "";
+            // 
             // cmsNotify
             // 
             this.cmsNotify.Name = "cmsNotify";
             this.cmsNotify.Size = new System.Drawing.Size(61, 4);
             // 
-            // button12
+            // button2
             // 
-            this.button12.Location = new System.Drawing.Point(398, 129);
-            this.button12.Name = "button12";
-            this.button12.Size = new System.Drawing.Size(75, 23);
-            this.button12.TabIndex = 34;
-            this.button12.Text = "检出代码";
-            this.button12.UseVisualStyleBackColor = true;
-            this.button12.Click += new System.EventHandler(this.button12_Click);
+            this.button2.Location = new System.Drawing.Point(513, 46);
+            this.button2.Name = "button2";
+            this.button2.Size = new System.Drawing.Size(75, 23);
+            this.button2.TabIndex = 35;
+            this.button2.Text = "打包";
+            this.button2.UseVisualStyleBackColor = true;
+            this.button2.Click += new System.EventHandler(this.button2_Click);
             // 
             // frmMakeAuto
             // 
@@ -724,7 +731,6 @@
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
             this.panel1.ResumeLayout(false);
-            this.panel1.PerformLayout();
             this.panel2.ResumeLayout(false);
             this.tcSCM.ResumeLayout(false);
             this.tabPage1.ResumeLayout(false);
@@ -745,7 +751,6 @@
 
         #endregion
 
-        private System.Windows.Forms.TextBox txtLog;
         private System.Windows.Forms.MenuStrip menuStrip1;
         private System.Windows.Forms.ToolStripMenuItem mniSettings;
         private System.Windows.Forms.ToolStripMenuItem mniAbout;
@@ -805,6 +810,8 @@
         private System.Windows.Forms.TextBox txtSubmitVer;
         private System.Windows.Forms.Button button11;
         private System.Windows.Forms.Button button12;
+        private System.Windows.Forms.RichTextBox rbLog;
+        private System.Windows.Forms.Button button2;
     }
 }
 

@@ -13,9 +13,10 @@ namespace MakeAuto
     public enum InfoType
     {
         Nothing = 0,
-        Info = 1,
-        Warning =2,
-        Error = 3,
+        FileLog = 1,
+        Info,
+        Warning,
+        Error,
     }
 
     public class FtpConf
@@ -29,6 +30,8 @@ namespace MakeAuto
         // 本地初始化路径
         public string LocalDir { get; set; }
     }
+
+    public delegate void InfoHandler(string info, InfoType type = InfoType.Info);    //定义信息输出委托
 
     sealed class MAConf
     {
@@ -58,8 +61,12 @@ namespace MakeAuto
         public bool ShowCrdt;
         public bool ShowFutu;
 
-        // 错误输出
-        public TextBox ErrorOut {get; set;}
+        public event InfoHandler LogInfo;    //基本信息实现事件
+
+        private static string LogDir = "Log";
+        private static string LogFile = LogDir + "\\" + "MA" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".Log";
+        private FileStream filestream;
+        private StreamWriter writer;
 
         // 取配置文件名称
         private readonly string conf = "MAConf.xml";
@@ -71,15 +78,18 @@ namespace MakeAuto
             Dls = new Details();
             fc = new FtpConf();
             ftp = new FTPConnection();
+
+            // 初始化日志文件
+            InitLog();
+
             // 添加调试
             //Debug.Listeners.Add(new TextWriterTraceListener(
-            //    "Log"+ "\\" + "MakeAuto" + DateTime.Now.ToString("yyyyMMddHHmmss") +".log"));
-            Debug.Listeners.Add(new TextWriterTraceListener(
-                "Log" + "\\" + "MakeAuto" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".log"));
-
-
+            //    "Log" + "\\" + "MakeAuto" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".log"));
             // 自动写入文件
-            Debug.AutoFlush = true;
+            //Debug.AutoFlush = true;
+
+            // 注册事件
+            LogInfo += new InfoHandler(WriteLogFile);
 
             XmlDocument xmldoc = new XmlDocument();
             xmldoc.Load(conf);
@@ -348,32 +358,40 @@ namespace MakeAuto
             //eh.SrcDir = MAConf.instance.SrcDir;
         }
 
-        public void WriteLog(InfoType type, string LogContent, string Title = "")
+        // 日志事件处理
+        public void WriteLog(string info, InfoType type = InfoType.Info)
         {
-            // 日志通用记法
-            if (Title == "")
-            {
-                Title = "日志";
-            }
-
-            ErrorOut.Text += DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "  "
-                + "[" + Enum.GetName(typeof(InfoType), type) + "]"
-                + "[" + Title + "]"
-                + "[" + LogContent + "]" + "\r\n";
-            
-            // 写到调试日志中
-            Debug.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " "
-                + "[" + Enum.GetName(typeof(InfoType), type) + "]"
-                + "[" + Title + "]"
-                + "[" + LogContent + "]");
-
+            LogInfo(info, type);
         }
 
-        public void WriteLog(string info)
+        // 写文本日志
+        private void WriteLogFile(string info, InfoType type = InfoType.Info)
         {
-            ErrorOut.Text += DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "  " + info + "\r\n";
+            string prefix;
+            if (type == InfoType.Error)
+                prefix = "[ERROR]";
+            else prefix = "";
 
-            Debug.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " " + info);
+            writer.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "  " + prefix + info);
+        }
+
+        public void InitLog()
+        {
+            if (!System.IO.Directory.Exists(LogDir))
+            {
+                System.IO.Directory.CreateDirectory(LogDir);
+            }
+            
+            filestream = new FileStream(LogFile, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None);
+            writer = new StreamWriter(filestream, System.Text.Encoding.Default);
+            writer.BaseStream.Seek(0, SeekOrigin.End);
+        }
+
+        public void FlushLog()
+        {
+            writer.Flush();
+            writer.Close();
+            filestream.Close();
         }
     }
 }
