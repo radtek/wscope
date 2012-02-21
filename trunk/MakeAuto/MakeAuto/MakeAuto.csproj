@@ -62,7 +62,7 @@
     <GenerateManifests>true</GenerateManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <SignManifests>true</SignManifests>
+    <SignManifests>false</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>MakeAuto.ico</ApplicationIcon>
@@ -115,10 +115,10 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="ChilkatDotNet4">
-      <HintPath>C:\Program Files\Chilkat Software Inc\Chilkat.NET-v4.0\ChilkatDotNet4.dll</HintPath>
+      <HintPath>bin\Release\ChilkatDotNet4.dll</HintPath>
     </Reference>
     <Reference Include="edtFTPnet">
-      <HintPath>C:\Documents and Settings\gaohu\My Documents\下载\edtftpnet\edtftpnet-2.2.2\bin\edtFTPnet.dll</HintPath>
+      <HintPath>bin\Release\edtFTPnet.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Office.Interop.Excel, Version=14.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
