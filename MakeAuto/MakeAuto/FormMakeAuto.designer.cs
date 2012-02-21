@@ -69,9 +69,9 @@
             this.label2 = new System.Windows.Forms.Label();
             this.txtAmendList = new System.Windows.Forms.TextBox();
             this.tabPage3 = new System.Windows.Forms.TabPage();
+            this.button2 = new System.Windows.Forms.Button();
             this.button12 = new System.Windows.Forms.Button();
             this.button11 = new System.Windows.Forms.Button();
-            this.button10 = new System.Windows.Forms.Button();
             this.button9 = new System.Windows.Forms.Button();
             this.button8 = new System.Windows.Forms.Button();
             this.button7 = new System.Windows.Forms.Button();
@@ -90,7 +90,6 @@
             this.btnReadInfo = new System.Windows.Forms.Button();
             this.rbLog = new System.Windows.Forms.RichTextBox();
             this.cmsNotify = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.button2 = new System.Windows.Forms.Button();
             this.menuStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -114,7 +113,7 @@
             this.mniAbout});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(740, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(750, 24);
             this.menuStrip1.TabIndex = 2;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -162,9 +161,9 @@
             // 
             // statusStrip1
             // 
-            this.statusStrip1.Location = new System.Drawing.Point(0, 418);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 415);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(740, 22);
+            this.statusStrip1.Size = new System.Drawing.Size(750, 22);
             this.statusStrip1.TabIndex = 3;
             this.statusStrip1.Text = "statusStrip1";
             // 
@@ -174,7 +173,7 @@
             this.toolStripButton1});
             this.toolStrip1.Location = new System.Drawing.Point(0, 24);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(740, 25);
+            this.toolStrip1.Size = new System.Drawing.Size(750, 25);
             this.toolStrip1.TabIndex = 4;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -206,17 +205,17 @@
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel1.Location = new System.Drawing.Point(0, 49);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(740, 369);
+            this.panel1.Size = new System.Drawing.Size(750, 366);
             this.panel1.TabIndex = 21;
             // 
             // panel2
             // 
-            this.panel2.Controls.Add(this.tcSCM);
             this.panel2.Controls.Add(this.rbLog);
+            this.panel2.Controls.Add(this.tcSCM);
             this.panel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel2.Location = new System.Drawing.Point(0, 0);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(740, 369);
+            this.panel2.Size = new System.Drawing.Size(750, 366);
             this.panel2.TabIndex = 23;
             // 
             // tcSCM
@@ -224,11 +223,11 @@
             this.tcSCM.Controls.Add(this.tabPage1);
             this.tcSCM.Controls.Add(this.tabPage2);
             this.tcSCM.Controls.Add(this.tabPage3);
-            this.tcSCM.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tcSCM.Dock = System.Windows.Forms.DockStyle.Top;
             this.tcSCM.Location = new System.Drawing.Point(0, 0);
             this.tcSCM.Name = "tcSCM";
             this.tcSCM.SelectedIndex = 0;
-            this.tcSCM.Size = new System.Drawing.Size(740, 244);
+            this.tcSCM.Size = new System.Drawing.Size(750, 227);
             this.tcSCM.TabIndex = 22;
             // 
             // tabPage1
@@ -485,7 +484,6 @@
             this.tabPage3.Controls.Add(this.button2);
             this.tabPage3.Controls.Add(this.button12);
             this.tabPage3.Controls.Add(this.button11);
-            this.tabPage3.Controls.Add(this.button10);
             this.tabPage3.Controls.Add(this.button9);
             this.tabPage3.Controls.Add(this.button8);
             this.tabPage3.Controls.Add(this.button7);
@@ -495,14 +493,24 @@
             this.tabPage3.Location = new System.Drawing.Point(4, 21);
             this.tabPage3.Name = "tabPage3";
             this.tabPage3.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage3.Size = new System.Drawing.Size(732, 219);
+            this.tabPage3.Size = new System.Drawing.Size(742, 202);
             this.tabPage3.TabIndex = 2;
             this.tabPage3.Text = "集成打包";
             this.tabPage3.UseVisualStyleBackColor = true;
             // 
+            // button2
+            // 
+            this.button2.Location = new System.Drawing.Point(398, 158);
+            this.button2.Name = "button2";
+            this.button2.Size = new System.Drawing.Size(75, 23);
+            this.button2.TabIndex = 35;
+            this.button2.Text = "打包";
+            this.button2.UseVisualStyleBackColor = true;
+            this.button2.Click += new System.EventHandler(this.button2_Click);
+            // 
             // button12
             // 
-            this.button12.Location = new System.Drawing.Point(398, 129);
+            this.button12.Location = new System.Drawing.Point(398, 100);
             this.button12.Name = "button12";
             this.button12.Size = new System.Drawing.Size(75, 23);
             this.button12.TabIndex = 34;
@@ -512,23 +520,13 @@
             // 
             // button11
             // 
-            this.button11.Location = new System.Drawing.Point(398, 100);
+            this.button11.Location = new System.Drawing.Point(398, 71);
             this.button11.Name = "button11";
             this.button11.Size = new System.Drawing.Size(75, 23);
             this.button11.TabIndex = 33;
             this.button11.Text = "ReadMe";
             this.button11.UseVisualStyleBackColor = true;
             this.button11.Click += new System.EventHandler(this.button11_Click);
-            // 
-            // button10
-            // 
-            this.button10.Location = new System.Drawing.Point(398, 71);
-            this.button10.Name = "button10";
-            this.button10.Size = new System.Drawing.Size(75, 23);
-            this.button10.TabIndex = 32;
-            this.button10.Text = "解包处理";
-            this.button10.UseVisualStyleBackColor = true;
-            this.button10.Click += new System.EventHandler(this.button10_Click);
             // 
             // button9
             // 
@@ -542,7 +540,7 @@
             // 
             // button8
             // 
-            this.button8.Location = new System.Drawing.Point(513, 75);
+            this.button8.Location = new System.Drawing.Point(479, 17);
             this.button8.Name = "button8";
             this.button8.Size = new System.Drawing.Size(75, 23);
             this.button8.TabIndex = 30;
@@ -552,7 +550,7 @@
             // 
             // button7
             // 
-            this.button7.Location = new System.Drawing.Point(513, 17);
+            this.button7.Location = new System.Drawing.Point(398, 129);
             this.button7.Name = "button7";
             this.button7.Size = new System.Drawing.Size(75, 23);
             this.button7.TabIndex = 29;
@@ -687,34 +685,25 @@
             // rbLog
             // 
             this.rbLog.BackColor = System.Drawing.SystemColors.Window;
-            this.rbLog.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.rbLog.Location = new System.Drawing.Point(0, 244);
+            this.rbLog.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.rbLog.Location = new System.Drawing.Point(0, 227);
             this.rbLog.Name = "rbLog";
             this.rbLog.ReadOnly = true;
-            this.rbLog.Size = new System.Drawing.Size(740, 125);
+            this.rbLog.Size = new System.Drawing.Size(750, 139);
             this.rbLog.TabIndex = 24;
             this.rbLog.Text = "";
+            this.rbLog.TextChanged += new System.EventHandler(this.rbLog_TextChanged);
             // 
             // cmsNotify
             // 
             this.cmsNotify.Name = "cmsNotify";
             this.cmsNotify.Size = new System.Drawing.Size(61, 4);
             // 
-            // button2
-            // 
-            this.button2.Location = new System.Drawing.Point(513, 46);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(75, 23);
-            this.button2.TabIndex = 35;
-            this.button2.Text = "打包";
-            this.button2.UseVisualStyleBackColor = true;
-            this.button2.Click += new System.EventHandler(this.button2_Click);
-            // 
             // frmMakeAuto
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(740, 440);
+            this.ClientSize = new System.Drawing.Size(750, 437);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.toolStrip1);
             this.Controls.Add(this.statusStrip1);
@@ -803,7 +792,6 @@
         private System.Windows.Forms.Button button7;
         private System.Windows.Forms.Button button8;
         private System.Windows.Forms.Button button9;
-        private System.Windows.Forms.Button button10;
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.TextBox txtScmVer;
         private System.Windows.Forms.Label label7;

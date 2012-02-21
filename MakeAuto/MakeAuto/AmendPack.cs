@@ -1025,7 +1025,7 @@ namespace MakeAuto
         }
 
         // 编译Dll或者Exe
-        public void CompileExcel(CommitCom c)
+        public bool CompileExcel(CommitCom c)
         {
             // 确定详细设计说明书文件
             Detail d;
@@ -1044,29 +1044,38 @@ namespace MakeAuto
             if (d == null)
             {
                 MAConf.instance.WriteLog("查找不对对应的详细设计说明书模块！", InfoType.Error);
-                return;
+                return false;
             }
 
             // 标定index
+            bool Result = true;
             int index = MAConf.instance.Dls.IndexOf(d) + 1;
             string LocalSrc = SCMAmendDir + "\\";
-            // ExcelMacroHelper.instance.ScmRunExcelMacro(m, index, LocalSrc);
-
-            if (c.ctype == ComType.SO)
+            
+            // 在 src 文件不完整时才执行编译
+            if(!File.Exists(LocalSrc + d.Gcc) || !File.Exists(LocalSrc + d.Cpp) 
+                || !File.Exists(LocalSrc + d.Header) || !File.Exists(LocalSrc + d.Pc) )
             {
-                // 编译完成后，需要上传到 ssh 服务器上得到 SO
+                Result = ExcelMacroHelper.instance.ScmRunExcelMacro(m, index, LocalSrc);
+            }
+
+            // 编译完成后，需要上传到 ssh 服务器上得到 SO，sql不需要处理
+            if (c.ctype == ComType.SO && Result == true)
+            {
+                
                 SshConn s = MAConf.instance.Conns["scm"];  // 一定要配置这个
                 if (s == null)
                 {
                     MAConf.instance.WriteLog("集成ssh配置不存在！", InfoType.Error);
-                    return;
+                    return false;
                 }
 
                 s.localdir = LocalSrc;
-                s.UploadModule(d);
-                s.Compile(d);
-                s.DownloadModule(d);
+                // 上传、编译、下载
+                Result = s.UploadModule(d) && s.Compile(d) && s.DownloadModule(d);
             }
+
+            return Result;
         }
 
         // 查询单号

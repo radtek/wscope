@@ -36,8 +36,18 @@ namespace MakeAuto
             currSsh = (SshConn)mc.Conns[0];
 
             // 注册一个事件处理
-            mc.LogInfo += new InfoHandler(WriteLog);
-            
+            mc.OnLogInfo += new LogInfoEventHandler(WriteLog);
+
+            // 注册一个事件给 sftp
+            foreach(SshConn s in MAConf.instance.Conns)
+            {
+                s.sftp.OnPercentDone += new Chilkat.SFtp.PercentDoneEventHandler(sftp_OnPercentDone);
+            }
+        }
+
+        void sftp_OnPercentDone(object sender, Chilkat.PercentDoneEventArgs args)
+        {
+            rbLog.AppendText("..." + args.PercentDone.ToString());
         }
 
         private void WriteLog(string info, InfoType type = InfoType.Info)
@@ -189,7 +199,15 @@ namespace MakeAuto
             // 释放掉托盘的资源，不然关闭了还是会在通知区域显示
             this.nfnMake.Dispose();
 
+            // 刷出日志
             MAConf.instance.FlushLog();
+
+            // 关闭远程连接
+            foreach (SshConn c in MAConf.instance.Conns)
+            {
+                c.CloseSsh();
+                c.CloseSftp();
+            }
         }
 
         private void mniAbout_Click(object sender, EventArgs e)
@@ -381,42 +399,45 @@ namespace MakeAuto
                 mc.WriteLog("查询FTP目录信息错误。", InfoType.Error);
                 return;
             }
+
+            mc.WriteLog("查询FTP目录信息...完成");
         }
 
         private void button6_Click(object sender, EventArgs e)
         {
             mc.WriteLog("下载递交包...");
             ap.DownloadPack();
-        }
-
-        private void button10_Click(object sender, EventArgs e)
-        {
             mc.WriteLog("解包处理...");
             ap.ProcessPack();
+            mc.WriteLog("下载递交包...完成");
         }
 
         private void button11_Click(object sender, EventArgs e)
         {
             mc.WriteLog("处理ReadMe...");
             ap.ProcessReadMe();
+            mc.WriteLog("处理ReadMe...完成");
         }
 
         private void button12_Click(object sender, EventArgs e)
         {
             mc.WriteLog("获取VSS代码...");
             ap.GetCode();
+            mc.WriteLog("获取VSS代码...完成");
         }
 
         private void button7_Click(object sender, EventArgs e)
         {
             mc.WriteLog("执行编译...");
             ap.Compile();
+            mc.WriteLog("编译...完成");
         }
 
         private void button8_Click(object sender, EventArgs e)
         {
             mc.WriteLog("版本对比...");
             ap.ValidateVersion();
+            mc.WriteLog("版本对比...完成");
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -427,6 +448,11 @@ namespace MakeAuto
         private void button9_Click(object sender, EventArgs e)
         {
             // test
+        }
+
+        private void rbLog_TextChanged(object sender, EventArgs e)
+        {
+            rbLog.ScrollToCaret();
         }
     }
 }

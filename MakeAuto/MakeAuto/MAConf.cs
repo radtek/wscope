@@ -31,7 +31,7 @@ namespace MakeAuto
         public string LocalDir { get; set; }
     }
 
-    public delegate void InfoHandler(string info, InfoType type = InfoType.Info);    //定义信息输出委托
+    public delegate void LogInfoEventHandler(string info, InfoType type = InfoType.Info);    //定义信息输出委托
 
     sealed class MAConf
     {
@@ -61,7 +61,7 @@ namespace MakeAuto
         public bool ShowCrdt;
         public bool ShowFutu;
 
-        public event InfoHandler LogInfo;    //基本信息实现事件
+        public event LogInfoEventHandler OnLogInfo;    //基本信息实现事件
 
         private static string LogDir = "Log";
         private static string LogFile = LogDir + "\\" + "MA" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".Log";
@@ -89,7 +89,7 @@ namespace MakeAuto
             //Debug.AutoFlush = true;
 
             // 注册事件
-            LogInfo += new InfoHandler(WriteLogFile);
+            OnLogInfo += new LogInfoEventHandler(WriteLogFile);
 
             XmlDocument xmldoc = new XmlDocument();
             xmldoc.Load(conf);
@@ -361,7 +361,7 @@ namespace MakeAuto
         // 日志事件处理
         public void WriteLog(string info, InfoType type = InfoType.Info)
         {
-            LogInfo(info, type);
+            OnLogInfo(info, type);
         }
 
         // 写文本日志
@@ -390,8 +390,8 @@ namespace MakeAuto
         public void FlushLog()
         {
             writer.Flush();
-            writer.Close();
-            filestream.Close();
+            //writer.Close();
+            //filestream.Close();
         }
     }
 }
