@@ -27,9 +27,6 @@ namespace MakeAuto
         // 当前活动编译服务器
         private SshConn currSsh;
 
-        //
-
-
         public frmMakeAuto()
         {
             InitializeComponent();
@@ -48,6 +45,9 @@ namespace MakeAuto
         void sftp_OnPercentDone(object sender, Chilkat.PercentDoneEventArgs args)
         {
             rbLog.AppendText("..." + args.PercentDone.ToString());
+
+            if (args.PercentDone == 100)
+                rbLog.AppendText("\r\n");
         }
 
         private void WriteLog(string info, InfoType type = InfoType.Info)

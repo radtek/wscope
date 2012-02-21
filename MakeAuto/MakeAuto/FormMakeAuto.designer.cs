@@ -44,6 +44,7 @@
             this.bgwProc = new System.ComponentModel.BackgroundWorker();
             this.panel1 = new System.Windows.Forms.Panel();
             this.panel2 = new System.Windows.Forms.Panel();
+            this.rbLog = new System.Windows.Forms.RichTextBox();
             this.tcSCM = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.tbModule = new System.Windows.Forms.TextBox();
@@ -88,7 +89,6 @@
             this.label5 = new System.Windows.Forms.Label();
             this.txbAmenNo = new System.Windows.Forms.TextBox();
             this.btnReadInfo = new System.Windows.Forms.Button();
-            this.rbLog = new System.Windows.Forms.RichTextBox();
             this.cmsNotify = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.menuStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
@@ -113,7 +113,7 @@
             this.mniAbout});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(750, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(750, 25);
             this.menuStrip1.TabIndex = 2;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -122,26 +122,26 @@
             this.mniSettings.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.mniRefresh});
             this.mniSettings.Name = "mniSettings";
-            this.mniSettings.Size = new System.Drawing.Size(41, 20);
+            this.mniSettings.Size = new System.Drawing.Size(44, 21);
             this.mniSettings.Text = "设置";
             // 
             // mniRefresh
             // 
             this.mniRefresh.Name = "mniRefresh";
-            this.mniRefresh.Size = new System.Drawing.Size(118, 22);
+            this.mniRefresh.Size = new System.Drawing.Size(124, 22);
             this.mniRefresh.Text = "刷新模块";
             this.mniRefresh.Click += new System.EventHandler(this.btnRefresh_Click);
             // 
             // 开发ToolStripMenuItem
             // 
             this.开发ToolStripMenuItem.Name = "开发ToolStripMenuItem";
-            this.开发ToolStripMenuItem.Size = new System.Drawing.Size(41, 20);
+            this.开发ToolStripMenuItem.Size = new System.Drawing.Size(44, 21);
             this.开发ToolStripMenuItem.Text = "质保";
             // 
             // 集成ToolStripMenuItem
             // 
             this.集成ToolStripMenuItem.Name = "集成ToolStripMenuItem";
-            this.集成ToolStripMenuItem.Size = new System.Drawing.Size(41, 20);
+            this.集成ToolStripMenuItem.Size = new System.Drawing.Size(44, 21);
             this.集成ToolStripMenuItem.Text = "集成";
             // 
             // mniAbout
@@ -149,13 +149,13 @@
             this.mniAbout.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.关于ToolStripMenuItem});
             this.mniAbout.Name = "mniAbout";
-            this.mniAbout.Size = new System.Drawing.Size(41, 20);
+            this.mniAbout.Size = new System.Drawing.Size(44, 21);
             this.mniAbout.Text = "帮助";
             // 
             // 关于ToolStripMenuItem
             // 
             this.关于ToolStripMenuItem.Name = "关于ToolStripMenuItem";
-            this.关于ToolStripMenuItem.Size = new System.Drawing.Size(94, 22);
+            this.关于ToolStripMenuItem.Size = new System.Drawing.Size(100, 22);
             this.关于ToolStripMenuItem.Text = "关于";
             this.关于ToolStripMenuItem.Click += new System.EventHandler(this.关于ToolStripMenuItem_Click);
             // 
@@ -171,7 +171,7 @@
             // 
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripButton1});
-            this.toolStrip1.Location = new System.Drawing.Point(0, 24);
+            this.toolStrip1.Location = new System.Drawing.Point(0, 25);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.Size = new System.Drawing.Size(750, 25);
             this.toolStrip1.TabIndex = 4;
@@ -203,9 +203,9 @@
             // 
             this.panel1.Controls.Add(this.panel2);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel1.Location = new System.Drawing.Point(0, 49);
+            this.panel1.Location = new System.Drawing.Point(0, 50);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(750, 366);
+            this.panel1.Size = new System.Drawing.Size(750, 365);
             this.panel1.TabIndex = 21;
             // 
             // panel2
@@ -215,14 +215,26 @@
             this.panel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel2.Location = new System.Drawing.Point(0, 0);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(750, 366);
+            this.panel2.Size = new System.Drawing.Size(750, 365);
             this.panel2.TabIndex = 23;
+            // 
+            // rbLog
+            // 
+            this.rbLog.BackColor = System.Drawing.SystemColors.Window;
+            this.rbLog.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.rbLog.Location = new System.Drawing.Point(0, 227);
+            this.rbLog.Name = "rbLog";
+            this.rbLog.ReadOnly = true;
+            this.rbLog.Size = new System.Drawing.Size(750, 138);
+            this.rbLog.TabIndex = 24;
+            this.rbLog.Text = "";
+            this.rbLog.TextChanged += new System.EventHandler(this.rbLog_TextChanged);
             // 
             // tcSCM
             // 
+            this.tcSCM.Controls.Add(this.tabPage3);
             this.tcSCM.Controls.Add(this.tabPage1);
             this.tcSCM.Controls.Add(this.tabPage2);
-            this.tcSCM.Controls.Add(this.tabPage3);
             this.tcSCM.Dock = System.Windows.Forms.DockStyle.Top;
             this.tcSCM.Location = new System.Drawing.Point(0, 0);
             this.tcSCM.Name = "tcSCM";
@@ -235,10 +247,10 @@
             this.tabPage1.Controls.Add(this.tbModule);
             this.tabPage1.Controls.Add(this.clbModule);
             this.tabPage1.Controls.Add(this.groupBox2);
-            this.tabPage1.Location = new System.Drawing.Point(4, 21);
+            this.tabPage1.Location = new System.Drawing.Point(4, 22);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(732, 219);
+            this.tabPage1.Size = new System.Drawing.Size(742, 201);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "编译集成";
             this.tabPage1.UseVisualStyleBackColor = true;
@@ -340,10 +352,10 @@
             // 
             this.tabPage2.Controls.Add(this.groupBox1);
             this.tabPage2.Controls.Add(this.groupBox3);
-            this.tabPage2.Location = new System.Drawing.Point(4, 21);
+            this.tabPage2.Location = new System.Drawing.Point(4, 22);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(732, 219);
+            this.tabPage2.Size = new System.Drawing.Size(742, 201);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "修改递交";
             this.tabPage2.UseVisualStyleBackColor = true;
@@ -490,10 +502,10 @@
             this.tabPage3.Controls.Add(this.button6);
             this.tabPage3.Controls.Add(this.groupBox4);
             this.tabPage3.Controls.Add(this.btnReadInfo);
-            this.tabPage3.Location = new System.Drawing.Point(4, 21);
+            this.tabPage3.Location = new System.Drawing.Point(4, 22);
             this.tabPage3.Name = "tabPage3";
             this.tabPage3.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage3.Size = new System.Drawing.Size(742, 202);
+            this.tabPage3.Size = new System.Drawing.Size(742, 201);
             this.tabPage3.TabIndex = 2;
             this.tabPage3.Text = "集成打包";
             this.tabPage3.UseVisualStyleBackColor = true;
@@ -681,18 +693,6 @@
             this.btnReadInfo.Text = "读取";
             this.btnReadInfo.UseVisualStyleBackColor = true;
             this.btnReadInfo.Click += new System.EventHandler(this.btnReadInfo_Click);
-            // 
-            // rbLog
-            // 
-            this.rbLog.BackColor = System.Drawing.SystemColors.Window;
-            this.rbLog.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.rbLog.Location = new System.Drawing.Point(0, 227);
-            this.rbLog.Name = "rbLog";
-            this.rbLog.ReadOnly = true;
-            this.rbLog.Size = new System.Drawing.Size(750, 139);
-            this.rbLog.TabIndex = 24;
-            this.rbLog.Text = "";
-            this.rbLog.TextChanged += new System.EventHandler(this.rbLog_TextChanged);
             // 
             // cmsNotify
             // 

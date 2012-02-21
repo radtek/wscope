@@ -302,7 +302,7 @@ namespace MakeAuto
         public string SAWPath;
         public string LocalPath;
         public string Version;
-        public string LocalVersion;
+        //public string LocalVersion;
         public FileStatus fstatus;
         public SAWVFileHistory filehis;
     }

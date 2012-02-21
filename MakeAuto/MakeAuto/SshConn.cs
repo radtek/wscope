@@ -52,6 +52,7 @@ namespace MakeAuto
             ssh.ConnectTimeoutMs = 10000;
             ssh.IdleTimeoutMs = 30000;
             ssh.EnableEvents = false;
+            ssh.KeepSessionLog = false;
 
             // 初始化 sftp 传输
             sftp = new Chilkat.SFtp();
@@ -60,7 +61,7 @@ namespace MakeAuto
             //  Set some timeouts, in milliseconds:
             sftp.ConnectTimeoutMs = 10000;
             sftp.IdleTimeoutMs = 30000;
-            //sftp.KeepSessionLog = true;
+            sftp.KeepSessionLog = false;
         }
 
         /// <summary>
@@ -149,7 +150,7 @@ namespace MakeAuto
                 return false;
             }
 
-            // 此时，频道打开成功，保留ssh频道号
+            // 此时，通道打开成功，保留ssh通道号
             sshchannel = channelNum;
 
             return true;
@@ -421,7 +422,7 @@ namespace MakeAuto
             MAConf.instance.WriteLog("发送编译命令： make -f " + dl.Gcc , InfoType.Info);
             bool success = ssh.ChannelSendString(channelNum, " cd ~/src; " +
                 "rm " + dl.OFlow + " " + dl.OFunc + "; " +
-                "make -f " + dl.Gcc + " \r\n ", "ansi");
+                "make -f " + dl.Gcc + "; echo \"Result:$?, OVER, $USER!\" \n", "ansi");
             if (success != true)
             {
                 MAConf.instance.WriteLog(ssh.LastErrorText, InfoType.FileLog);
@@ -429,16 +430,16 @@ namespace MakeAuto
             }
 
             #region 这段代码会导致界面假死，使用下面这段，希望有所改善
-            /* 这段代码会导致界面假死，使用下面这段，希望有所改善
+            //s 这段代码会导致界面假死，使用下面这段，希望有所改善
             //  Read the response until we get the shell prompt (assuming it's successful)
             //  In my case, the shell prompt is: "root@ubuntu:/home/chilkat# "
             //  It will be different in your case.
-            success = ssh.ChannelReceiveUntilMatch(channelNum, "Compile so over!", "ansi", true);
+            success = ssh.ChannelReceiveUntilMatch(channelNum, "OVER, " + user, "ansi", true);
             if (success != true)
             {
                 //  Check the last-error information and the session log...
                 MAConf.instance.WriteLog(ssh.LastErrorText);
-                MAConf.instance.WriteLog(ssh.SessionLog);
+                MAConf.instance.WriteLog(ssh.SessionLog, InfoType.FileLog);
                 //  Check to see what was received.
                 MAConf.instance.WriteLog(ssh.GetReceivedText(channelNum, "ansi"));
                 return false;
@@ -454,8 +455,10 @@ namespace MakeAuto
             }
             
             // 编译失败，提示用户，编译成功，提示是否重启AS
-            int iSucceed = cmdOutput.IndexOf("Succeed");
-            if (iSucceed == -1)
+            int Begin = cmdOutput.LastIndexOf("Result:");
+            int End = cmdOutput.LastIndexOf(", OVER");
+            int Result = int.Parse(cmdOutput.Substring(Begin + 7, End - Begin));
+            if (Result != 0)
             {
                 MAConf.instance.WriteLog("编译so报错，请参考输出日志！", InfoType.Error);
                 //  Display the remote shell's command output:
@@ -466,17 +469,19 @@ namespace MakeAuto
             {
                 MAConf.instance.WriteLog("编译so完成！", InfoType.Info);
                 MAConf.instance.WriteLog(cmdOutput, InfoType.FileLog);
+                return true;
             }
-             
-             * */
             #endregion
 
+            /*
+            // 其实木有改善
             // Now check for incoming data from the SSH channel.
             int retval;
             string cmdOutput = string.Empty;
+            string cmdLog = string.Empty;
             do
             {
-                retval = ssh.ChannelPoll(channelNum, 5000);
+                retval = ssh.ChannelPoll(channelNum, 10000);
                 if (retval == -1)
                 {
                     MAConf.instance.WriteLog(ssh.LastErrorText, InfoType.Error);
@@ -485,8 +490,10 @@ namespace MakeAuto
                 }
                 if (retval > 0)
                 {
-                    cmdOutput += ssh.GetReceivedText(channelNum, "ansi");
-                    //System.Threading.Thread.Sleep(500);  // 重绘界面
+                    cmdOutput = ssh.GetReceivedText(channelNum, "ansi");
+                    //MAConf.instance.WriteLog(cmdOutput, InfoType.Info);
+                    cmdLog += cmdOutput;
+                    System.Threading.Thread.Sleep(5000);  // 重绘界面
                 }
                 else
                 {
@@ -496,29 +503,8 @@ namespace MakeAuto
                 }
             } while (retval > 0);
 
-            MAConf.instance.WriteLog(cmdOutput, InfoType.Info);
-
-            // 检查编译是否成功
-            MAConf.instance.WriteLog("检查编译结果： echo $? ", InfoType.Info);
-            success = ssh.ChannelSendString(channelNum, " echo $? " + "\r\n ", "ansi");
-            if (success != true)
-            {
-                MAConf.instance.WriteLog(ssh.LastErrorText, InfoType.FileLog);
-                return false;
-            }
-
-            retval = ssh.ChannelPoll(channelNum, 5000);  // 等待 5 秒钟
-            if (retval < 0)
-            {
-                MAConf.instance.WriteLog(ssh.LastErrorText, InfoType.FileLog);
-                return false;
-            }
-            else if (retval > 0)
-            {
-                cmdOutput = ssh.GetReceivedText(channelNum, "ansi");
-                MAConf.instance.WriteLog(cmdOutput, InfoType.Info);
-                //System.Threading.Thread.Sleep(500);  // 重绘界面
-            }
+            // 判断编译是否成功
+            
 
             if (cmdOutput.IndexOf("0") >= 0)
             {
@@ -528,6 +514,7 @@ namespace MakeAuto
             {
                 return false;
             }
+             * */
         }        
     }
 
