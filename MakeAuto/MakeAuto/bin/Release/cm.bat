@@ -50,7 +50,7 @@ rem 这里替换 C_CbpETF为其他DLL
 rem echo "%DCC%" -B "%ProName%" -U"%UPath%" -E"%OutPut%"
 "%DCC%" -B "%ProName%" -U"%UPath%" -E"%OutPut%"
 rem 如果编译失败，那么需要用户确认来进行处理
-if ERRORLEVEL 1 echo. & pause
+if %ERRORLEVEL%==0 (echo "Complile Success") else (echo "Complile Failed")
 
 popd
 rem 输出一行空行，且暂停
