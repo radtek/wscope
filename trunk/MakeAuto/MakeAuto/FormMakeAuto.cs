@@ -44,7 +44,7 @@ namespace MakeAuto
 
         void sftp_OnPercentDone(object sender, Chilkat.PercentDoneEventArgs args)
         {
-            rbLog.AppendText("..." + args.PercentDone.ToString());
+            rbLog.AppendText("..." + args.PercentDone.ToString() + "%");
 
             if (args.PercentDone == 100)
                 rbLog.AppendText("\r\n");
@@ -409,14 +409,9 @@ namespace MakeAuto
             ap.DownloadPack();
             mc.WriteLog("解包处理...");
             ap.ProcessPack();
-            mc.WriteLog("下载递交包...完成");
-        }
-
-        private void button11_Click(object sender, EventArgs e)
-        {
             mc.WriteLog("处理ReadMe...");
             ap.ProcessReadMe();
-            mc.WriteLog("处理ReadMe...完成");
+            mc.WriteLog("下载递交包...完成");
         }
 
         private void button12_Click(object sender, EventArgs e)
@@ -443,6 +438,10 @@ namespace MakeAuto
         private void button2_Click(object sender, EventArgs e)
         {
             // 打包
+            // 先打 src --> src-V*
+            mc.WriteLog("打包处理...");
+            ap.DoPacker();
+            mc.WriteLog("打包处理...完成");
         }
 
         private void button9_Click(object sender, EventArgs e)

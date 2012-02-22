@@ -422,7 +422,7 @@ namespace MakeAuto
             MAConf.instance.WriteLog("发送编译命令： make -f " + dl.Gcc , InfoType.Info);
             bool success = ssh.ChannelSendString(channelNum, " cd ~/src; " +
                 "rm " + dl.OFlow + " " + dl.OFunc + "; " +
-                "make -f " + dl.Gcc + "; echo \"Result:$?, OVER, $USER!\" \n", "ansi");
+                "make -f " + dl.Gcc + "; echo \"Result:$?, OVER, $USER \" \n", "ansi");
             if (success != true)
             {
                 MAConf.instance.WriteLog(ssh.LastErrorText, InfoType.FileLog);
@@ -457,18 +457,18 @@ namespace MakeAuto
             // 编译失败，提示用户，编译成功，提示是否重启AS
             int Begin = cmdOutput.LastIndexOf("Result:");
             int End = cmdOutput.LastIndexOf(", OVER");
-            int Result = int.Parse(cmdOutput.Substring(Begin + 7, End - Begin));
+            int Result = int.Parse(cmdOutput.Substring(Begin + 7, End - Begin - 7));
             if (Result != 0)
             {
-                MAConf.instance.WriteLog("编译so报错，请参考输出日志！", InfoType.Error);
                 //  Display the remote shell's command output:
                 MAConf.instance.WriteLog(cmdOutput);
+                MAConf.instance.WriteLog("编译so报错，请参考输出日志！", InfoType.Error);
                 return false;
             }
             else
             {
-                MAConf.instance.WriteLog("编译so完成！", InfoType.Info);
                 MAConf.instance.WriteLog(cmdOutput, InfoType.FileLog);
+                MAConf.instance.WriteLog("编译so完成！", InfoType.Info);
                 return true;
             }
             #endregion

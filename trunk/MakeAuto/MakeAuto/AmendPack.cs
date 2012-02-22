@@ -504,6 +504,14 @@ namespace MakeAuto
                 // 下载压缩包之后，解压缩包，重命名文件夹为集成-*，
                 UnRar(LocalFile, SCMAmendDir);
 
+                // 如果存在 src 压缩文件夹，解压缩 src 文件夹
+                string srcrar = SCMAmendDir + Path.DirectorySeparatorChar + "src-V1.rar";
+                if (File.Exists(srcrar))
+                {
+                    //UnRar(srcrar, SCMAmendDir);  // 不用解压，新的集成直接生成代码处理
+                    File.Delete(srcrar);
+                }
+
                 // 所有递交组件标记为新增
                 foreach (CommitCom c in ComComms)
                 {
@@ -837,8 +845,8 @@ namespace MakeAuto
                 }
                 else
                 {
-                    s.LocalPath = sv.Workspace + @"HSTRADES11\" + s.Path;
-                    s.SAWPath = @"$/" + @"HSTRADES11/" + s.Path.Replace('\\', '/');
+                    s.LocalPath = sv.Workspace + @"HSTRADES11" + s.Path;
+                    s.SAWPath = @"$/" + @"HSTRADES11" + s.Path.Replace('\\', '/');
                 }
             }
         }
@@ -856,8 +864,11 @@ namespace MakeAuto
             }
         }
 
-        public void Compile()
+        public bool Compile()
         {
+            laststatus = scmstatus;
+            scmstatus = ScmStatus.Compile;
+            bool Result = true;
             foreach (CommitCom c in ComComms)
             {
                 // 小包直接跳过
@@ -877,16 +888,22 @@ namespace MakeAuto
                 }
                 else if (c.ctype == ComType.Dll || c.ctype == ComType.Exe)
                 {
-                    CompileDpr(c);
+                    Result = CompileDpr(c);
+                    if (Result == false)
+                        break;
                 }
                 else if (c.ctype == ComType.SO || c.ctype == ComType.Sql)
                 {
                     // 这里不能并发执行，有可能锁住Excel，可能只能等待执行
-                    CompileExcel(c);
+                    Result = CompileExcel(c);
+                    if (Result == false)
+                        break;
                 }
 
                 c.cstatus = ComStatus.Normal;
             }
+
+            return Result;
         }
 
         // 集成所有递交组件
@@ -894,7 +911,65 @@ namespace MakeAuto
         {
             // 此时，文件夹的组件已完成，对文件夹压包处理
             // 需要把递交组件和src分别压包，这个与开发递交的组件不同
+            // 检查是否存在源代码
+            bool SrcFlag = false;
+            foreach (CommitCom c in ComComms)
+            {
+                if (c.ctype == ComType.SO)  // 交了SO，一定要存在源代码 
+                {
+                    SrcFlag = true;
+                    break;
+                }
+            }
 
+            string strOutput = string.Empty;
+            // 暂无实现需要
+            // 开启进程执行 rar解压缩
+            // 获取 Winrar 的路径（通过注册表或者是配置，这里直接根据xml来处理）
+            // 实例化 Process 类，启动执行进程
+            Process p = new Process();
+            try
+            {
+                p.StartInfo.FileName = MAConf.instance.rar;           // rar程序名
+
+                p.StartInfo.UseShellExecute = false;        // 关闭Shell的使用  
+                p.StartInfo.RedirectStandardInput = true; // 重定向标准输入
+                p.StartInfo.RedirectStandardOutput = true;  //重定向标准出  
+                p.StartInfo.RedirectStandardError = true; //重定向错误输出  
+                p.StartInfo.CreateNoWindow = true;             // 不显示窗口
+
+                if (SrcFlag == true)
+                {
+                    // 打包 Src
+                    p.StartInfo.Arguments = " m -ep " + LocalDir + "\\" + "src-V" + (ScmVer + 1).ToString() + ".rar "
+                        + SCMAmendDir + "\\" + "*.h " + SCMAmendDir + "\\" + "*.pc "
+                        + SCMAmendDir + "\\" + "*.cpp " + SCMAmendDir + "\\" + "*.gcc ";   // 设置执行参数  
+
+                    p.Start();    // 启动
+
+                    strOutput = p.StandardOutput.ReadToEnd();        //從输出流取得命令执行结果
+                    MAConf.instance.WriteLog(strOutput, InfoType.FileLog);
+
+                    p.WaitForExit();
+                }
+
+                // 打包Pack
+                p.StartInfo.Arguments = " a -ep " + SCMAmendDir + ".rar "
+                    + SCMAmendDir;   // 设置执行参数  
+
+                p.Start();    // 启动
+
+                strOutput = p.StandardOutput.ReadToEnd();        //從输出流取得命令执行结果
+                MAConf.instance.WriteLog(strOutput, InfoType.FileLog);
+
+                p.WaitForExit();
+
+                p.Close();
+            }
+            catch (Exception ex)
+            {
+                MAConf.instance.WriteLog("执行rar失败" + ex.Message, InfoType.Error);
+            }
 
         }
 
@@ -947,9 +1022,8 @@ namespace MakeAuto
         }
 
         // 打包压缩
-        private void Rar(string path, string dir)
+        private void RarScmPack()
         {
-            // 暂无实现需要
 
         }
 
@@ -988,7 +1062,12 @@ namespace MakeAuto
                 p.StartInfo.RedirectStandardError = true; //重定向错误输出  
                 p.StartInfo.CreateNoWindow = true;             // 不显示窗口 
                 p.Start();    // 启动
-                //return p.StandardOutput.ReadToEnd();        //從输出流取得命令执行结果
+                
+                string strOutput = p.StandardOutput.ReadToEnd();        //從输出流取得命令执行结果
+                MAConf.instance.WriteLog(strOutput, InfoType.FileLog);
+                
+                p.WaitForExit();
+                p.Close();
             }
             catch (Exception ex)
             {
@@ -997,31 +1076,52 @@ namespace MakeAuto
         }
 
         // 编译Dll或者Exe
-        public void CompileDpr(CommitCom c)
+        public bool CompileDpr(CommitCom c)
         {
-            int DVer = 6;
-            if(c.cname == "HsTools.exe" || c.cname == "HsCentrTrans.exe" || c.cname == "HsCbpTrans.exe")
-            {
-                DVer = 5;
-            }
+            bool Result = true;
+            
+            // 确认Delphi版本
+            int DVer = GetDelphiVer(c.cname);
 
-            string dpr = c.sawfile.LocalPath.Remove(c.sawfile.LocalPath.LastIndexOf('.')) + ".dpr";
+            // 确定工程名称
+            string dPro = c.sawfile.LocalPath + Path.GetFileNameWithoutExtension(c.cname) + ".dpr";
 
             Process p = new Process();
             p.StartInfo.FileName = "cm.bat";
-            p.StartInfo.Arguments = " " + DVer.ToString() + " " + c.sawfile.LocalPath + " " + SCMAmendDir;
+            p.StartInfo.Arguments = " " + DVer.ToString() + " " + dPro + " " + SCMAmendDir;
             p.StartInfo.UseShellExecute = false;
             p.StartInfo.RedirectStandardInput = true;
             p.StartInfo.RedirectStandardOutput = true;
             p.StartInfo.RedirectStandardError = true;
-            p.StartInfo.CreateNoWindow = false;
+            p.StartInfo.CreateNoWindow = true;
             p.Start();
 
-            string strOutput = null;
-            strOutput = p.StandardOutput.ReadToEnd();
-            Debug.WriteLine(strOutput);
+            string strOutput = p.StandardOutput.ReadToEnd();
+            MAConf.instance.WriteLog(strOutput, InfoType.FileLog);
+            if(strOutput.IndexOf("Complile Failed") >=0)
+            {
+                Result = false;
+                // 输出最后五行
+                string[] strArr = Regex.Split(strOutput, "\r");
+                //MAConf.instance.WriteLog(strArr[strArr.Length - 4], InfoType.Error); // 输出最后一行报错信息
+                MAConf.instance.WriteLog(strArr[strArr.Length - 3], InfoType.Error); // 输出最后一行报错信息
+                //MAConf.instance.WriteLog(strArr[strArr.Length - 2], InfoType.Error); // 输出最后一行报错信息 Compile Failed
+                //MAConf.instance.WriteLog(strArr[strArr.Length - 1], InfoType.Error); // 输出最后一行报错信息 " "
+            }
             p.WaitForExit();
             p.Close();
+
+            return Result;
+        }
+
+        public int GetDelphiVer(string Name)
+        {
+            if (Name == "HsTools.exe" || Name == "HsCentrTrans.exe" || Name == "HsCbpTrans.exe"
+                || Name == "HsQuota.exe")
+            {
+                return 5;
+            }
+            else return 6;
         }
 
         // 编译Dll或者Exe
@@ -1199,6 +1299,7 @@ namespace MakeAuto
 
         public ScmType scmtype;
 
+        public ScmStatus laststatus;
         public ScmStatus scmstatus;
 
         public SAWV sv;
