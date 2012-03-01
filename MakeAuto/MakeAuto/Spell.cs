@@ -17,36 +17,42 @@ namespace MakeAuto
 
         public Spell(Details dls)
         {
+            polyphone = new Dictionary<char, char>();
+            Detaildic = new Dictionary<string, string>();
+
+            LoadPolyphone(conf);
+
             // 遍历详细设计说明书
             foreach (Detail d in dls)
             {
-                dic.Add(GetFirstPinyin(d.Name),;
+                Detaildic.Add(d.Name, GetFirstPinyin(d.Name));
+                Debug.WriteLine(d.Name, Detaildic[d.Name]);
             }
         }
 
-        public void LoadPolyphone(string path)
+        private void LoadPolyphone(string path)
         {
             XmlDocument xmldoc = new XmlDocument();
-            xmldoc.Load(conf);
+            xmldoc.Load(path);
 
             XmlElement root = xmldoc.DocumentElement;
 
             // 读取多音字修正表
-            XmlNode xn = root.SelectSingleNode("polyphone");
+            XmlNode xn = root.SelectSingleNode("secu");
             XmlNodeList xnl = xn.ChildNodes;
             foreach (XmlNode x in xnl)
             {
                 try
                 {
-                    polyphone.Add(x.Attributes["key"].Value, x.Attributes["value"].Value);
+                    polyphone.Add(x.Attributes["key"].Value[0], x.Attributes["value"].Value[0]);
                 }
                 catch (ArgumentException)
                 {
-                    Debug.WriteLine("An element with Key = " + x.Attributes["key"].Value + " already exists.");
+                    MAConf.instance.WriteLog("An element with Key = " + x.Attributes["key"].Value[0] + " already exists.", InfoType.Error);
                 }
                 catch
                 {
-                    Debug.WriteLine("添加多音字异常！");
+                    MAConf.instance.WriteLog("添加多音字异常！" + x.Attributes["key"].Value, InfoType.Error);
                 }
             }
         }
@@ -56,15 +62,16 @@ namespace MakeAuto
         /// </summary> 
         /// <param name="str">汉字</param> 
         /// <returns>首字母</returns> 
-        public string GetFirstPinyin(string str)
+        private string GetFirstPinyin(string str)
         {
             string r = string.Empty;
             string t;
             ChineseChar chinChar;
+            char val = ' ';
             foreach (char c in str)
             {
                 // 数字和字母不需要处理
-                if (Char.IsLetterOrDigit(c))
+                if (Char.IsDigit(c) || Char.IsUpper(c) || Char.IsLower(c))
                 {
                     r += c.ToString();
                     continue;
@@ -72,9 +79,9 @@ namespace MakeAuto
                 else  // 处理中文字符
                 {
                     // 先检查多音字
-                    if (polyphone.ContainsKey(c.ToString()))
+                    if (polyphone.TryGetValue(c, out val))
                     {
-                        r += polyphone[c.ToString()].Substring(0, 1);
+                        r += val;
                     }
                     else  // 正常处理掉
                     {
@@ -99,9 +106,9 @@ namespace MakeAuto
         }
 
         // 多音字
-        private Dictionary<string, string> polyphone = new Dictionary<string, string>();
+        private Dictionary<char, char> polyphone;
 
-        private Dictionary<string, string> dic = new Dictionary<string, string>();
+        public Dictionary<string, string> Detaildic;
 
         private readonly string conf = "polyphone.xml";
 

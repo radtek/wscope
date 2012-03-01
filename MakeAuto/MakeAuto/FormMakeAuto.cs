@@ -341,6 +341,9 @@ namespace MakeAuto
             }
 
             sp = new Spell(MAConf.instance.Dls);
+
+            foreach(sp.Detaildic.key)
+            //tbModule.AutoCompleteCustomSource += sp.Detaildic.Keys;
         }
 
         private void tbModule_TextChanged(object sender, EventArgs e)
