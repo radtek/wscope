@@ -317,6 +317,7 @@ namespace MakeAuto
             FtpConf fc = MAConf.instance.fc;
             string s;
 
+            // 强制重新连接，防止时间长了就断掉了
             if (ftp.IsConnected == false)
             {
                 ftp.Connect();
@@ -410,6 +411,11 @@ namespace MakeAuto
             }
 
             // 递交包只需要同时下载集成包
+            if (ftp.Exists(RemoteFile) == false)
+            {
+                System.Windows.Forms.MessageBox.Show("FTP文件 " + RemoteFile + " 不存在！");
+                return false;
+            }
             ftp.DownloadFile(LocalFile, RemoteFile);
 
             // 集成包需要全部下载下来

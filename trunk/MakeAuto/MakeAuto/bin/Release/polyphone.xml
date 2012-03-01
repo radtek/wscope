@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="gb2312"?>
+<!--多音字修正-->
+<polyphone>
+    <item key="查" value="C"/>
+    <item key="参" value="C"/>
+    <item key="广" value="G"/>
+    <item key="合" value="H"/>
+    <item key="行" value="X"/>
+    <item key="券" value="Q"/>
+    <item key="适" value="S"/>
+    <item key="调" value="T"/>
+    <item key="系" value="X"/>
+</polyphone>

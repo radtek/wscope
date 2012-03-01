@@ -89,6 +89,7 @@
             this.label2 = new System.Windows.Forms.Label();
             this.txtAmendList = new System.Windows.Forms.TextBox();
             this.cmsNotify = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.menuStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -687,6 +688,12 @@
             this.cmsNotify.Name = "cmsNotify";
             this.cmsNotify.Size = new System.Drawing.Size(61, 4);
             // 
+            // timer1
+            // 
+            this.timer1.Enabled = true;
+            this.timer1.Interval = 180000;
+            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
+            // 
             // frmMakeAuto
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -787,6 +794,7 @@
         private System.Windows.Forms.Button button12;
         private System.Windows.Forms.RichTextBox rbLog;
         private System.Windows.Forms.Button button2;
+        private System.Windows.Forms.Timer timer1;
     }
 }
 
