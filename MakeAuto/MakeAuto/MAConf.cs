@@ -64,7 +64,9 @@ namespace MakeAuto
         public event LogInfoEventHandler OnLogInfo;    //基本信息实现事件
 
         private static string LogDir = "Log";
-        private static string LogFile = LogDir + "\\" + "MA" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".Log";
+        //private static string LogFile = LogDir + "\\" + "MA" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".Log";
+        private static string LogFile = LogDir + "\\" + "MA" + DateTime.Now.ToString("yyyyMMdd") + ".Log";
+       
         private FileStream filestream;
         private StreamWriter writer;
 
@@ -148,7 +150,7 @@ namespace MakeAuto
             ftp.UserName = fc.user;
             ftp.Password = fc.pass;
             ftp.TransferType = FTPTransferType.BINARY;  // 指定 BINARY 传输，否则对于压缩包会失败
-            ftp.CommandEncoding = Encoding.GetEncoding("gb2312"); // 重要，否则乱码且连接不上
+            ftp.CommandEncoding = Encoding.GetEncoding("gb2312"); // 重要，否则乱码且连接不
 
             // 读取 WinRAR 压缩配置，在节点RAR上
             rar = xn.ChildNodes[1].Attributes["Path"].InnerText;

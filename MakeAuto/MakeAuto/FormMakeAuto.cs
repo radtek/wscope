@@ -27,6 +27,8 @@ namespace MakeAuto
         // 当前活动编译服务器
         private SshConn currSsh;
 
+        Spell sp;
+
         public frmMakeAuto()
         {
             InitializeComponent();
@@ -111,7 +113,7 @@ namespace MakeAuto
             WriteLog("编译进度：" + e.ProgressPercentage.ToString() + "%, 当前模块：" + c.dl.Name
                 + ",编译信息：" + c.info, InfoType.Info);
             
-            /* 此处以为托盘化是便利的，但是调试期间不见得，所以先不要这样子处理
+            // 此处以为托盘化是便利的，但是调试期间不见得，所以先不要这样子处理
             if (e.ProgressPercentage == 0)
             {
                 // 启动后处理到托盘
@@ -135,7 +137,6 @@ namespace MakeAuto
                 }
  
             }
-             * */
         }
 
         private void bgwProc_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
@@ -338,6 +339,8 @@ namespace MakeAuto
             {
                 clbModule.Items.Add(dl.Name);
             }
+
+            sp = new Spell(MAConf.instance.Dls);
         }
 
         private void tbModule_TextChanged(object sender, EventArgs e)
@@ -453,5 +456,16 @@ namespace MakeAuto
         {
             rbLog.ScrollToCaret();
         }
+
+        // edtFTP的心跳包
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            if (mc.ftp.IsConnected == true)
+            {
+                mc.ftp.GetFileInfos(mc.fc.ServerDir);
+            }
+        }
+
+
     }
 }
