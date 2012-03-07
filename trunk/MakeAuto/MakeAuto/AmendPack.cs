@@ -17,13 +17,14 @@ namespace MakeAuto
     {
         Nothing = 0,
         SO = 1,
-        Sql = 2,
-        Exe = 3,
-        Dll = 4,
-        Patch = 5,
+        Sql,
+        Exe,
+        Dll,
+        Patch,
         // 小包SQL
-        Ssql =6,
-        Ini = 7,
+        Ssql,
+        Ini,
+        Xml,
     }
 
     enum ComStatus
@@ -109,6 +110,8 @@ namespace MakeAuto
                 ctype = ComType.Dll;
             else if (cname.IndexOf("ini") > -1)
                 ctype = ComType.Ini;
+            else if (cname.IndexOf("xml") > -1)
+                ctype = ComType.Xml;
         }
     }
 
@@ -795,6 +798,10 @@ namespace MakeAuto
                 if (c.cstatus == ComStatus.NoChange)
                     continue;
 
+                // 小包无SAW库
+                if (c.ctype == ComType.Ssql)
+                    continue;
+
                 // 标记文件需要刷新，添加到文件状态列表中
                 if (SAWFiles[c.path] == null)
                 {
@@ -851,6 +858,9 @@ namespace MakeAuto
                 }
                 else
                 {
+                    // 如果第一个不是路径分隔符号，那么补路径分隔符号
+                    if (s.Path[0] != '\\')
+                        s.Path = "\\" + s.Path;
                     s.LocalPath = sv.Workspace + @"HSTRADES11" + s.Path;
                     s.SAWPath = @"$/" + @"HSTRADES11" + s.Path.Replace('\\', '/');
                 }
