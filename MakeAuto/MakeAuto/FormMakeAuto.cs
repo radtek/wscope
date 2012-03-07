@@ -9,7 +9,6 @@ namespace MakeAuto
 {
     public partial class frmMakeAuto : Form
     {
-
         // 定义保存 Excel 列表的东东
         ArrayList alModule = new ArrayList();
 
@@ -31,13 +30,16 @@ namespace MakeAuto
 
         public frmMakeAuto()
         {
+            //System.Windows.Forms.MessageBox.Show("窗体入口");
             InitializeComponent();
             currSsh = (SshConn)mc.Conns[0];
 
+            //System.Windows.Forms.MessageBox.Show("注册日志");
             // 注册一个事件处理
             mc.OnLogInfo += new LogInfoEventHandler(WriteLog);
 
             // 注册一个事件给 sftp
+            //System.Windows.Forms.MessageBox.Show("注册ftp事件");
             foreach(SshConn s in MAConf.instance.Conns)
             {
                 s.sftp.OnPercentDone += new Chilkat.SFtp.PercentDoneEventHandler(sftp_OnPercentDone);
@@ -340,9 +342,9 @@ namespace MakeAuto
                 clbModule.Items.Add(dl.Name);
             }
 
-            sp = new Spell(MAConf.instance.Dls);
+            //sp = new Spell(MAConf.instance.Dls);
 
-            foreach(sp.Detaildic.key)
+            //foreach(sp.Detaildic.key)
             //tbModule.AutoCompleteCustomSource += sp.Detaildic.Keys;
         }
 

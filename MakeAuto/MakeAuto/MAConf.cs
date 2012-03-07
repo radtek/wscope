@@ -7,6 +7,7 @@ using System.Windows.Forms;
 using System.Data;
 using EnterpriseDT.Net.Ftp;
 using System.Diagnostics;
+using System.Security;
 
 namespace MakeAuto
 {
@@ -81,6 +82,7 @@ namespace MakeAuto
             fc = new FtpConf();
             ftp = new FTPConnection();
 
+            //System.Windows.Forms.MessageBox.Show("配置类初始化");
             // 初始化日志文件
             InitLog();
 
@@ -93,30 +95,39 @@ namespace MakeAuto
             // 注册事件
             OnLogInfo += new LogInfoEventHandler(WriteLogFile);
 
+            WriteLogFile("加载配置文件");
+            writer.Flush();
+            //System.Windows.Forms.MessageBox.Show("加载配置文件");
+
             XmlDocument xmldoc = new XmlDocument();
             xmldoc.Load(conf);
 
             XmlElement root = xmldoc.DocumentElement;
 
             // 读取显示属性
+            WriteLogFile("读取显示属性");
+            writer.Flush();
             XmlNode xn = root.SelectSingleNode("Part");
             ShowSecu = bool.Parse(xn.Attributes["showsecu"].InnerText);
             ShowFutu = bool.Parse(xn.Attributes["showfutu"].InnerText);
             ShowCrdt = bool.Parse(xn.Attributes["showcrdt"].InnerText);
 
             // 读取节点配置明细
+            WriteLog("读取节点配置明细");
             xn = root.SelectSingleNode("Detail");
             DetailFile = xn.Attributes["DetailFile"].InnerText;
             SrcDir = xn.Attributes["SrcDir"].InnerText;
             DetailList = xn.Attributes["DetailList"].InnerText;
 
             // 读取修改单配置明细
+            WriteLog("读取修改单配置明细");
             xn = root.SelectSingleNode("Amend");
             BaseDir = xn.Attributes["BaseDir"].InnerText;
             Author = xn.Attributes["Author"].InnerText;
             ModuleList = xn.Attributes["ModuleList"].InnerText;
 
             // 读取Ssh连接配置
+            WriteLog("读取Ssh连接配置");
             xn = root.SelectSingleNode("Conns");
             XmlNodeList xnl = xn.ChildNodes;
             foreach (XmlNode x in xnl)
@@ -137,6 +148,7 @@ namespace MakeAuto
             }
 
             // 读取小球FTP路径递交配置
+            WriteLog("读取小球FTP路径递交配置");
             xn = root.SelectSingleNode("Smallball");
             fc.host = xn.Attributes["host"].InnerText;
             fc.port = int.Parse(xn.Attributes["port"].InnerText);
@@ -153,10 +165,11 @@ namespace MakeAuto
             ftp.CommandEncoding = Encoding.GetEncoding("gb2312"); // 重要，否则乱码且连接不
 
             // 读取 WinRAR 压缩配置，在节点RAR上
+            WriteLog("读取 WinRAR 压缩配置，在节点RAR上"); 
             rar = xn.ChildNodes[1].Attributes["Path"].InnerText;
             
             // 读取VSS配置
-            // 读取Ssh连接配置
+            WriteLog("读取VSS配置"); 
             xn = root.SelectSingleNode("SCMS");
             xnl = xn.ChildNodes;
             foreach (XmlNode x in xnl)
@@ -175,6 +188,9 @@ namespace MakeAuto
                 // 添加此连接到配置组
                 SAWs.Add(sv);
             }
+
+            //WriteLog("配置初始化完成");
+            writer.Flush();
         }
 
         // 单例化 MAConf
@@ -374,19 +390,100 @@ namespace MakeAuto
                 prefix = "[ERROR]";
             else prefix = "";
 
-            writer.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "  " + prefix + info);
+            try
+            {
+                writer.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "  " + prefix + info);
+            }
+            catch (ObjectDisposedException e)
+            {
+                System.Windows.Forms.MessageBox.Show("w ObjectDisposedException\r\n" + e.Message);
+            }
+            catch (IOException e)
+            {
+                System.Windows.Forms.MessageBox.Show("w IOException\r\n" + e.Message);
+            }
+            catch (Exception e)
+            {
+                System.Windows.Forms.MessageBox.Show("w Exception\r\n" + e.Message);
+            }
         }
 
         public void InitLog()
         {
+            //System.Windows.Forms.MessageBox.Show("InitLog");
             if (!System.IO.Directory.Exists(LogDir))
             {
                 System.IO.Directory.CreateDirectory(LogDir);
             }
-            
-            filestream = new FileStream(LogFile, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None);
-            writer = new StreamWriter(filestream, System.Text.Encoding.Default);
-            writer.BaseStream.Seek(0, SeekOrigin.End);
+
+            //System.Windows.Forms.MessageBox.Show("filestream");
+
+            try
+            {
+                filestream = new FileStream(LogFile, FileMode.OpenOrCreate, FileAccess.Write);
+            }
+            catch (ArgumentNullException e)
+            {
+                System.Windows.Forms.MessageBox.Show("ArgumentNullException\r\n" + e.Message);
+            }
+            catch (ArgumentOutOfRangeException e)
+            {
+                System.Windows.Forms.MessageBox.Show("ArgumentOutOfRangeException\r\n" + e.Message);
+            }
+            catch (ArgumentException e)
+            {
+                System.Windows.Forms.MessageBox.Show("ArgumentException\r\n" + e.Message);
+            }
+            catch (NotSupportedException e)
+            {
+                System.Windows.Forms.MessageBox.Show("NotSupportedException\r\n" + e.Message);
+            }
+            catch (SecurityException e)
+            {
+                System.Windows.Forms.MessageBox.Show("SecurityException\r\n" + e.Message);
+            }
+            catch (FileNotFoundException e)
+            {
+                System.Windows.Forms.MessageBox.Show("NotSupportedException\r\n" + e.Message);
+            }
+            catch (PathTooLongException e)
+            {
+                System.Windows.Forms.MessageBox.Show("PathTooLongException\r\n" + e.Message);
+            }
+            catch (DirectoryNotFoundException e)
+            {
+                System.Windows.Forms.MessageBox.Show("DirectoryNotFoundException\r\n" + e.Message);
+            }
+            catch (IOException e)
+            {
+                System.Windows.Forms.MessageBox.Show("IOException\r\n" + e.Message);
+            }
+            catch (Exception e)
+            {
+                System.Windows.Forms.MessageBox.Show("Exception\r\n" + e.Message);
+            }
+
+            //System.Windows.Forms.MessageBox.Show("writer");
+            try
+            {
+                writer = new StreamWriter(filestream, System.Text.Encoding.Default);
+                writer.BaseStream.Seek(0, SeekOrigin.End);
+            }
+            catch (ArgumentNullException e)
+            {
+                System.Windows.Forms.MessageBox.Show("ArgumentNullException\r\n" + e.Message);
+            }
+            catch (ArgumentException e)
+            {
+                System.Windows.Forms.MessageBox.Show("ArgumentException\r\n" + e.Message);
+            }
+            catch (Exception e)
+            {
+                System.Windows.Forms.MessageBox.Show("Exception\r\n" + e.Message);
+            }
+
+
+            //System.Windows.Forms.MessageBox.Show("seek");
         }
 
         public void FlushLog()
