@@ -4,6 +4,7 @@ using System.Collections;
 using System.Text;
 using System.IO;
 using System.Diagnostics;
+using Renci.SshNet;
 
 namespace MakeAuto
 {
@@ -27,7 +28,7 @@ namespace MakeAuto
         private Detail currDetail;
 
         // 当前活动编译服务器
-        private SshConn currSsh;
+        private ReSSH currSsh;
 
         Spell sp;
 
@@ -40,22 +41,7 @@ namespace MakeAuto
             // 注册一个事件处理
             log.OnLogInfo += new LogInfoEventHandler(WriteLog);
 
-            currSsh = (SshConn)mc.Conns[0];
-
-            // 注册一个事件给 sftp
-            //System.Windows.Forms.MessageBox.Show("注册ftp事件");
-            foreach(SshConn s in MAConf.instance.Conns)
-            {
-                s.sftp.OnPercentDone += new Chilkat.SFtp.PercentDoneEventHandler(sftp_OnPercentDone);
-            }
-        }
-
-        void sftp_OnPercentDone(object sender, Chilkat.PercentDoneEventArgs args)
-        {
-            rbLog.AppendText("..." + args.PercentDone.ToString() + "%");
-
-            if (args.PercentDone == 100)
-                rbLog.AppendText("\r\n");
+            currSsh = (ReSSH)mc.ReConns[0];
         }
 
         private void WriteLog(object sender, LogInfoArgs e)
@@ -207,7 +193,7 @@ namespace MakeAuto
             this.nfnMake.Dispose();
 
             // 关闭远程连接
-            foreach (SshConn c in MAConf.instance.Conns)
+            foreach (ReSSH c in MAConf.instance.ReConns)
             {
                 c.CloseSsh();
                 c.CloseSftp();
@@ -455,7 +441,6 @@ namespace MakeAuto
 
         private void button9_Click(object sender, EventArgs e)
         {
-            // test
         }
 
         private void rbLog_TextChanged(object sender, EventArgs e)

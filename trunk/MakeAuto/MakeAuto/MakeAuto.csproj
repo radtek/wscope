@@ -106,10 +106,10 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
+    <Compile Include="ReSSH.cs" />
     <Compile Include="SAWV.cs" />
     <Compile Include="AmendPack.cs" />
     <Compile Include="Spell.cs" />
-    <Compile Include="SshConn.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="AboutBoxMakeAuto.resx">
@@ -126,9 +126,6 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="ChilkatDotNet4">
-      <HintPath>bin\Release\ChilkatDotNet4.dll</HintPath>
-    </Reference>
     <Reference Include="ChnCharInfo">
       <HintPath>bin\Release\ChnCharInfo.dll</HintPath>
     </Reference>
@@ -139,6 +136,9 @@
       <SpecificVersion>False</SpecificVersion>
       <EmbedInteropTypes>True</EmbedInteropTypes>
       <HintPath>..\..\..\..\..\..\..\WINDOWS\assembly\GAC_MSIL\Microsoft.Office.Interop.Excel\14.0.0.0__71e9bce111e9429c\Microsoft.Office.Interop.Excel.dll</HintPath>
+    </Reference>
+    <Reference Include="Renci.SshNet">
+      <HintPath>..\depbin\Renci.SshNet.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.configuration" />
@@ -168,8 +168,9 @@
     </COMReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
-    <None Include="Properties\app.manifest" />
+    <None Include="Properties\app.manifest">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
