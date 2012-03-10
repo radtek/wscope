@@ -1183,7 +1183,7 @@ namespace MakeAuto
             if (c.ctype == ComType.SO && Result == true)
             {
                 
-                SshConn s = MAConf.instance.Conns["scm"];  // 一定要配置这个
+                ReSSH s = MAConf.instance.ReConns["scm"];  // 一定要配置这个
                 if (s == null)
                 {
                     MAConf.instance.WriteLog("集成ssh配置不存在！", LogLevel.Error);

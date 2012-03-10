@@ -70,6 +70,11 @@ namespace MakeAuto
             get { return "s_" + Pas + "func.h"; }
         }
 
+        public string FCPP
+        {
+            get { return "s_" + Pas + "func.cpp"; }
+        }
+
         public string OFlow
         {
             get { return "s_" + Pas + "flow.o"; }

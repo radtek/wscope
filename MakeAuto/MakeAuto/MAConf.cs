@@ -28,7 +28,8 @@ namespace MakeAuto
         private MAConf()
         {
             log = OperLog.instance;
-            Conns = new SshConns();
+            //Conns = new SshConns();
+            ReConns = new ReSSHConns();
             SAWs = new SAWVList();
             Dls = new Details();
             fc = new FtpConf();
@@ -67,7 +68,11 @@ namespace MakeAuto
             XmlNodeList xnl = xn.ChildNodes;
             foreach (XmlNode x in xnl)
             {
-                SshConn sc = new SshConn(x.Attributes["name"].InnerText,
+                // 跳过注释，否则格式不对，会报错
+                if (x.NodeType == XmlNodeType.Comment)
+                    continue;
+
+                ReSSH sc = new ReSSH(x.Attributes["name"].InnerText,
                     x.Attributes["host"].InnerText,
                     int.Parse(x.Attributes["port"].InnerText),
                     x.Attributes["user"].InnerText,
@@ -79,7 +84,7 @@ namespace MakeAuto
                 sc.restartAs = bool.Parse(xn.Attributes["restartas"].InnerText);
 
                 // 添加此连接到配置组
-                Conns.Add(sc);
+                ReConns.Add(sc);
             }
 
             // 读取小球FTP路径递交配置
@@ -109,6 +114,9 @@ namespace MakeAuto
             xnl = xn.ChildNodes;
             foreach (XmlNode x in xnl)
             {
+                if (x.NodeType == XmlNodeType.Comment)
+                    continue;
+
                 SAWV sv = new SAWV(x.Attributes["name"].Value,
                     x.Attributes["server"].Value,
                     int.Parse(x.Attributes["port"].Value),
@@ -331,7 +339,8 @@ namespace MakeAuto
         // winrar路径
         public string rar { get; private set; }
 
-        public SshConns Conns;
+        //public SshConns Conns;
+        public ReSSHConns ReConns;
 
         public Details Dls;
         public FtpConf fc;
