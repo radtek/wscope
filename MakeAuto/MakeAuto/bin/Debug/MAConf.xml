@@ -5,7 +5,7 @@
     <Detail DetailFile="E:\VSS\HSTRADES11\Documents\D2.Designs\详细设计\金融产品销售系统_详细设计说明书.xls" SrcDir="C:\src\" DetailList="detail.xml"/>
     <Amend BaseDir="E:\Work\xgd\"  Author="高虎" ModuleList="module.xml"/>
     <Conns>
-      <Conn name="centos" host="192.168.56.101" port="22" user="handsome" pass="handsome">
+      <Conn name="centos" host="192.168.185.89" port="22" user="handsome" pass="handsome">
         <FBASE compile="false" restartas="false" />
       </Conn>
       <Conn name="rzgh" host="192.168.187.60" port="22" user="handsome" pass="handsome">

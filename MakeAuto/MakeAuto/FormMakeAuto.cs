@@ -12,6 +12,9 @@ namespace MakeAuto
         // 定义保存 Excel 列表的东东
         ArrayList alModule = new ArrayList();
 
+        // 日志实例
+        private OperLog log = OperLog.instance;
+
         // 配置实例
         private MAConf mc = MAConf.instance;
 
@@ -32,11 +35,12 @@ namespace MakeAuto
         {
             //System.Windows.Forms.MessageBox.Show("窗体入口");
             InitializeComponent();
-            currSsh = (SshConn)mc.Conns[0];
 
             //System.Windows.Forms.MessageBox.Show("注册日志");
             // 注册一个事件处理
-            mc.OnLogInfo += new LogInfoEventHandler(WriteLog);
+            log.OnLogInfo += new LogInfoEventHandler(WriteLog);
+
+            currSsh = (SshConn)mc.Conns[0];
 
             // 注册一个事件给 sftp
             //System.Windows.Forms.MessageBox.Show("注册ftp事件");
@@ -54,17 +58,17 @@ namespace MakeAuto
                 rbLog.AppendText("\r\n");
         }
 
-        private void WriteLog(string info, InfoType type = InfoType.Info)
+        private void WriteLog(object sender, LogInfoArgs e)
         {
-            if (type == InfoType.FileLog)
+            if (e.level < LogLevel.FormLog)
                 return;
 
-            if (type == InfoType.Error)
+            if (e.level == LogLevel.Error)
             {
                 rbLog.SelectionColor = System.Drawing.Color.Red;
             }
 
-            rbLog.AppendText(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "  " + info + "\r\n");
+            rbLog.AppendText(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "  " + e.title + e.info + "\r\n");
         }
 
         private void btnSO_Click(object sender, EventArgs e)
@@ -103,17 +107,17 @@ namespace MakeAuto
             if (e.Error != null)
                 MessageBox.Show("Error: " + e.Error.Message);
             else if (e.Cancelled)
-                WriteLog("取消任务", InfoType.Info);
+                log.WriteLog("取消任务", LogLevel.Info);
             else
-                WriteLog("编译完成", InfoType.Info);
+                log.WriteLog("编译完成", LogLevel.Info);
         }
 
         private void bgwProc_ProgressChanged(object sender, System.ComponentModel.ProgressChangedEventArgs e)
         {
             // This method runs on the main thread.
             State c = (State)e.UserState;
-            WriteLog("编译进度：" + e.ProgressPercentage.ToString() + "%, 当前模块：" + c.dl.Name
-                + ",编译信息：" + c.info, InfoType.Info);
+            log.WriteLog("编译进度：" + e.ProgressPercentage.ToString() + "%, 当前模块：" + c.dl.Name
+                + ",编译信息：" + c.info, LogLevel.Info);
             
             // 此处以为托盘化是便利的，但是调试期间不见得，所以先不要这样子处理
             if (e.ProgressPercentage == 0)
@@ -202,9 +206,6 @@ namespace MakeAuto
             // 释放掉托盘的资源，不然关闭了还是会在通知区域显示
             this.nfnMake.Dispose();
 
-            // 刷出日志
-            MAConf.instance.FlushLog();
-
             // 关闭远程连接
             foreach (SshConn c in MAConf.instance.Conns)
             {
@@ -289,7 +290,7 @@ namespace MakeAuto
                     }
                     else
                     {
-                        WriteLog("文件：" + MAConf.instance.SrcDir + s + "不存在，请确认！", InfoType.Info);
+                        log.WriteLog("文件：" + MAConf.instance.SrcDir + s + "不存在，请确认！", LogLevel.Info);
                     }
                 }
 
@@ -302,7 +303,7 @@ namespace MakeAuto
                     }
                     else
                     {
-                        WriteLog("文件：" + MAConf.instance.SrcDir + currDetail.Sql + "不存在，请确认！", InfoType.Info);
+                        log.WriteLog("文件：" + MAConf.instance.SrcDir + currDetail.Sql + "不存在，请确认！", LogLevel.Error);
                     }
                 }
 
@@ -314,7 +315,7 @@ namespace MakeAuto
             }
 
             // 日志通用记法
-            WriteLog("修改单递交准备完成，生成目录：" + CurrVer, InfoType.Info);
+            log.WriteLog("修改单递交准备完成，生成目录：" + CurrVer, LogLevel.Info);
         }
 
         private void txtAmendList_Validating(object sender, System.ComponentModel.CancelEventArgs e)
@@ -391,7 +392,7 @@ namespace MakeAuto
             }
             else
             {
-                mc.WriteLog("查询递交路径错误。", InfoType.Error);
+                mc.WriteLog("查询递交路径错误。", LogLevel.Error);
                 return;
             }
 
@@ -404,7 +405,7 @@ namespace MakeAuto
             }
             else 
             {
-                mc.WriteLog("查询FTP目录信息错误。", InfoType.Error);
+                mc.WriteLog("查询FTP目录信息错误。", LogLevel.Error);
                 return;
             }
 

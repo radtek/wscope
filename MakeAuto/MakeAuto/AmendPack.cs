@@ -137,6 +137,8 @@ namespace MakeAuto
     {
         public static readonly AmendPack instance = new AmendPack();
 
+        private OperLog log;
+
         private AmendPack()
         {
             ComComms = new ComList();
@@ -148,6 +150,8 @@ namespace MakeAuto
             SubmitL = new ArrayList();
             ScmL = new ArrayList();
             SAWFiles = new SAWFileList();
+
+            log = OperLog.instance;
         }
 
         // 类初始化
@@ -201,7 +205,7 @@ namespace MakeAuto
             }
             catch (Exception e)
             {
-                MAConf.instance.WriteLog("查询修改单递交路径失败，" + e.Message, InfoType.Error);
+                log.WriteLog("查询修改单递交路径失败，" + e.Message, LogLevel.Error);
             }
             finally
             {
@@ -649,7 +653,7 @@ namespace MakeAuto
             catch (Exception ex)
             {
                 // Let the user know what went wrong.
-                MAConf.instance.WriteLog("ProcessComs异常: " + Readme + " " + ex.Message, InfoType.Error);
+                MAConf.instance.WriteLog("ProcessComs异常: " + Readme + " " + ex.Message, LogLevel.Error);
             }
 
             // 输出下处理结果
@@ -728,7 +732,7 @@ namespace MakeAuto
                         c = ComComms[name];
                         if (c == null)
                         {
-                            MAConf.instance.WriteLog("ProcessMods未能找到组件", InfoType.Error);
+                            MAConf.instance.WriteLog("ProcessMods未能找到组件", LogLevel.Error);
                             scmstatus = ScmStatus.Error;
                             return;
                         }
@@ -747,7 +751,7 @@ namespace MakeAuto
             catch (Exception ex)
             {
                 // Let the user know what went wrong.
-                MAConf.instance.WriteLog("ProcessMods异常: " + Readme + " " + ex.Message, InfoType.Error);
+                MAConf.instance.WriteLog("ProcessMods异常: " + Readme + " " + ex.Message, LogLevel.Error);
             }
         }
         
@@ -964,7 +968,7 @@ namespace MakeAuto
                     p.Start();    // 启动
 
                     strOutput = p.StandardOutput.ReadToEnd();        //從输出流取得命令执行结果
-                    MAConf.instance.WriteLog(strOutput, InfoType.FileLog);
+                    MAConf.instance.WriteLog(strOutput, LogLevel.FileLog);
 
                     p.WaitForExit();
                 }
@@ -976,7 +980,7 @@ namespace MakeAuto
                 p.Start();    // 启动
 
                 strOutput = p.StandardOutput.ReadToEnd();        //從输出流取得命令执行结果
-                MAConf.instance.WriteLog(strOutput, InfoType.FileLog);
+                MAConf.instance.WriteLog(strOutput, LogLevel.FileLog);
 
                 p.WaitForExit();
 
@@ -984,7 +988,7 @@ namespace MakeAuto
             }
             catch (Exception ex)
             {
-                MAConf.instance.WriteLog("执行rar失败" + ex.Message, InfoType.Error);
+                MAConf.instance.WriteLog("执行rar失败" + ex.Message, LogLevel.Error);
             }
 
         }
@@ -1080,14 +1084,14 @@ namespace MakeAuto
                 p.Start();    // 启动
                 
                 string strOutput = p.StandardOutput.ReadToEnd();        //從输出流取得命令执行结果
-                MAConf.instance.WriteLog(strOutput, InfoType.FileLog);
+                MAConf.instance.WriteLog(strOutput, LogLevel.FileLog);
                 
                 p.WaitForExit();
                 p.Close();
             }
             catch (Exception ex)
             {
-                MAConf.instance.WriteLog("执行rar失败" + ex.Message, InfoType.Error);
+                MAConf.instance.WriteLog("执行rar失败" + ex.Message, LogLevel.Error);
             }
         }
 
@@ -1113,16 +1117,16 @@ namespace MakeAuto
             p.Start();
 
             string strOutput = p.StandardOutput.ReadToEnd();
-            MAConf.instance.WriteLog(strOutput, InfoType.FileLog);
+            MAConf.instance.WriteLog(strOutput, LogLevel.FileLog);
             if(strOutput.IndexOf("Complile Failed") >=0)
             {
                 Result = false;
                 // 输出最后五行
                 string[] strArr = Regex.Split(strOutput, "\r");
-                //MAConf.instance.WriteLog(strArr[strArr.Length - 4], InfoType.Error); // 输出最后一行报错信息
-                MAConf.instance.WriteLog(strArr[strArr.Length - 3], InfoType.Error); // 输出最后一行报错信息
-                //MAConf.instance.WriteLog(strArr[strArr.Length - 2], InfoType.Error); // 输出最后一行报错信息 Compile Failed
-                //MAConf.instance.WriteLog(strArr[strArr.Length - 1], InfoType.Error); // 输出最后一行报错信息 " "
+                //MAConf.instance.WriteLog(strArr[strArr.Length - 4], LogLevel.Error); // 输出最后一行报错信息
+                MAConf.instance.WriteLog(strArr[strArr.Length - 3], LogLevel.Error); // 输出最后一行报错信息
+                //MAConf.instance.WriteLog(strArr[strArr.Length - 2], LogLevel.Error); // 输出最后一行报错信息 Compile Failed
+                //MAConf.instance.WriteLog(strArr[strArr.Length - 1], LogLevel.Error); // 输出最后一行报错信息 " "
             }
             p.WaitForExit();
             p.Close();
@@ -1159,7 +1163,7 @@ namespace MakeAuto
 
             if (d == null)
             {
-                MAConf.instance.WriteLog("查找不对对应的详细设计说明书模块！", InfoType.Error);
+                MAConf.instance.WriteLog("查找不对对应的详细设计说明书模块！", LogLevel.Error);
                 return false;
             }
 
@@ -1182,7 +1186,7 @@ namespace MakeAuto
                 SshConn s = MAConf.instance.Conns["scm"];  // 一定要配置这个
                 if (s == null)
                 {
-                    MAConf.instance.WriteLog("集成ssh配置不存在！", InfoType.Error);
+                    MAConf.instance.WriteLog("集成ssh配置不存在！", LogLevel.Error);
                     return false;
                 }
 
