@@ -64,6 +64,8 @@ namespace MakeAuto
 
         public State state;
 
+        private OperLog log = OperLog.instance;
+
         private ExcelMacroHelper()
         {
             SrcDir = MAConf.instance.SrcDir;
@@ -225,7 +227,7 @@ namespace MakeAuto
             {
                 if (RunExcelMacro(outdir, FileNo, FileNo) != 0)
                 {
-                    MAConf.instance.WriteLog("±‡“Îexcel ß∞‹");
+                    log.WriteLog("±‡“Îexcel ß∞‹");
                     return false;
                 }
             }

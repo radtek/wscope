@@ -24,6 +24,8 @@ namespace MakeAuto
         public Chilkat.SFtp sftp; // sftp组件
         //private int sftpchannel; // sftp 频道号
 
+        private OperLog log;
+
         /// <summary>
         /// 配置一个ssh连接
         /// </summary>
@@ -62,6 +64,8 @@ namespace MakeAuto
             sftp.ConnectTimeoutMs = 10000;
             sftp.IdleTimeoutMs = 30000;
             sftp.KeepSessionLog = false;
+
+            log = OperLog.instance;
         }
 
         /// <summary>
@@ -82,14 +86,14 @@ namespace MakeAuto
             success = ssh.UnlockComponent("30-day trial");
             if (success != true)
             {
-                MAConf.instance.WriteLog(ssh.LastErrorText, InfoType.FileLog);
+                MAConf.instance.WriteLog(ssh.LastErrorText, LogLevel.FileLog);
                 return false;
             }
 
             success = ssh.Connect(host, port);
             if (success != true)
             {
-                MAConf.instance.WriteLog(ssh.LastErrorText, InfoType.FileLog);
+                MAConf.instance.WriteLog(ssh.LastErrorText, LogLevel.FileLog);
                 return false;
             }
 
@@ -97,7 +101,7 @@ namespace MakeAuto
             success = ssh.AuthenticatePw(user, pass);
             if (success != true)
             {
-                MAConf.instance.WriteLog(ssh.LastErrorText, InfoType.FileLog);
+                MAConf.instance.WriteLog(ssh.LastErrorText, LogLevel.FileLog);
                 return false;
             }
 
@@ -107,7 +111,7 @@ namespace MakeAuto
             channelNum = ssh.OpenSessionChannel();
             if (channelNum < 0)
             {
-                MAConf.instance.WriteLog(ssh.LastErrorText, InfoType.FileLog);
+                MAConf.instance.WriteLog(ssh.LastErrorText, LogLevel.FileLog);
                 return false;
             }
 
@@ -138,7 +142,7 @@ namespace MakeAuto
             success = ssh.SendReqPty(channelNum, termType, widthInChars, heightInChars, pixWidth, pixHeight);
             if (success != true)
             {
-                MAConf.instance.WriteLog(ssh.LastErrorText, InfoType.FileLog);
+                MAConf.instance.WriteLog(ssh.LastErrorText, LogLevel.FileLog);
                 return false;
             }
 
@@ -146,7 +150,7 @@ namespace MakeAuto
             success = ssh.SendReqShell(channelNum);
             if (success != true)
             {
-                MAConf.instance.WriteLog(ssh.LastErrorText, InfoType.FileLog);
+                MAConf.instance.WriteLog(ssh.LastErrorText, LogLevel.FileLog);
                 return false;
             }
 
@@ -179,7 +183,7 @@ namespace MakeAuto
             n = ssh.ChannelReadAndPoll(channelNum, pollTimeoutMs);
             if (n < 0)
             {
-                MAConf.instance.WriteLog(ssh.LastErrorText, InfoType.FileLog);
+                MAConf.instance.WriteLog(ssh.LastErrorText, LogLevel.FileLog);
                 return false;
             }
 
@@ -187,7 +191,7 @@ namespace MakeAuto
             success = ssh.ChannelSendClose(channelNum);
             if (success != true)
             {
-                MAConf.instance.WriteLog(ssh.LastErrorText, InfoType.FileLog);
+                MAConf.instance.WriteLog(ssh.LastErrorText, LogLevel.FileLog);
                 return false;
             }
 
@@ -197,7 +201,7 @@ namespace MakeAuto
             success = ssh.ChannelReceiveToClose(channelNum);
             if (success != true)
             {
-                MAConf.instance.WriteLog(ssh.LastErrorText, InfoType.FileLog);
+                MAConf.instance.WriteLog(ssh.LastErrorText, LogLevel.FileLog);
                 return false;
             }
 
@@ -206,12 +210,12 @@ namespace MakeAuto
             cmdOutput = ssh.GetReceivedText(channelNum, "ansi");
             if (cmdOutput == null)
             {
-                MAConf.instance.WriteLog(ssh.LastErrorText, InfoType.FileLog);
+                MAConf.instance.WriteLog(ssh.LastErrorText, LogLevel.FileLog);
                 return false;
             }
 
             //  Display the remote shell's command output:
-            MAConf.instance.WriteLog(cmdOutput, InfoType.FileLog);
+            MAConf.instance.WriteLog(cmdOutput, LogLevel.FileLog);
 
             //  Disconnect
             ssh.Disconnect();
@@ -233,7 +237,7 @@ namespace MakeAuto
             success = sftp.UnlockComponent("Anything for 30-day trial");
             if (success != true)
             {
-                MAConf.instance.WriteLog(sftp.LastErrorText, InfoType.FileLog);
+                MAConf.instance.WriteLog(sftp.LastErrorText, LogLevel.FileLog);
                 return false;
             }
 
@@ -241,7 +245,7 @@ namespace MakeAuto
             success = sftp.Connect(host, port);
             if (success != true)
             {
-                MAConf.instance.WriteLog(sftp.LastErrorText, InfoType.FileLog);
+                MAConf.instance.WriteLog(sftp.LastErrorText, LogLevel.FileLog);
                 return false ;
             }
 
@@ -249,7 +253,7 @@ namespace MakeAuto
             success = sftp.AuthenticatePw(user, pass);
             if (success != true)
             {
-                MAConf.instance.WriteLog(sftp.LastErrorText, InfoType.FileLog);
+                MAConf.instance.WriteLog(sftp.LastErrorText, LogLevel.FileLog);
                 return false;
             }
 
@@ -257,7 +261,7 @@ namespace MakeAuto
             success = sftp.InitializeSftp();
             if (success != true)
             {
-                MAConf.instance.WriteLog(sftp.LastErrorText, InfoType.FileLog);
+                MAConf.instance.WriteLog(sftp.LastErrorText, LogLevel.FileLog);
                 return false;
             }
 
@@ -287,7 +291,7 @@ namespace MakeAuto
             // 初始化连接，打开shell
             if (InitSsh() == false)
             {
-                MAConf.instance.WriteLog("初始化ssh连接失败", InfoType.Error);
+                log.WriteLog("初始化ssh连接失败", LogLevel.Error);
                 return false;
             }
 
@@ -298,7 +302,7 @@ namespace MakeAuto
             success = ssh.ChannelSendString(channelNum, " gfas \r\n ", "ansi");
             if (success != true)
             {
-                MAConf.instance.WriteLog(ssh.LastErrorText, InfoType.FileLog);
+                MAConf.instance.WriteLog(ssh.LastErrorText, LogLevel.FileLog);
                 return false;
             }
 
@@ -308,7 +312,7 @@ namespace MakeAuto
             success = ssh.ChannelSendEof(channelNum);
             if (success != true)
             {
-                MAConf.instance.WriteLog(ssh.LastErrorText, InfoType.FileLog);
+                log.WriteLog(ssh.LastErrorText, LogLevel.FileLog);
                 return false;
             }
 
@@ -316,7 +320,7 @@ namespace MakeAuto
             int n = ssh.ChannelReadAndPoll(channelNum, pollTimeoutMs);
             if (n < 0)
             {
-                MAConf.instance.WriteLog(ssh.LastErrorText, InfoType.FileLog);
+                MAConf.instance.WriteLog(ssh.LastErrorText, LogLevel.FileLog);
                 return false;
             }
 
@@ -324,7 +328,7 @@ namespace MakeAuto
             string cmdOutput = ssh.GetReceivedText(channelNum, "ansi");
             if (cmdOutput == null)
             {
-                MAConf.instance.WriteLog(ssh.LastErrorText, InfoType.FileLog);
+                MAConf.instance.WriteLog(ssh.LastErrorText, LogLevel.FileLog);
                 return false;
             }
 
@@ -340,7 +344,7 @@ namespace MakeAuto
             {
                 if (InitSftp() == false)
                 {
-                    MAConf.instance.WriteLog("初始化sftp连接失败", InfoType.Error);
+                    MAConf.instance.WriteLog("初始化sftp连接失败", LogLevel.Error);
                     return false;
                 }
             }
@@ -354,35 +358,35 @@ namespace MakeAuto
             //localFilePath = "c:/src/s_cbpoutsideflow.gcc";
 
             #region 处理 .pc, .h, .cpp, .gc 文件
-            MAConf.instance.WriteLog("上传文件 " + dl.Header, InfoType.Info);
+            MAConf.instance.WriteLog("上传文件 " + dl.Header, LogLevel.Info);
             success = sftp.UploadFileByName(remotedir + dl.Header, localdir + dl.Header);
             if (success != true)
             {
-                MAConf.instance.WriteLog(sftp.LastErrorText, InfoType.FileLog);
+                MAConf.instance.WriteLog(sftp.LastErrorText, LogLevel.FileLog);
                 return false;
             }
 
-            MAConf.instance.WriteLog("上传文件 " + dl.Pc, InfoType.Info);
+            MAConf.instance.WriteLog("上传文件 " + dl.Pc, LogLevel.Info);
             success = sftp.UploadFileByName(remotedir + dl.Pc, localdir + dl.Pc);
             if (success != true)
             {
-                MAConf.instance.WriteLog(sftp.LastErrorText, InfoType.FileLog);
+                MAConf.instance.WriteLog(sftp.LastErrorText, LogLevel.FileLog);
                 return false;
             }
 
-            MAConf.instance.WriteLog("上传文件 " + dl.Cpp, InfoType.Info);
+            MAConf.instance.WriteLog("上传文件 " + dl.Cpp, LogLevel.Info);
             success = sftp.UploadFileByName(remotedir + dl.Cpp, localdir + dl.Cpp);
             if (success != true)
             {
-                MAConf.instance.WriteLog(sftp.LastErrorText, InfoType.FileLog);
+                MAConf.instance.WriteLog(sftp.LastErrorText, LogLevel.FileLog);
                 return false;
             }
 
-            MAConf.instance.WriteLog("上传文件 " + dl.Gcc, InfoType.Info);
+            MAConf.instance.WriteLog("上传文件 " + dl.Gcc, LogLevel.Info);
             success = sftp.UploadFileByName(remotedir + dl.Gcc, localdir + dl.Gcc);
             if (success != true)
             {
-                MAConf.instance.WriteLog(sftp.LastErrorText, InfoType.FileLog);
+                MAConf.instance.WriteLog(sftp.LastErrorText, LogLevel.FileLog);
                 return false;
             }
             #endregion
@@ -398,13 +402,13 @@ namespace MakeAuto
                 InitSftp();
             }
 
-            MAConf.instance.WriteLog("下载文件 " + dl.SO, InfoType.Info);
+            MAConf.instance.WriteLog("下载文件 " + dl.SO, LogLevel.Info);
             bool success = sftp.DownloadFileByName("/home/" + user + "/appcom/" + dl.SO,
                 localdir + dl.SO);
             if (success != true)
             {
-                MAConf.instance.WriteLog(sftp.LastErrorText, InfoType.FileLog);
-                MAConf.instance.WriteLog("下载文件 " + dl.SO + "失败" , InfoType.Error);
+                MAConf.instance.WriteLog(sftp.LastErrorText, LogLevel.FileLog);
+                MAConf.instance.WriteLog("下载文件 " + dl.SO + "失败" , LogLevel.Error);
             }
             return success;
         }
@@ -419,13 +423,13 @@ namespace MakeAuto
             int channelNum = sshchannel;
 
             //  开启命令，发送编译指令
-            MAConf.instance.WriteLog("发送编译命令： make -f " + dl.Gcc , InfoType.Info);
+            MAConf.instance.WriteLog("发送编译命令： make -f " + dl.Gcc , LogLevel.Info);
             bool success = ssh.ChannelSendString(channelNum, " cd ~/src; " +
                 "rm " + dl.OFlow + " " + dl.OFunc + "; " +
                 "make -f " + dl.Gcc + "; echo \"Result:$?, OVER, $USER \" \n", "ansi");
             if (success != true)
             {
-                MAConf.instance.WriteLog(ssh.LastErrorText, InfoType.FileLog);
+                MAConf.instance.WriteLog(ssh.LastErrorText, LogLevel.FileLog);
                 return false;
             }
 
@@ -439,7 +443,7 @@ namespace MakeAuto
             {
                 //  Check the last-error information and the session log...
                 MAConf.instance.WriteLog(ssh.LastErrorText);
-                MAConf.instance.WriteLog(ssh.SessionLog, InfoType.FileLog);
+                MAConf.instance.WriteLog(ssh.SessionLog, LogLevel.FileLog);
                 //  Check to see what was received.
                 MAConf.instance.WriteLog(ssh.GetReceivedText(channelNum, "ansi"));
                 return false;
@@ -450,7 +454,7 @@ namespace MakeAuto
             cmdOutput = ssh.GetReceivedText(channelNum, "ansi");
             if (cmdOutput == null)
             {
-                MAConf.instance.WriteLog(ssh.LastErrorText, InfoType.FileLog);
+                MAConf.instance.WriteLog(ssh.LastErrorText, LogLevel.FileLog);
                 return false;
             }
             
@@ -462,13 +466,13 @@ namespace MakeAuto
             {
                 //  Display the remote shell's command output:
                 MAConf.instance.WriteLog(cmdOutput);
-                MAConf.instance.WriteLog("编译so报错，请参考输出日志！", InfoType.Error);
+                MAConf.instance.WriteLog("编译so报错，请参考输出日志！", LogLevel.Error);
                 return false;
             }
             else
             {
-                MAConf.instance.WriteLog(cmdOutput, InfoType.FileLog);
-                MAConf.instance.WriteLog("编译so完成！", InfoType.Info);
+                MAConf.instance.WriteLog(cmdOutput, LogLevel.FileLog);
+                MAConf.instance.WriteLog("编译so完成！", LogLevel.Info);
                 return true;
             }
             #endregion
@@ -484,14 +488,14 @@ namespace MakeAuto
                 retval = ssh.ChannelPoll(channelNum, 10000);
                 if (retval == -1)
                 {
-                    MAConf.instance.WriteLog(ssh.LastErrorText, InfoType.Error);
+                    MAConf.instance.WriteLog(ssh.LastErrorText, LogLevel.Error);
                     // Read so we can see the error before the console closes.
                     return false;
                 }
                 if (retval > 0)
                 {
                     cmdOutput = ssh.GetReceivedText(channelNum, "ansi");
-                    //MAConf.instance.WriteLog(cmdOutput, InfoType.Info);
+                    //MAConf.instance.WriteLog(cmdOutput, LogLevel.Info);
                     cmdLog += cmdOutput;
                     System.Threading.Thread.Sleep(5000);  // 重绘界面
                 }

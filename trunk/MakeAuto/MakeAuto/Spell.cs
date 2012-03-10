@@ -48,11 +48,11 @@ namespace MakeAuto
                 }
                 catch (ArgumentException)
                 {
-                    MAConf.instance.WriteLog("An element with Key = " + x.Attributes["key"].Value[0] + " already exists.", InfoType.Error);
+                    log.WriteLog("An element with Key = " + x.Attributes["key"].Value[0] + " already exists.", LogLevel.Error);
                 }
                 catch
                 {
-                    MAConf.instance.WriteLog("添加多音字异常！" + x.Attributes["key"].Value, InfoType.Error);
+                    log.WriteLog("添加多音字异常！" + x.Attributes["key"].Value, LogLevel.Error);
                 }
             }
         }
@@ -111,6 +111,8 @@ namespace MakeAuto
         public Dictionary<string, string> Detaildic;
 
         private readonly string conf = "polyphone.xml";
+
+        private OperLog log = OperLog.instance;
 
     }
 }
