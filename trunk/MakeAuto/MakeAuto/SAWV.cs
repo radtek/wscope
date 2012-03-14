@@ -22,6 +22,9 @@ namespace MakeAuto
             DatabaseName = database;
             UserName = user;
             Password = password;
+
+            // 初始化日志
+            log = OperLog.instance;
         }
 
         /// <summary>
@@ -29,6 +32,7 @@ namespace MakeAuto
         /// </summary>
         public Boolean ConnectToServer()
         {
+            log.WriteLog("连接配置库 IP: " + ServerIP + ", Port: " + ServerPort);
             // 测试 SAW 功能
             Boolean bConn = false;
             int Result = sv.ConnectToServer(ServerIP, ServerPort, out bConn,
@@ -38,6 +42,7 @@ namespace MakeAuto
             if (Result == 0)
             {
                 this.ConnectedToServer = bConn;
+                log.WriteLog("配置库连接成功");
             }
             return this.ConnectedToServer;
         }
@@ -47,6 +52,7 @@ namespace MakeAuto
         /// </summary>
         public Boolean Login()
         {
+            log.WriteLog("登录配置库 DataBaseName:" + DatabaseName);
             // 登录
             SAWVKeyInfoSet sk = new SAWVKeyInfoSet();
             int Result = sv.Login(UserName, Password, DatabaseName,
@@ -56,6 +62,7 @@ namespace MakeAuto
             if (Result == 0)
             {
                 this.LoggedIn = true;
+                log.WriteLog("用户登录成功");
             }
             return this.LoggedIn;
         }
@@ -66,11 +73,14 @@ namespace MakeAuto
             {
                 ConnectToServer();
             }
+
             if (LoggedIn == false)
             {
                 Login();
             }
 
+            log.WriteLog("获取修改单代码文件,修改单号:" + AmendNo + "，递交类型：" 
+                + Enum.GetName(typeof(SAWType), sf.Type));
             int FileVersion = 0;
             string FileName;
             string Project, File;
@@ -236,6 +246,8 @@ namespace MakeAuto
         public string Name;  // 类的主键
         public string Workspace {get; set;}  // 工作目录
         public string Amend {get; set;}  // 根据修改单中的这个特性来瞄定数据库
+
+        private OperLog log;
     }
 
     class SAWVList : ArrayList

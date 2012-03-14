@@ -21,11 +21,16 @@
         <FBASE compile="false" restartas="false" />
       </Conn>
     </Conns>
-    <Smallball host="192.168.51.46" port="1021" user="GuangFa" pass="laisha">
-        <BaseDir ServerDir ="/d:/测试代码站点/产品一部" LocalDir="E:\xgd" />
-        <RAR Path="C:\Program Files\WinRAR\Rar.exe" />
+	<!-- RAR路径，处理压缩包使用 -->
+	<RAR Path="C:\Program Files\WinRAR\Rar.exe" />
+    <Smallball host="192.168.51.46" port="1021" user="GuangFa" pass="laisha" ServerDir ="/d:/测试代码站点/产品一部/" LocalDir="E:\xgd">
+        <!-- ftp目录与本地目录对应关系，按照匹配度处理 -->
+		<BaseDir Subject ="广发版技术支持测试" LocalDir="E:\xgd\gfb\2011SP1PACK" />
+		<BaseDir Subject ="融资融券" LocalDir="E:\xgd\rzrq" />
     </Smallball>
-    <SCMS>
-        <SCM name="HSTRADES11" server="cm02.hundsun.com" port="8884" database="10106-证券一部-2006版" user="gaohu"  pass="Hundsun_2" WorkSpace="E:\VSS\" Amend="广发版技术支持测试|融资融券" />
+    <!-- 集成节点，主要是VSS配置库的位置 -->
+	<SCMS>
+        <SCM name="CRDT11" server="cm02.hundsun.com" port="8884" database="10106-证券一部-2006版" user="gaohu"  pass="Hundsun_2" WorkSpace="E:\VSS\" Amend="融资融券" />
+		<SCM name="HSTRADES11" server="cm02.hundsun.com" port="8884" database="10106-证券一部-2006版" user="gaohu"  pass="Hundsun_2" WorkSpace="E:\VSS\" Amend="广发版技术支持测试" />
     </SCMS>
 </MakeAuto>

@@ -22,8 +22,6 @@ namespace MakeAuto
         // 宏助手
         private ExcelMacroHelper eh = ExcelMacroHelper.instance;
 
-        AmendPack ap = AmendPack.instance;
-
         // 当前活动ExcelFile;
         private Detail currDetail;
 
@@ -31,6 +29,8 @@ namespace MakeAuto
         private ReSSH currSsh;
 
         Spell sp;
+
+        AmendFlow secuflow;
 
         public frmMakeAuto()
         {
@@ -101,7 +101,7 @@ namespace MakeAuto
         private void bgwProc_ProgressChanged(object sender, System.ComponentModel.ProgressChangedEventArgs e)
         {
             // This method runs on the main thread.
-            State c = (State)e.UserState;
+            VBAState c = (VBAState)e.UserState;
             log.WriteLog("编译进度：" + e.ProgressPercentage.ToString() + "%, 当前模块：" + c.dl.Name
                 + ",编译信息：" + c.info, LogLevel.Info);
             
@@ -164,11 +164,11 @@ namespace MakeAuto
 
         private void frmMakeAuto_SizeChanged(object sender, EventArgs e)
         {
-            if (WindowState == FormWindowState.Minimized)
-            {
-                Hide();
-                nfnMake.Visible = true;
-            }
+            //if (WindowState == FormWindowState.Minimized)
+            //{
+            //    Hide();
+            //    nfnMake.Visible = true;
+            //}
         }
 
         private void nfnMake_MouseDoubleClick(object sender, MouseEventArgs e)
@@ -369,20 +369,13 @@ namespace MakeAuto
 
         private void btnReadInfo_Click(object sender, EventArgs e)
         {
-            mc.WriteLog("查询递交包路径，修改单编号：" + txbAmenNo.Text + "...");
+            log.WriteInfoLog("查询递交包路径，修改单编号：" + txbAmenNo.Text + "...");
 
-            if (ap.QueryAmend(txbAmenNo.Text) == true)
-            {
-                txbMainNo.Text = ap.MainNo;
-                txbCommitPath.Text = ap.CommitPath;
-            }
-            else
-            {
-                mc.WriteLog("查询递交路径错误。", LogLevel.Error);
-                return;
-            }
+            AmendPack ap = new AmendPack(txbAmenNo.Text);
+            txbMainNo.Text = ap.MainNo;
+            txbCommitPath.Text = ap.CommitPath;
 
-            mc.WriteLog("查询FTP目录信息...");
+            log.WriteInfoLog("查询FTP目录信息...");
 
             if (ap.QueryFTP() == true)
             {
@@ -391,56 +384,27 @@ namespace MakeAuto
             }
             else 
             {
-                mc.WriteLog("查询FTP目录信息错误。", LogLevel.Error);
+                log.WriteErrorLog("查询FTP目录信息错误。");
                 return;
             }
 
-            mc.WriteLog("查询FTP目录信息...完成");
-        }
+            secuflow = new AmendFlow(ap);
 
-        private void button6_Click(object sender, EventArgs e)
-        {
-            mc.WriteLog("下载递交包...");
-            ap.DownloadPack();
-            mc.WriteLog("解包处理...");
-            ap.ProcessPack();
-            mc.WriteLog("处理ReadMe...");
-            ap.ProcessReadMe();
-            mc.WriteLog("下载递交包...完成");
-        }
-
-        private void button12_Click(object sender, EventArgs e)
-        {
-            mc.WriteLog("获取VSS代码...");
-            ap.GetCode();
-            mc.WriteLog("获取VSS代码...完成");
-        }
-
-        private void button7_Click(object sender, EventArgs e)
-        {
-            mc.WriteLog("执行编译...");
-            ap.Compile();
-            mc.WriteLog("编译...完成");
+           log.WriteInfoLog("查询FTP目录信息...完成");
         }
 
         private void button8_Click(object sender, EventArgs e)
         {
             mc.WriteLog("版本对比...");
-            ap.ValidateVersion();
+            //ap.ValidateVersion();
             mc.WriteLog("版本对比...完成");
-        }
-
-        private void button2_Click(object sender, EventArgs e)
-        {
-            // 打包
-            // 先打 src --> src-V*
-            mc.WriteLog("打包处理...");
-            ap.DoPacker();
-            mc.WriteLog("打包处理...完成");
         }
 
         private void button9_Click(object sender, EventArgs e)
         {
+            // 读取方法名
+            //string s = System.Reflection.MethodBase.GetCurrentMethod().Name;
+            //rbLog.AppendText(s);
         }
 
         private void rbLog_TextChanged(object sender, EventArgs e)
@@ -455,6 +419,11 @@ namespace MakeAuto
             {
                 mc.ftp.GetFileInfos(mc.fc.ServerDir);
             }
+        }
+
+        private void button6_Click(object sender, EventArgs e)
+        {
+            secuflow.Work();
         }
 
 

@@ -135,37 +135,26 @@ namespace MakeAuto
     // 递交修改包
     class AmendPack
     {
-        public static readonly AmendPack instance = new AmendPack();
-
-        private OperLog log;
-
-        private AmendPack()
+        public AmendPack(string AmendNo)
         {
+            this.AmendNo = AmendNo;
+            
             ComComms = new ComList();
             // 创建连接
             sqlconn = new SqlConnection(ConnString);
             //为上面的连接指定Command对象
             sqlcomm = sqlconn.CreateCommand();
 
-            SubmitL = new ArrayList();
-            ScmL = new ArrayList();
             SAWFiles = new SAWFileList();
 
             log = OperLog.instance;
-        }
 
-        // 类初始化
-        public Boolean QueryAmend(string AmendNo)
-        {
-            this.AmendNo = AmendNo;
             // 查询修改单信息
             if (QueryAmendInfo() == true)
             {
                 // 生成修改单组件包信息
                 SetComs();
-                return true;
             }
-            else return false;
         }
 
         // 根据提供的修改单查询主单号
@@ -198,8 +187,24 @@ namespace MakeAuto
                   
                 // 从CommitPath中分解递交项和主单号 /融资融券/20111123054-国金短信，分解得到 20111123054
                 MainNo = CommitPath.Substring(CommitPath.LastIndexOf("/") + 1, 11);
+                // 得到递交模块，融资融券 广发版技术支持测试
+                AmendSubject = CommitPath.Substring(0, CommitPath.IndexOf("/"));  // 融资融券
+                CommitDir = CommitPath.Substring(CommitPath.LastIndexOf("/") + 1);  // 20111123054-国金短短信
+
                 // Readme 文件名称
                 Readme = "Readme-" + CommitDir + ".txt";
+
+                // 标定路径
+                RemoteDir = MAConf.instance.fc.ServerDir + CommitPath;
+                string val;
+                if (MAConf.instance.fc.PathCorr.TryGetValue(AmendSubject, out val))
+                {
+                    LocalDir = val;  // 没有 20111123054-国金短短信 这一级文件夹，直接把压缩包放到这个目录
+                }
+                else
+                {
+                    LocalDir = MAConf.instance.fc.LocalDir;
+                }
 
                 result = true;
             }
@@ -323,6 +328,10 @@ namespace MakeAuto
             FTPConnection ftp = MAConf.instance.ftp;
             FtpConf fc = MAConf.instance.fc;
             string s;
+            ArrayList SubmitL, ScmL;
+
+            SubmitL = new ArrayList();
+            ScmL = new ArrayList();
 
             // 强制重新连接，防止时间长了就断掉了
             if (ftp.IsConnected == false)
@@ -350,7 +359,7 @@ namespace MakeAuto
             ScmL.Clear();
             foreach (string f in files) //查找子目录
             {
-                // 跳过 src 之类的东东
+                // 跳过 src-V*.rar 之类的东东
                 if (f.IndexOf(MainNo) < 0)
                     continue;
 
@@ -359,109 +368,39 @@ namespace MakeAuto
                 else
                     SubmitL.Add(f);
             }
-
+            
+            string currVerFile = string.Empty;// 20111123054-国金短信-李景杰-20120117-V3.rar
             if (SubmitL.Count > 0)
             {
                 SubmitL.Sort();
-
                 s = SubmitL[SubmitL.Count - 1].ToString();
                 currVerFile = s;
-
                 // 取递交版本号 
                 // 20111207012-委托管理-高虎-20120116-V13.rar --> 20111207012-委托管理-高虎-20120116-V13 -> 13
                 s = s.Substring(0, s.LastIndexOf('.'));
                 SubmitVer = int.Parse(s.Substring(s.LastIndexOf('V') + 1));
             }
-            else SubmitVer = 0;
+            else
+            {
+                SubmitVer = 0;
+            }
 
             if (ScmL.Count > 0)
             {
                 ScmL.Sort();
-
                 s = ScmL[ScmL.Count - 1].ToString();
-
-                SCMcurrVerFile = s;
-
+                SCMLastFile = LocalDir + "\\" + s;  // 上次集成文件夹
                 // 取递交版本号 
                 // 20111207012-委托管理-高虎-20120116-V13.rar --> 20111207012-委托管理-高虎-20120116-V13 -> 13
                 s = s.Substring(0, s.LastIndexOf('.'));
-                ScmVer = int.Parse(s.Substring(s.LastIndexOf('V') + 1));
+                SCMLastVer = int.Parse(s.Substring(s.LastIndexOf('V') + 1)); 
             }
-            else ScmVer = 0;
-
-            return true;
-        }
-
-        public bool DownloadPack()
-        {
-            // 输出递交包，到本地集成环境处理，需要使用ftp连接
-            FTPConnection ftp = MAConf.instance.ftp;
-            FtpConf fc = MAConf.instance.fc;
-            string scmfile, scmremote, scmdir;
-
-            if (ftp.IsConnected == false)
+            else
             {
-                ftp.Connect();
+                SCMLastVer = 0;
             }
 
-            if (ftp.DirectoryExists(RemoteDir) == false)
-            {
-                System.Windows.Forms.MessageBox.Show("FTP路径" + fc.ServerDir + CommitPath + "不存在！");
-                return false;
-            }
-            ftp.ChangeWorkingDirectory(fc.ServerDir);
-
-            // 下载递交包
-            if (!Directory.Exists(LocalDir))
-            {
-                Directory.CreateDirectory(LocalDir);
-            }
-
-            // 递交包只需要同时下载集成包
-            if (ftp.Exists(RemoteFile) == false)
-            {
-                System.Windows.Forms.MessageBox.Show("FTP文件 " + RemoteFile + " 不存在！");
-                return false;
-            }
-            ftp.DownloadFile(LocalFile, RemoteFile);
-
-            // 集成包需要全部下载下来
-            foreach (string s in ScmL)
-            {
-                scmfile = LocalDir + "\\" + s;
-                scmremote = RemoteDir + "\\" + s;
-                if (!File.Exists(scmfile))
-                {
-                    ftp.DownloadFile(scmfile, scmremote);
-                }
-
-                // 如果没有对应的文件夹，那么需要解压缩文件夹
-                scmdir = LocalDir + "\\" + Path.GetFileNameWithoutExtension(scmfile);
-                if (!Directory.Exists(scmdir))
-                {
-                    UnRar(scmfile, scmdir);
-                }
-            }
-            return true;
-        }
-
-        public void ProcessPack()
-        {
-            string s, lastscm;
-            // 检查文件夹是否存在，如果存在，就先执行删除 
-            // E:\xgd\融资融券\20111123054-国金短信\20111123054-国金短信-李景杰-20120117-V1
-            if (Directory.Exists(AmendDir))
-            {
-                Directory.Delete(AmendDir, true);
-            }
-
-            // 检查集成文件夹是否存在，存在则执行删除
-            // E:\xgd\融资融券\20111123054-国金短信\集成-20111123054-国金短信-李景杰-20120117-V1
-            if (Directory.Exists(SCMAmendDir))
-            {
-                Directory.Delete(SCMAmendDir, true);
-            }
-            Directory.CreateDirectory(SCMAmendDir);
+            ScmVer = SubmitVer;
 
             // 决定是新集成还是修复集成还是重新集成
             if (ScmVer == 0)
@@ -477,727 +416,18 @@ namespace MakeAuto
                 scmtype = ScmType.BugScm;  // 修复集成
             }
 
-            // 对于重新集成，先删除掉上一次集成的软件包，然后按照新集成处理
-            if (scmtype == ScmType.ReScm)
-            {
-                // 删除ftp软件包，删除本地软件包
-                FTPConnection ftp = MAConf.instance.ftp;
-                if (ftp.IsConnected == false)
-                {
-                    ftp.Connect();
-                }
-                Debug.WriteLine("删除本地集成包" + SCMLocalFile);
-                File.Delete(SCMLocalFile);
-                Debug.WriteLine("删除服务器集成包" + SCMRemoteFile);
-                //ftp.DeleteFile(SCMRemoteFile);
+            LocalFile = LocalDir + "\\" + currVerFile;
+            RemoteFile = RemoteDir + "\\" + currVerFile;
 
-                // 重新标定 scmver
-                ScmL.RemoveAt(ScmL.Count -1);
-                if(ScmL.Count > 0)
-                {
-                    s = ScmL[ScmL.Count - 1].ToString();
-                    SCMcurrVerFile = s;
-                    // 取递交版本号
-                    // 20111207012-委托管理-高虎-20120116-V13.rar --> 20111207012-委托管理-高虎-20120116-V13 -> 13
-                    s = s.Substring(0, s.LastIndexOf('.'));
-                    ScmVer = int.Parse(s.Substring(s.LastIndexOf('V') + 1));
+            SCMLocalFile = LocalDir + "\\" + "集成-" + currVerFile;
+            SCMRemoteFile = RemoteDir + "\\" + "集成-" +currVerFile;
 
-                    scmtype = ScmType.BugScm;
-                }
-                else 
-                {
-                    ScmVer = 0;
-                    scmtype = ScmType.NewScm;
-                }
-            }
+            AmendDir = LocalDir + "\\" + Path.GetFileNameWithoutExtension(currVerFile);
+            SCMAmendDir = LocalDir + "\\" + "集成-" + Path.GetFileNameWithoutExtension(currVerFile);
 
-            // 根据集成类型执行集成操作
-            if (scmtype == ScmType.NewScm)
-            {
-                // 下载压缩包之后，解压缩包，重命名文件夹为集成-*，
-                UnRar(LocalFile, SCMAmendDir);
-
-                // 如果存在 src 压缩文件夹，解压缩 src 文件夹
-                string srcrar = SCMAmendDir + Path.DirectorySeparatorChar + "src-V1.rar";
-                if (File.Exists(srcrar))
-                {
-                    //UnRar(srcrar, SCMAmendDir);  // 不用解压，新的集成直接生成代码处理
-                    File.Delete(srcrar);
-                }
-
-                // 所有递交组件标记为新增
-                foreach (CommitCom c in ComComms)
-                {
-                    c.cstatus = ComStatus.Add;
-                }
-            }
-            else // 重新集成和bug集成处理相同
-            {
-                // 复制上一次集成文件夹为本次集成文件夹
-                s = SCMcurrVerFile;
-                s = s.Substring(0, s.LastIndexOf('.'));
-
-                lastscm = LocalDir + Path.DirectorySeparatorChar + s;
-                if (Directory.Exists(lastscm))
-                {
-                    DirectoryCopy(lastscm, SCMAmendDir, false);
-                }
-
-                // 如果存在 src 压缩文件夹，解压缩 src 文件夹
-                string srcrar = SCMAmendDir + Path.DirectorySeparatorChar + "src-V" + ScmVer.ToString() + ".rar";
-                if (File.Exists(srcrar))
-                {
-                    UnRar(srcrar, SCMAmendDir);
-                    File.Delete(srcrar);
-                }
-
-                // 对于下载的递交文件，解压缩readme到集成文件夹，以便根据本次变动取出需要重新集成的文件
-                UnRar(LocalFile, SCMAmendDir, Readme);
-            }
-        }
-            
-        // 根据 Readme 置重新集成状态，这里分成两步，因为数据库里读出来的递交组件不可靠
-        // 如果一张修改单不递交，只是生成下 readme，数据库就会更新掉递交的组件，
-        // 所以直接使用数据库的stuff字段有问题，调整为使用readme处理
-        public void ProcessReadMe()
-        {
-            // 读取readme分成两步，先重新生成递交组件，然后检测修改
-            ProcessComs();
-            ProcessMods();
-            PostComs();
-            ProcessSAWPath();
-            // 输出下处理结果
-            Debug.WriteLine("ProcessReadMe:Coms...");
-            foreach (CommitCom c in ComComms)
-            {
-                Debug.WriteLine("名称：" + c.cname);
-                Debug.Indent();
-                Debug.WriteLine("状态：" + Enum.GetName(typeof(ComStatus), c.cstatus));
-                Debug.WriteLine("版本：" + c.cver);
-                Debug.WriteLine("路径：" + c.path);
-                if (c.sawfile == null)
-                {
-                    Debug.WriteLine("本地路径：test__");
-                    Debug.WriteLine("SAW路径：test__");
-                }
-                else
-                {
-                    Debug.WriteLine("本地路径：" + c.sawfile.LocalPath);
-                    Debug.WriteLine("SAW路径：" + c.sawfile.SAWPath);
-                }
-                Debug.Unindent();
-            }
-            Debug.WriteLine("ProcessReadMe:SAWFiles...");
-            foreach (SAWFile s in SAWFiles)
-            {
-                Debug.WriteLine("路径：" + s.Path);
-                Debug.Indent();
-                Debug.WriteLine("本地路径：" + s.LocalPath);
-                Debug.WriteLine("SAW路径：" + s.SAWPath);
-                Debug.WriteLine("文件状态：" + Enum.GetName(typeof(FileStatus), s.fstatus));
-                Debug.Unindent();
-            }
-        }
-
-        private void ProcessComs()
-        {
-            // 清除掉组件列表，重新添加
-            ComComms.Clear();
-            // 读取readme，重新集成，由于小球上查询的数据库记录的信息冗余，
-            try
-            {
-                // Create an instance of StreamReader to read from a file.
-                // The using statement also closes the StreamReader.
-                using (StreamReader sr = new StreamReader(SCMAmendDir + "/" + Readme, Encoding.GetEncoding("gb2312")))
-                {
-                    string line, name, version;
-                    int index, index1;
-
-                    // 读到时停止
-                    while ((line = sr.ReadLine()) != null && line.IndexOf("涉及的程序及文件: ") < 0)
-                        ;
-
-                    sr.ReadLine(); // 跳过"涉及的程序及文件 ..."这行字
-
-                    // 处理递交的组件
-                    while ((line = sr.ReadLine()) != null && line.IndexOf("存放路径: ") < 0)
-                    {
-                        // 跳过空行
-                        if (line.Trim() == string.Empty)
-                            continue;
-
-                        // 连续读取两行，一行文件说明和版本，一行存放路径
-                        // 读取源代码路径，小包下面没有路径，不用读取
-                        index = line.IndexOf("[");
-                        name = line.Substring(0, index).Trim();
-                        index = line.LastIndexOf("["); // 希望读第一个 "[" 和最后一个 "]" 能够处理掉
-                        index1 = line.LastIndexOf("]");
-                        version = line.Substring(index + 1, index1 - index - 1);
-                       
-                        // 生成组件信息
-                        CommitCom c = new CommitCom(name, version);
-
-                        if (line.IndexOf("小包-") < 0)
-                        {
-                            line = sr.ReadLine().Trim();
-                            c.path = line.Substring(1, line.Length - 2); // 去除头部和尾部的 []
-                        }
-                        else 
-                        {
-                            c.path = "";
-                        }
-                        ComComms.Add(c);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                // Let the user know what went wrong.
-                MAConf.instance.WriteLog("ProcessComs异常: " + Readme + " " + ex.Message, LogLevel.Error);
-            }
-
-            // 输出下处理结果
-            Debug.WriteLine("ProcessComs...");
-            foreach (CommitCom c in ComComms)
-            {
-                Debug.WriteLine(c.cname);
-                Debug.Indent();
-                Debug.WriteLine(Enum.GetName(typeof(ComStatus), c.cstatus));
-                Debug.WriteLine(c.cver);
-                Debug.WriteLine(c.path);
-                Debug.Unindent();
-            }
-        }
-
-        private void ProcessMods()
-        {
-            SAWFiles.Clear();
-            // 如果是第一次递交，那么不管修改是什么，都需要重新集成
-            if (scmtype == ScmType.NewScm)
-            {
-                // 标记组件为新增
-                foreach (CommitCom c in ComComms)
-                {
-                    c.cstatus = ComStatus.Add;
-                }
-
-                // 标记文件为未刷新
-                foreach (SAWFile s in SAWFiles)
-                {
-                    s.fstatus = FileStatus.Old;
-                }
-
-                return;
-            }
-
-            // 读取readme，重新集成，由于小球上查询的数据库记录的信息可能不对，需要根据readme的作准
-            try
-            {
-                // Create an instance of StreamReader to read from a file.
-                // The using statement also closes the StreamReader.
-                using (StreamReader sr = new StreamReader(SCMAmendDir + "/" + Readme, Encoding.GetEncoding("gb2312")))
-                {
-                    string line, name, version, des;
-                    int index, index1;
-                    // step 1-本次修改 2-集成注意 3-涉及程序 4-存放路径 5-修改说明
-                    CommitCom c;
-
-                    // 读到时停止
-                    while ((line = sr.ReadLine()) != null && line.IndexOf("本次修改") < 0)
-                        ;
-
-                    sr.ReadLine(); // 跳过"本次修改 ..."这行字
-
-                    // 处理递交的组件
-                    while ((line = sr.ReadLine()) != null && line.IndexOf("集成注意：") < 0)
-                    {
-                        // 跳过空行
-                        if (line.Trim() == string.Empty)
-                            continue;
-
-                        // 跳过可能的文件名称行，不知道readme里为啥有这种数据
-                        if (line.Trim().LastIndexOf("[V") < 0)
-                            continue;
-
-                        // 连续读取两行，一行文件说明和版本，一行存放路径
-                        // 读取源代码路径，小包下面没有路径，不用读取
-                        index = line.IndexOf("[");
-                        name = line.Substring(0, index).Trim();
-                        index = line.LastIndexOf("["); // 希望读第一个 "[" 和最后一个 "]" 能够处理掉
-                        index1 = line.LastIndexOf("]");
-                        version = line.Substring(index + 1, index1 - index - 1);
-                        des = line.Substring(index1 + 1).Trim();
-
-                        // 这里如果返回了两个或者没找到，那就是有异常
-                        c = ComComms[name];
-                        if (c == null)
-                        {
-                            MAConf.instance.WriteLog("ProcessMods未能找到组件", LogLevel.Error);
-                            scmstatus = ScmStatus.Error;
-                            return;
-                        }
-
-                        if (des.IndexOf("本次取消") >= 0)
-                        {
-                            c.cstatus = ComStatus.Delete;
-                        }
-                        else
-                        {
-                            c.cstatus = ComStatus.Modify;
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                // Let the user know what went wrong.
-                MAConf.instance.WriteLog("ProcessMods异常: " + Readme + " " + ex.Message, LogLevel.Error);
-            }
+            return true;
         }
         
-        // 后处理组件，删除不需要的内容
-        public void PostComs()
-        {
-            if (scmstatus == ScmStatus.Error)
-            {
-                return;
-            }
-            else
-            {
-                scmstatus = ScmStatus.PostComs;
-            }
-
-            // 如果是删除的，那么删除文件（对于so，需要删除src文件）
-            foreach (CommitCom c in ComComms)
-            {
-                if (c.cstatus == ComStatus.Delete || c.cstatus == ComStatus.Modify)
-                {
-                    // SO删除了，源文件也删除掉
-                    File.Delete(SCMAmendDir + "\\" + c.cname);
-                    if(c.ctype == ComType.SO)
-                    {  
-                        foreach(Detail d in MAConf.instance.Dls)
-                        {
-                            if(d.SO == c.cname)
-                            {
-                                foreach(string s in d.ProcFiles)
-                                {
-                                    File.Delete(SCMAmendDir + "\\" + s);
-                                }
-                            }
-
-                            break;
-                        }
-                    }  
-                }
-
-                // 对于标记为删除的，不需要在列表中维护了
-                if (c.cstatus == ComStatus.Delete)
-                    ComComms.Remove(c);
-            }
-
-            // 处理 SAWFile
-            foreach (CommitCom c in ComComms)
-            {
-                if (c.cstatus == ComStatus.NoChange)
-                    continue;
-
-                // 小包无SAW库
-                if (c.ctype == ComType.Ssql)
-                    continue;
-
-                // 标记文件需要刷新，添加到文件状态列表中
-                if (SAWFiles[c.path] == null)
-                {
-                    SAWFile f = new SAWFile(c.path, FileStatus.Old);
-                    f.Version = c.cver;
-                    SAWFiles.Add(f);                    
-                    c.sawfile = f;
-                }
-                else
-                {
-                    // 如果第一个文件不是更新，那就改成需要更新，但是不会有这种情况吧，所以直接改掉好了。
-                    SAWFile f = SAWFiles[c.path];
-                    f.fstatus = FileStatus.Old;
-                    f.Version = c.cver;
-                    c.sawfile = f;
-                }
-            }
-        }
-
-        // 处理 SAWPath，设置检出代码的路径
-        public void ProcessSAWPath()
-        {
-            if(scmstatus == ScmStatus.Error)
-            {
-                return;
-            }
-            else
-            {
-                scmstatus = ScmStatus.ProcessSAWPath;
-            }
-
-            // 确认修改单的配置库
-            sv = MAConf.instance.SAWs.GetByAmend(AmendSubject);
-            if(sv == null)
-            {
-                Debug.WriteLine("获取对应配置库失败");
-                scmstatus = ScmStatus.Error;
-                return;
-            }
-
-            // 处理SAW代码的路径，暂时只对06版有效，因为目录是固定的，需要写死
-            foreach (SAWFile s in SAWFiles)
-            {
-                if (s.Path.IndexOf("小包-") >= 0)
-                    continue;
-
-                // 根据 s 的名称来处理，这是一段很纠结的代码
-                if (s.Path.IndexOf("金融产品销售系统_详细设计说明书") >= 0) // 
-                {
-                    string temp = @"HSTRADES11\Documents\D2.Designs\详细设计\后端\";
-                    s.LocalPath = sv.Workspace + temp + s.Path;
-                    s.SAWPath = @"$/" + temp.Replace('\\','/') + s.Path;
-                    
-                }
-                else
-                {
-                    // 如果第一个不是路径分隔符号，那么补路径分隔符号
-                    if (s.Path[0] != '\\')
-                        s.Path = "\\" + s.Path;
-                    s.LocalPath = sv.Workspace + @"HSTRADES11" + s.Path;
-                    s.SAWPath = @"$/" + @"HSTRADES11" + s.Path.Replace('\\', '/');
-                }
-            }
-        }
-
-        // 刷出VSS代码
-        public void GetCode()
-        {
-            // 这个地方由于没有历史性刷出的办法，对于DLL，可能需要两遍代码刷出，第一遍，先刷出最新版，第二遍，根据递交的版本历史，
-            // 把在这个版本之后修改的刷回去
-            // 需要注意的是ReadMe中的路径是不全的，这个很恶心
-            foreach (SAWFile s in SAWFiles)
-            {
-                sv.GetAmendCode(AmendNo, s);
-                s.fstatus = FileStatus.New;
-            }
-        }
-
-        public bool Compile()
-        {
-            laststatus = scmstatus;
-            scmstatus = ScmStatus.Compile;
-            bool Result = true;
-            foreach (CommitCom c in ComComms)
-            {
-                // 小包直接跳过
-                if (c.ctype == ComType.Ssql)
-                {
-                    c.cstatus = ComStatus.Normal;
-                    continue;
-                }
-
-                if (c.cstatus == ComStatus.NoChange)
-                    continue;
-
-                // Patch 和 Ini 刷下来，拷贝过去就可以
-                else if (c.ctype == ComType.Patch || c.ctype == ComType.Ini)
-                {
-                    File.Copy(c.sawfile.LocalPath, SCMAmendDir+ "//" + c.cname, true);
-                }
-                else if (c.ctype == ComType.Dll || c.ctype == ComType.Exe)
-                {
-                    Result = CompileDpr(c);
-                    if (Result == false)
-                        break;
-                }
-                else if (c.ctype == ComType.SO || c.ctype == ComType.Sql)
-                {
-                    // 这里不能并发执行，有可能锁住Excel，可能只能等待执行
-                    Result = CompileExcel(c);
-                    if (Result == false)
-                        break;
-                }
-
-                c.cstatus = ComStatus.Normal;
-            }
-
-            return Result;
-        }
-
-        // 集成所有递交组件
-        public void DoPacker()
-        {
-            // 此时，文件夹的组件已完成，对文件夹压包处理
-            // 需要把递交组件和src分别压包，这个与开发递交的组件不同
-            // 检查是否存在源代码
-            bool SrcFlag = false;
-            foreach (CommitCom c in ComComms)
-            {
-                if (c.ctype == ComType.SO)  // 交了SO，一定要存在源代码 
-                {
-                    SrcFlag = true;
-                    break;
-                }
-            }
-
-            string strOutput = string.Empty;
-            // 暂无实现需要
-            // 开启进程执行 rar解压缩
-            // 获取 Winrar 的路径（通过注册表或者是配置，这里直接根据xml来处理）
-            // 实例化 Process 类，启动执行进程
-            Process p = new Process();
-            try
-            {
-                p.StartInfo.FileName = MAConf.instance.rar;           // rar程序名
-
-                p.StartInfo.UseShellExecute = false;        // 关闭Shell的使用  
-                p.StartInfo.RedirectStandardInput = true; // 重定向标准输入
-                p.StartInfo.RedirectStandardOutput = true;  //重定向标准出  
-                p.StartInfo.RedirectStandardError = true; //重定向错误输出  
-                p.StartInfo.CreateNoWindow = true;             // 不显示窗口
-
-                if (SrcFlag == true)
-                {
-                    // 打包 Src
-                    p.StartInfo.Arguments = " m -ep " + LocalDir + "\\" + "src-V" + (ScmVer + 1).ToString() + ".rar "
-                        + SCMAmendDir + "\\" + "*.h " + SCMAmendDir + "\\" + "*.pc "
-                        + SCMAmendDir + "\\" + "*.cpp " + SCMAmendDir + "\\" + "*.gcc ";   // 设置执行参数  
-
-                    p.Start();    // 启动
-
-                    strOutput = p.StandardOutput.ReadToEnd();        //從输出流取得命令执行结果
-                    MAConf.instance.WriteLog(strOutput, LogLevel.FileLog);
-
-                    p.WaitForExit();
-                }
-
-                // 打包Pack
-                p.StartInfo.Arguments = " a -ep " + SCMAmendDir + ".rar "
-                    + SCMAmendDir;   // 设置执行参数  
-
-                p.Start();    // 启动
-
-                strOutput = p.StandardOutput.ReadToEnd();        //從输出流取得命令执行结果
-                MAConf.instance.WriteLog(strOutput, LogLevel.FileLog);
-
-                p.WaitForExit();
-
-                p.Close();
-            }
-            catch (Exception ex)
-            {
-                MAConf.instance.WriteLog("执行rar失败" + ex.Message, LogLevel.Error);
-            }
-
-        }
-
-        private static void DirectoryCopy(
-        string sourceDirName, string destDirName, bool copySubDirs)
-        {
-            DirectoryInfo dir = new DirectoryInfo(sourceDirName);
-            DirectoryInfo[] dirs = dir.GetDirectories();
-
-            // If the source directory does not exist, throw an exception.
-            if (!dir.Exists)
-            {
-                throw new DirectoryNotFoundException(
-                    "Source directory does not exist or could not be found: "
-                    + sourceDirName);
-            }
-
-            // If the destination directory does not exist, create it.
-            if (!Directory.Exists(destDirName))
-            {
-                Directory.CreateDirectory(destDirName);
-            }
-
-
-            // Get the file contents of the directory to copy.
-            FileInfo[] files = dir.GetFiles();
-
-            foreach (FileInfo file in files)
-            {
-                // Create the path to the new copy of the file.
-                string temppath = Path.Combine(destDirName, file.Name);
-
-                // Copy the file.
-                file.CopyTo(temppath, false);
-            }
-
-            // If copySubDirs is true, copy the subdirectories.
-            if (copySubDirs)
-            {
-
-                foreach (DirectoryInfo subdir in dirs)
-                {
-                    // Create the subdirectory.
-                    string temppath = Path.Combine(destDirName, subdir.Name);
-
-                    // Copy the subdirectories.
-                    DirectoryCopy(subdir.FullName, temppath, copySubDirs);
-                }
-            }
-        }
-
-        // 打包压缩
-        private void RarScmPack()
-        {
-
-        }
-
-        // 解压缩
-        private void UnRar(string rarfile, string dir, string file = "")
-        {
-            if (!File.Exists(rarfile))
-            {
-                return;
-            }
-
-            if (!Directory.Exists(dir))
-            {
-                Directory.CreateDirectory(dir);
-            }
-            
-            // 开启进程执行 rar解压缩
-            // 获取 Winrar 的路径（通过注册表或者是配置，这里直接根据xml来处理）
-            // 实例化 Process 类，启动执行进程
-            Process p = new Process();
-            try
-            {
-                p.StartInfo.FileName = MAConf.instance.rar;           // rar程序名  
-                // 解压缩的参数
-
-                // 如果没有指定解压某一个文件，则解压缩全部文件
-                if (file == "")
-                {
-                    file = " ";
-                }
-
-                p.StartInfo.Arguments = " E -y -ep " + rarfile + " " + file + " " + dir;   // 设置执行参数  
-                p.StartInfo.UseShellExecute = false;        // 关闭Shell的使用  
-                p.StartInfo.RedirectStandardInput = true; // 重定向标准输入
-                p.StartInfo.RedirectStandardOutput = true;  //重定向标准出  
-                p.StartInfo.RedirectStandardError = true; //重定向错误输出  
-                p.StartInfo.CreateNoWindow = true;             // 不显示窗口 
-                p.Start();    // 启动
-                
-                string strOutput = p.StandardOutput.ReadToEnd();        //從输出流取得命令执行结果
-                MAConf.instance.WriteLog(strOutput, LogLevel.FileLog);
-                
-                p.WaitForExit();
-                p.Close();
-            }
-            catch (Exception ex)
-            {
-                MAConf.instance.WriteLog("执行rar失败" + ex.Message, LogLevel.Error);
-            }
-        }
-
-        // 编译Dll或者Exe
-        public bool CompileDpr(CommitCom c)
-        {
-            bool Result = true;
-            
-            // 确认Delphi版本
-            int DVer = GetDelphiVer(c.cname);
-
-            // 确定工程名称
-            string dPro = c.sawfile.LocalPath + Path.GetFileNameWithoutExtension(c.cname) + ".dpr";
-
-            Process p = new Process();
-            p.StartInfo.FileName = "cm.bat";
-            p.StartInfo.Arguments = " " + DVer.ToString() + " " + dPro + " " + SCMAmendDir;
-            p.StartInfo.UseShellExecute = false;
-            p.StartInfo.RedirectStandardInput = true;
-            p.StartInfo.RedirectStandardOutput = true;
-            p.StartInfo.RedirectStandardError = true;
-            p.StartInfo.CreateNoWindow = true;
-            p.Start();
-
-            string strOutput = p.StandardOutput.ReadToEnd();
-            MAConf.instance.WriteLog(strOutput, LogLevel.FileLog);
-            if(strOutput.IndexOf("Complile Failed") >=0)
-            {
-                Result = false;
-                // 输出最后五行
-                string[] strArr = Regex.Split(strOutput, "\r");
-                //MAConf.instance.WriteLog(strArr[strArr.Length - 4], LogLevel.Error); // 输出最后一行报错信息
-                MAConf.instance.WriteLog(strArr[strArr.Length - 3], LogLevel.Error); // 输出最后一行报错信息
-                //MAConf.instance.WriteLog(strArr[strArr.Length - 2], LogLevel.Error); // 输出最后一行报错信息 Compile Failed
-                //MAConf.instance.WriteLog(strArr[strArr.Length - 1], LogLevel.Error); // 输出最后一行报错信息 " "
-            }
-            p.WaitForExit();
-            p.Close();
-
-            return Result;
-        }
-
-        public int GetDelphiVer(string Name)
-        {
-            if (Name == "HsTools.exe" || Name == "HsCentrTrans.exe" || Name == "HsCbpTrans.exe"
-                || Name == "HsQuota.exe")
-            {
-                return 5;
-            }
-            else return 6;
-        }
-
-        // 编译Dll或者Exe
-        public bool CompileExcel(CommitCom c)
-        {
-            // 确定详细设计说明书文件
-            Detail d;
-            MacroType m;
-            if (c.ctype == ComType.SO)
-            {
-                m = MacroType.ProC;
-                d = MAConf.instance.Dls.FindBySo(c.cname);
-            }
-            else
-            {
-                m = MacroType.SQL;
-                d = MAConf.instance.Dls.FindBySql(c.cname);
-            }
-
-            if (d == null)
-            {
-                MAConf.instance.WriteLog("查找不对对应的详细设计说明书模块！", LogLevel.Error);
-                return false;
-            }
-
-            // 标定index
-            bool Result = true;
-            int index = MAConf.instance.Dls.IndexOf(d) + 1;
-            string LocalSrc = SCMAmendDir + "\\";
-            
-            // 在 src 文件不完整时才执行编译
-            if(!File.Exists(LocalSrc + d.Gcc) || !File.Exists(LocalSrc + d.Cpp) 
-                || !File.Exists(LocalSrc + d.Header) || !File.Exists(LocalSrc + d.Pc) )
-            {
-                Result = ExcelMacroHelper.instance.ScmRunExcelMacro(m, index, LocalSrc);
-            }
-
-            // 编译完成后，需要上传到 ssh 服务器上得到 SO，sql不需要处理
-            if (c.ctype == ComType.SO && Result == true)
-            {
-                
-                ReSSH s = MAConf.instance.ReConns["scm"];  // 一定要配置这个
-                if (s == null)
-                {
-                    MAConf.instance.WriteLog("集成ssh配置不存在！", LogLevel.Error);
-                    return false;
-                }
-
-                s.localdir = LocalSrc;
-                // 上传、编译、下载
-                Result = s.UploadModule(d) && s.Compile(d) && s.DownloadModule(d);
-            }
-
-            return Result;
-        }
-
         // 查询单号
         public string AmendNo {get; set;}
         
@@ -1208,91 +438,37 @@ namespace MakeAuto
         //public int[] Amends {get; set;}
 
         // 存放路径
-        public string CommitPath {get; private set;} // /广发版技术支持测试/20111223029-深圳大宗
+        public string CommitPath {get; private set; } // /广发版技术支持测试/20111223029-深圳大宗
 
         // 递交文件夹 
-        public string CommitDir // 20111223029-深圳大宗
-        { 
-            get
-            {
-                return CommitPath.Substring(CommitPath.LastIndexOf("/") + 1);
-            } 
-        }
+        public string CommitDir { get; private set; } // 20111223029-深圳大宗
 
-        public string AmendSubject // 融资融券 广发版技术支持测试
-        {
-            get
-            {
-                return CommitPath.Substring(0, CommitPath.IndexOf("/"));
-            }
-        }
+        public string AmendSubject { get; private set; } // 融资融券 广发版技术支持测试
 
-        // 本次V*包
-        public string currVerFile { get; set; } // 20111123054-国金短信-李景杰-20120117-V3.rar
-        public string SCMcurrVerFile { get; set; } // 集成-20111123054-国金短信-李景杰-20120117-V2.rar
+        // 上次集成版本
+        public int SCMLastVer {get; private set;}
+        public string SCMLastFile { get; private set; }
 
         // 本地修改单路径，不带最后的 /
-        public string LocalDir // E:\xgd\融资融券\20111123054-国金短信
-        {
-            get
-            {
-                return MAConf.instance.fc.LocalDir + CommitPath;
-            }
-        }
+        public string LocalDir {get; private set;} // E:\xgd\融资融券\20111123054-国金短信
 
         // 远程递交文件夹
-        public string RemoteDir
-        {
-            get 
-            {
-                return MAConf.instance.fc.ServerDir + CommitPath;
-            }
-        }
+        public string RemoteDir {get; private set;} //
 
         // 修改单压缩包本地存放文件
-        public string LocalFile
-        {
-            get
-            {
-                return LocalDir + "\\" + currVerFile;
-            }
-        }
+        public string LocalFile { get; private set; }
 
-        public string SCMLocalFile
-        {
-            get { return LocalDir + "\\" + SCMcurrVerFile; }
-        }
+        public string SCMLocalFile {get; private set; }  // 集成输出文件，可能查询的时候还不存在
 
-        public string RemoteFile
-        {
-            get 
-            {
-                return RemoteDir + "\\" + currVerFile;
-            }
-        }
+        public string RemoteFile {get; private set;}
 
-        public string SCMRemoteFile
-        {
-            get { return RemoteDir + "\\" + SCMcurrVerFile; }
-        }
+        public string SCMRemoteFile {get; private set;} // 远程集成输出文件
  
         // 本地修改单V*文件夹路径，不带最后的 /
-        public string AmendDir
-        {
-            get
-            {
-                return LocalDir + "\\" + Path.GetFileNameWithoutExtension(LocalFile);
-            }
-        }  // E:\xgd\融资融券\20111123054-国金短信\20111123054-国金短信-李景杰-20120117-V1
+        public string AmendDir { get; private set; } // E:\xgd\融资融券\20111123054-国金短信\20111123054-国金短信-李景杰-20120117-V1
 
         // 集成文件夹路径
-        public string SCMAmendDir 
-        {
-            get
-            {
-                return LocalDir + "\\" + "集成-" + Path.GetFileNameWithoutExtension(LocalFile);
-            }
-        }  // E:\xgd\融资融券\20111123054-国金短信\集成-20111123054-国金短信-李景杰-20120117-V1
+        public string SCMAmendDir { get; private set; }  // E:\xgd\融资融券\20111123054-国金短信\集成-20111123054-国金短信-李景杰-20120117-V1
 
         // 需求单号，暂时不用
         //private string ReqNo {get; set;}
@@ -1310,12 +486,10 @@ namespace MakeAuto
         private SqlCommand sqlcomm;
         private SqlDataReader sqldr;
 
-        public int SubmitVer {get; private set;}
-        public int ScmVer { get; private set; }
-        private ArrayList SubmitL;
-        private ArrayList ScmL;
+        public int SubmitVer {get; set;}
+        public int ScmVer { get; set; }
 
-        private string Readme;  // readme文件名称
+        public string Readme { get; private set; }  // readme文件名称
 
         public ScmType scmtype;
 
@@ -1323,5 +497,7 @@ namespace MakeAuto
         public ScmStatus scmstatus;
 
         public SAWV sv;
+
+        private OperLog log;
     }
 }

@@ -8,6 +8,7 @@ using System.Data;
 using EnterpriseDT.Net.Ftp;
 using System.Diagnostics;
 using System.Security;
+using System.Collections.Generic;
 
 namespace MakeAuto
 {
@@ -21,6 +22,9 @@ namespace MakeAuto
         public string ServerDir { get; set; }
         // 本地初始化路径
         public string LocalDir { get; set; }
+
+        // 保存
+        public Dictionary<string, string> PathCorr;
     }
 
     sealed class MAConf
@@ -87,6 +91,10 @@ namespace MakeAuto
                 ReConns.Add(sc);
             }
 
+            // 读取 WinRAR 压缩配置，在节点RAR上
+            log.WriteFileLog("读取 RAR 压缩配置");
+            rar = root.SelectSingleNode("RAR").Attributes["Path"].InnerText;
+
             // 读取小球FTP路径递交配置
             log.WriteFileLog("读取小球FTP路径递交配置");
             xn = root.SelectSingleNode("Smallball");
@@ -94,8 +102,23 @@ namespace MakeAuto
             fc.port = int.Parse(xn.Attributes["port"].InnerText);
             fc.user = xn.Attributes["user"].InnerText;
             fc.pass = xn.Attributes["pass"].InnerText;
-            fc.ServerDir = xn.ChildNodes[0].Attributes["ServerDir"].InnerText;
-            fc.LocalDir = xn.ChildNodes[0].Attributes["LocalDir"].InnerText;
+
+            fc.ServerDir = xn.Attributes["ServerDir"].Value;
+            fc.LocalDir = xn.Attributes["LocalDir"].Value;
+
+            //fc.PathCorr.Add(fc.ServerDir, fc.LocalDir);
+            
+            // 读取本地对应目录节点
+            fc.PathCorr = new Dictionary<string, string>();
+            xnl = xn.ChildNodes;
+            foreach (XmlNode x in xnl)
+            {
+                // 跳过注释，否则格式不对，会报错
+                if (x.NodeType == XmlNodeType.Comment)
+                    continue;
+
+                fc.PathCorr.Add(x.Attributes["Subject"].Value, x.Attributes["LocalDir"].Value);
+            }
 
             ftp.ServerAddress = fc.host;
             ftp.ServerPort = fc.port;
@@ -103,10 +126,6 @@ namespace MakeAuto
             ftp.Password = fc.pass;
             ftp.TransferType = FTPTransferType.BINARY;  // 指定 BINARY 传输，否则对于压缩包会失败
             ftp.CommandEncoding = Encoding.GetEncoding("gb2312"); // 重要，否则乱码且连接不
-
-            // 读取 WinRAR 压缩配置，在节点RAR上
-            log.WriteFileLog("读取 WinRAR 压缩配置，在节点RAR上"); 
-            rar = xn.ChildNodes[1].Attributes["Path"].InnerText;
             
             // 读取VSS配置
             log.WriteFileLog("读取VSS配置"); 
