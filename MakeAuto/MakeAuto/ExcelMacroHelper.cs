@@ -25,7 +25,7 @@ namespace MakeAuto
         All = 8,
     }
 
-    public class State
+    public class VBAState
     {
         // 活动的详细设计说明书
         public Detail dl { get; set; }
@@ -62,7 +62,7 @@ namespace MakeAuto
 
         public MacroType McrType { get; set; }
 
-        public State state;
+        public VBAState state;
 
         private OperLog log = OperLog.instance;
 
@@ -71,7 +71,7 @@ namespace MakeAuto
             SrcDir = MAConf.instance.SrcDir;
             ExcelFilePath = MAConf.instance.DetailFile;
             ShowExcel = true;
-            state = new State();
+            state = new VBAState();
         }
 
         // 单例化 ExcelMacroHelper
