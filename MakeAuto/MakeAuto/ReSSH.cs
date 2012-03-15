@@ -95,20 +95,37 @@ namespace MakeAuto
             // 初始化连接，打开shell
             if (InitSsh() == false)
             {
-                log.WriteLog("初始化ssh连接失败", LogLevel.Error);
+                log.WriteErrorLog("初始化ssh连接失败");
                 return false;
             }
 
             // 执行命令
             // 开启命令，发送重启AS指令
-            ssh.Connect();
-            var cmd = ssh.RunCommand("gfas");
+            // 这里 gfas 总是应答不能返回，可能是它启动 haas的进程是后台执行的，所以只能处理到超时这个异常，可能会导致真正的异常被
+            // 隐藏掉
+            var cmd = ssh.CreateCommand("source ~/.bash_profile; gfas");
+            cmd.CommandTimeout = new System.TimeSpan(0, 0, 5);
+            try
+            {
+                cmd.Execute();
+            }
+            catch (Renci.SshNet.Common.SshOperationTimeoutException e)
+            {
+                if (cmd.Result.Trim() == string.Empty)
+                {
+                    log.WriteErrorLog("重启AS异常，" + e.Message);
+                }
+            }
+
             if (cmd.ExitStatus != 0)
             {
                 log.WriteLog(cmd.Result, LogLevel.Error);
                 return false;
             }
-            else log.WriteLog(cmd.Result, LogLevel.Info);
+            else
+            {
+                log.WriteLog(cmd.Result, LogLevel.Info);
+            }
 
             return true;
         }
@@ -131,7 +148,7 @@ namespace MakeAuto
             foreach (string f in dl.ProcFiles)
             {
                 log.WriteLog("上传文件 " + f, LogLevel.Info);
-                path = localdir + f;
+                path = Path.Combine(localdir, f);
                 fs = new FileStream(path, FileMode.Open, FileAccess.Read);
                 sftp.UploadFile(fs, remotedir + f);
                 fs.Close();
@@ -148,12 +165,34 @@ namespace MakeAuto
                 InitSftp();
             }
 
-            FileStream fs = new FileStream(localdir + dl.SO, FileMode.Create);
+            FileStream fs = new FileStream(Path.Combine(localdir, dl.SO), FileMode.Create);
             MAConf.instance.WriteLog("下载文件 " + dl.SO, LogLevel.Info);
             sftp.DownloadFile("/home/" + user + "/appcom/" + dl.SO, fs);
             fs.Close();
 
             return true;
+        }
+
+        private string MakeCmd(Detail dl)
+        {
+            // bug? 这里如果不读下 bash_profile，就读不出bash_profile的环境变量 
+            string s = " cd ~/src; source ~/.bash_profile; " +
+                "rm " + dl.OFlow + " " + dl.OFunc + " "+ dl.FCPP + " " + "../appcom/" + dl.SO + ";";
+            string make = " make -f ";
+            string m_g;
+            string m_p = " ORA_VER=10";
+
+            switch(dl.SO)
+            {
+                case "libs_publicfunc.10.so":
+                    m_g = "s_publicfunc.gcc";
+                    break;
+                default:
+                    m_g = dl.Gcc;
+                    break;
+            }
+
+            return s + make + m_g + m_p;
         }
 
         public bool Compile(Detail dl)
@@ -164,13 +203,10 @@ namespace MakeAuto
             }
 
             //  开启命令，发送编译指令
-            log.WriteLog("发送编译命令： make -f " + dl.Gcc, LogLevel.Info);
+            string Make = MakeCmd(dl);
+            log.WriteLog("发送编译命令： " + Make, LogLevel.Info);
 
-            // bug? 这里如果不读下 bash_profile，就读不出bash_profile的环境变量 
-            string cmdMake = " cd ~/src; source ~/.bash_profile; " +
-                "rm " + dl.OFlow + " " + dl.OFunc + " "+ dl.FCPP +"; " +
-                "make -f " + dl.Gcc;
-            var cmd = ssh.RunCommand(cmdMake);
+            var cmd = ssh.RunCommand(Make);
             //  获取输出
             log.WriteLog(cmd.Result);
             if (cmd.ExitStatus != 0)

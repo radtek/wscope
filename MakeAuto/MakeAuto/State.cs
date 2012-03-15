@@ -196,114 +196,33 @@ namespace MakeAuto
     }
 
     /// <summary>
-    /// 处理压缩包，包括解压
+    /// 处理ReadMe
     /// </summary>
-    class PackerProcess : State
-    {
-        public override string StateName
-        {
-            get { return "预处理压缩包压缩包"; }
-        }
-
-        public override bool DoWork(AmendPack ap)
-        {
-            // 检查本地文件夹是否存在，如果存在，就先执行删除 
-            if (Directory.Exists(ap.AmendDir))
-            {
-                Directory.Delete(ap.AmendDir, true);
-            }
-
-            // 检查集成本地文件夹是否存在，不存在则创建
-            if (!Directory.Exists(ap.SCMAmendDir))
-            {
-                Directory.CreateDirectory(ap.SCMAmendDir);
-            }
-
-            // 对于重新集成，先删除掉上一次集成的软件包，然后按照新集成处理
-            if (ap.scmtype == ScmType.ReScm)
-            {
-                // 删除ftp软件包，删除本地软件包
-                FTPConnection ftp = MAConf.instance.ftp;
-                if (ftp.IsConnected == false)
-                {
-                    ftp.Connect();
-                }
-                log.WriteInfoLog("重新集成，删除本地集成包" + ap.SCMLocalFile);
-                File.Delete(ap.SCMLocalFile);
-                log.WriteInfoLog("重新集成，删除服务器集成包" + ap.SCMRemoteFile);
-                //ftp.DeleteFile(SCMRemoteFile);
-
-                // 重新标定，暂时不考虑重复集成
-            }
-
-            // 根据集成类型执行集成操作
-            if (ap.scmtype == ScmType.NewScm)
-            {
-                // 下载压缩包之后，解压缩包，重命名文件夹为集成-*，
-                UnRar(ap.LocalFile, ap.SCMAmendDir);
-
-                // 如果存在 src 压缩文件夹，解压缩 src 文件夹
-                string srcrar = ap.SCMAmendDir + Path.DirectorySeparatorChar + "src-V1.rar";
-                if (File.Exists(srcrar))
-                {
-                    UnRar(srcrar, ap.SCMAmendDir);  // 不用解压，新的集成直接生成代码处理
-                    File.Delete(srcrar);
-                }
-
-                // 所有递交组件标记为新增
-                foreach (CommitCom c in ap.ComComms)
-                {
-                    c.cstatus = ComStatus.Add;
-                }
-            }
-            else if (ap.scmtype == ScmType.BugScm)// bug集成处理
-            {
-                // 复制上一次集成文件夹为本次集成文件夹
-                if (Directory.Exists(ap.SCMLastFile))
-                {
-                    DirectoryCopy(ap.SCMLastFile, ap.SCMAmendDir, false);
-                }
-                else
-                {
-                    System.Windows.Forms.MessageBox.Show("上次集成文件不存在！\r\n" + ap.SCMLastFile);
-                    return false;
-                }
-
-                // 如果存在 src 压缩文件夹，解压缩 src 文件夹
-                string srcrar = ap.SCMAmendDir + "\\" + "src-V" + ap.SCMLastVer.ToString() + ".rar";
-                if (File.Exists(srcrar))
-                {
-                    UnRar(srcrar, ap.SCMAmendDir);
-                    File.Delete(srcrar);  // 这个怎么处理，有还是木有？
-                }
-                else
-                {
-                    System.Windows.Forms.MessageBox.Show("源代码压缩目录不存在！\r\n" + srcrar);
-                }
-
-                // 对于下载的递交文件，解压缩readme到集成文件夹，以便根据本次变动取出需要重新集成的文件
-                UnRar(ap.LocalFile, ap.SCMAmendDir, ap.Readme);
-            }
-            return true;
-        }
-    }
-
     class PackerReadMe : State
     {
         public override string StateName
         {
             get { return "处理ReadMe"; }
         }
-        
+
         // 根据 Readme 置重新集成状态，这里分成两步，因为数据库里读出来的递交组件不可靠
         // 如果一张修改单不递交，只是生成下 readme，数据库就会更新掉递交的组件，
         // 所以直接使用数据库的stuff字段有问题，调整为使用readme处理
         public override bool DoWork(AmendPack ap)
         {
+            // 检查集成本地文件夹是否存在，不存在则创建
+            if (!Directory.Exists(ap.SCMAmendDir))
+            {
+                Directory.CreateDirectory(ap.SCMAmendDir);
+            }
+
+            // 对于下载的递交文件，解压缩readme到集成文件夹，以便根据本次变动取出需要重新集成的文件
+            UnRar(ap.LocalFile, ap.SCMAmendDir, ap.Readme);
+
+            // 处理 ReadMe，以获取变动
             // 读取readme分成两步，先重新生成递交组件，然后检测修改
             ProcessComs(ap);
             ProcessMods(ap);
-            PostComs(ap);
             ProcessSAWPath(ap);
 
             // 显示处理结果，打开ReadMe文件
@@ -315,39 +234,37 @@ namespace MakeAuto
         private void ProcessReadMe(AmendPack ap)
         {
             // 输出下处理结果
-            Debug.WriteLine("ProcessReadMe:Coms...");
+            log.WriteInfoLog("[递交组件]");
             foreach (CommitCom c in ap.ComComms)
             {
-                Debug.WriteLine("名称：" + c.cname);
-                Debug.Indent();
-                Debug.WriteLine("状态：" + Enum.GetName(typeof(ComStatus), c.cstatus));
-                Debug.WriteLine("版本：" + c.cver);
-                Debug.WriteLine("路径：" + c.path);
+                log.WriteInfoLog("名称：" + c.cname + " "
+                    + "状态：" + Enum.GetName(typeof(ComStatus), c.cstatus) + " "
+                    + "版本：" + c.cver + " "
+                    + "路径：" + c.path);
+                /*
                 if (c.sawfile == null)
                 {
-                    Debug.WriteLine("本地路径：test__");
-                    Debug.WriteLine("SAW路径：test__");
+                    log.WriteInfoLog("本地路径：test__");
+                    log.WriteInfoLog("SAW路径：test__");
                 }
                 else
                 {
-                    Debug.WriteLine("本地路径：" + c.sawfile.LocalPath);
-                    Debug.WriteLine("SAW路径：" + c.sawfile.SAWPath);
+                    log.WriteInfoLog("本地路径：" + c.sawfile.LocalPath);
+                    log.WriteInfoLog("SAW路径：" + c.sawfile.SAWPath);
                 }
-                Debug.Unindent();
+                 * */
             }
-            Debug.WriteLine("ProcessReadMe:SAWFiles...");
+            log.WriteInfoLog("[配置库文件]");
             foreach (SAWFile s in ap.SAWFiles)
             {
-                Debug.WriteLine("路径：" + s.Path);
-                Debug.Indent();
-                Debug.WriteLine("本地路径：" + s.LocalPath);
-                Debug.WriteLine("SAW路径：" + s.SAWPath);
-                Debug.WriteLine("文件状态：" + Enum.GetName(typeof(FileStatus), s.fstatus));
-                Debug.Unindent();
+                log.WriteInfoLog("路径：" + s.Path + " "
+                    + "本地路径：" + s.LocalPath + " "
+                    + "SAW路径：" + s.SAWPath + " "
+                    + "文件状态：" + Enum.GetName(typeof(FileStatus), s.fstatus));
             }
         }
 
-        private void ProcessComs(AmendPack ap)
+        private bool ProcessComs(AmendPack ap)
         {
             // 清除掉组件列表，重新添加
             ap.ComComms.Clear();
@@ -356,7 +273,7 @@ namespace MakeAuto
             {
                 // Create an instance of StreamReader to read from a file.
                 // The using statement also closes the StreamReader.
-                using (StreamReader sr = new StreamReader(ap.SCMAmendDir + "/" + ap.Readme, 
+                using (StreamReader sr = new StreamReader(ap.SCMAmendDir + "/" + ap.Readme,
                     Encoding.GetEncoding("gb2312")))
                 {
                     string line, name, version;
@@ -402,23 +319,28 @@ namespace MakeAuto
             catch (Exception ex)
             {
                 log.WriteErrorLog("ProcessComs异常 ReadMe：" + ap.Readme + " " + ex.Message);
+                return false;
             }
 
             // 输出下处理结果
+            /*
             log.WriteInfoLog("ProcessComs...");
-            Debug.WriteLine(System.Reflection.MethodBase.GetCurrentMethod().Name);
+            log.WriteInfoLog(System.Reflection.MethodBase.GetCurrentMethod().Name);
             foreach (CommitCom c in ap.ComComms)
             {
-                Debug.WriteLine(c.cname);
+                log.WriteInfoLog(c.cname);
                 Debug.Indent();
-                Debug.WriteLine(Enum.GetName(typeof(ComStatus), c.cstatus));
-                Debug.WriteLine(c.cver);
-                Debug.WriteLine(c.path);
+                log.WriteInfoLog(Enum.GetName(typeof(ComStatus), c.cstatus));
+                log.WriteInfoLog(c.cver);
+                log.WriteInfoLog(c.path);
                 Debug.Unindent();
             }
+             * */
+
+            return true;
         }
 
-        private void ProcessMods(AmendPack ap)
+        private bool ProcessMods(AmendPack ap)
         {
             ap.SAWFiles.Clear();
             // 如果是第一次递交，那么不管修改是什么，都需要重新集成
@@ -436,15 +358,13 @@ namespace MakeAuto
                     s.fstatus = FileStatus.Old;
                 }
 
-                return;
+                return true;
             }
 
             // 读取readme，重新集成，由于小球上查询的数据库记录的信息可能不对，需要根据readme的作准
             try
             {
-                // Create an instance of StreamReader to read from a file.
-                // The using statement also closes the StreamReader.
-                using (StreamReader sr = new StreamReader(ap.SCMAmendDir + "/" + ap.Readme, 
+                using (StreamReader sr = new StreamReader(ap.SCMAmendDir + "/" + ap.Readme,
                     Encoding.GetEncoding("gb2312")))
                 {
                     string line, name, version, des;
@@ -484,7 +404,7 @@ namespace MakeAuto
                         {
                             log.WriteErrorLog("ProcessMods未能找到组件");
                             ap.scmstatus = ScmStatus.Error;
-                            return;
+                            return false;
                         }
 
                         if (des.IndexOf("本次取消") >= 0)
@@ -501,58 +421,21 @@ namespace MakeAuto
             catch (Exception ex)
             {
                 log.WriteErrorLog("ProcessMods异常 ReadMe:" + ap.Readme + " " + ex.Message);
+                return false;
             }
+
+            return true;
         }
 
-        // 后处理组件，删除不需要的内容
-        private void PostComs(AmendPack ap)
+        // 处理 SAWPath，设置检出代码的路径
+        private bool ProcessSAWPath(AmendPack ap)
         {
-            if (ap.scmstatus == ScmStatus.Error)
-            {
-                return;
-            }
-            else
-            {
-                ap.scmstatus = ScmStatus.PostComs;
-            }
-
-            // 如果是删除的，那么删除文件（对于so，需要删除src文件）
-            foreach (CommitCom c in ap.ComComms)
-            {
-                if (c.cstatus == ComStatus.Delete || c.cstatus == ComStatus.Modify)
-                {
-                    // SO删除了，源文件也删除掉
-                    File.Delete(ap.SCMAmendDir + "\\" + c.cname);
-                    if (c.ctype == ComType.SO)
-                    {
-                        foreach (Detail d in MAConf.instance.Dls)
-                        {
-                            if (d.SO == c.cname)
-                            {
-                                foreach (string s in d.ProcFiles)
-                                {
-                                    File.Delete(ap.SCMAmendDir + "\\" + s);
-                                }
-                            }
-
-                            break;
-                        }
-                    }
-                }
-
-                // 对于标记为删除的，不需要在列表中维护了
-                if (c.cstatus == ComStatus.Delete)
-                    ap.ComComms.Remove(c);
-            }
-
+            #region 第一步，生成基本的SAWFile
             // 处理 SAWFile
             foreach (CommitCom c in ap.ComComms)
             {
-                if (c.cstatus == ComStatus.NoChange)
-                    continue;
-
-                // 小包无SAW库
-                if (c.ctype == ComType.Ssql)
+                // 对于无变动和要删除的，不需要再生成SAW库信息；对于小包，不需要生成 SAW库信息
+                if (c.cstatus == ComStatus.NoChange || c.cstatus == ComStatus.Delete || c.ctype == ComType.Ssql)
                     continue;
 
                 // 标记文件需要刷新，添加到文件状态列表中
@@ -572,30 +455,19 @@ namespace MakeAuto
                     c.sawfile = f;
                 }
             }
-        }
+            #endregion
 
-        // 处理 SAWPath，设置检出代码的路径
-        private void ProcessSAWPath(AmendPack ap)
-        {
-            if (ap.scmstatus == ScmStatus.Error)
-            {
-                return;
-            }
-            else
-            {
-                ap.scmstatus = ScmStatus.ProcessSAWPath;
-            }
-
+            #region 第二步，生出每个文件的配置库路径
             // 确认修改单的配置库
             ap.sv = MAConf.instance.SAWs.GetByAmend(ap.AmendSubject);
             if (ap.sv == null)
             {
-                Debug.WriteLine("获取对应配置库失败");
+                log.WriteInfoLog("获取对应配置库失败，在配置文件节点无法找到该递交主题的配置库路径");
                 ap.scmstatus = ScmStatus.Error;
-                return;
+                return false;
             }
 
-            // 处理SAW代码的路径，暂时只对06版有效，因为目录是固定的，需要写死
+            // 处理SAW代码的路径，暂时只对06版有效，因为目录是固定的，需要写死，这段代码可能需要很多变动
             foreach (SAWFile s in ap.SAWFiles)
             {
                 if (s.Path.IndexOf("小包-") >= 0)
@@ -605,7 +477,7 @@ namespace MakeAuto
                 if (s.Path.IndexOf("金融产品销售系统_详细设计说明书") >= 0) // 
                 {
                     string temp = @"HSTRADES11\Documents\D2.Designs\详细设计\后端\";
-                    s.LocalPath = ap.sv.Workspace + temp + s.Path;
+                    s.LocalPath = ap.sv.Workspace + "\\" + temp + s.Path;
                     s.SAWPath = @"$/" + temp.Replace('\\', '/') + s.Path;
 
                 }
@@ -614,10 +486,87 @@ namespace MakeAuto
                     // 如果第一个不是路径分隔符号，那么补路径分隔符号
                     if (s.Path[0] != '\\')
                         s.Path = "\\" + s.Path;
-                    s.LocalPath = ap.sv.Workspace + @"HSTRADES11" + s.Path;
+                    s.LocalPath = ap.sv.Workspace + "\\" + @"HSTRADES11" + s.Path;
                     s.SAWPath = @"$/" + @"HSTRADES11" + s.Path.Replace('\\', '/');
                 }
             }
+            #endregion
+
+            return true;
+        }
+    }
+
+    class PackerProcess : State
+    {
+        public override string StateName
+        {
+            get { return "处理压缩包"; }
+        }
+        
+        public override bool DoWork(AmendPack ap)
+        {
+            // 如果本地集成文件已存在，删除本地集成文件
+            if (File.Exists(ap.SCMLocalFile))
+            {
+                File.Delete(ap.SCMLocalFile);
+            }
+
+            // 下载压缩包之后，解压缩包，得到 集成-[修改单号]-[模块]-[修改人]-[日期]-V* 的一个文件夹
+            UnRar(ap.LocalFile, ap.SCMAmendDir);
+
+            // 如果存在 src 压缩文件夹，解压缩 src 文件夹
+            if (File.Exists(ap.SrcRar))
+            {
+                UnRar(ap.SrcRar, ap.SCMAmendDir);  // 解压处理，供对比用
+                File.Delete(ap.SrcRar);  // 删除掉，不需要留着了
+            }
+
+            // 根据集成类型执行集成操作
+            if (ap.scmtype == ScmType.NewScm)
+            {
+                // 所有递交组件标记为新增
+                foreach (CommitCom c in ap.ComComms)
+                {
+                    c.cstatus = ComStatus.Add;
+                }
+            }
+            else if (ap.scmtype == ScmType.BugScm) // bug集成处理
+            {
+                foreach (CommitCom c in ap.ComComms)
+                {
+                    // 对于没有变动的组件，复制老的集成到新的集成包里
+                    if (c.cstatus == ComStatus.NoChange)  // 无变动的可以复制了
+                    {
+                        File.Copy(Path.Combine(ap.SCMLastAmendDir, c.cname), 
+                            Path.Combine(ap.SCMAmendDir, c.cname), 
+                            true);
+                    }
+                    else if (c.cstatus == ComStatus.Delete) // 如果是删除的，那么删除文件（对于so，需要删除src文件）
+                    {
+                        // SO删除了，源文件也删除掉
+                        File.Delete(ap.SCMAmendDir + "\\" + c.cname);
+                        if (c.ctype == ComType.SO)
+                        {
+                            foreach (Detail d in MAConf.instance.Dls)
+                            {
+                                if (d.SO == c.cname)
+                                {
+                                    foreach (string s in d.ProcFiles)
+                                    {
+                                        File.Delete(ap.SCMAmendDir + "\\" + s);
+                                    }
+
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        // 对于标记为删除的，不需要在递交组件列表中维护了
+                        ap.ComComms.Remove(c);
+                    }                        
+                }
+            }
+            return true;
         }
     }
 
@@ -704,7 +653,7 @@ namespace MakeAuto
                 else if (c.ctype == ComType.SO || c.ctype == ComType.Sql)
                 {
                     // 这里不能并发执行，有可能锁住Excel，可能只能等待执行
-                    //Result = CompileExcel(c.ctype, c.cname, ap.SCMAmendDir);
+                    Result = CompileExcel(c.ctype, c.cname, ap.SCMAmendDir);
                     if (Result == false)
                         break;
                 }
@@ -754,12 +703,16 @@ namespace MakeAuto
         // 要重写
         private int GetDelphiVer(string Name)
         {
-            if (Name == "HsTools.exe" || Name == "HsCentrTrans.exe" || Name == "HsCbpTrans.exe"
-                || Name == "HsQuota.exe")
+            // 检查是否在配置中
+            int ver;
+            if (MAConf.instance.DelCom.TryGetValue(Name, out ver))
             {
-                return 5;
             }
-            else return 6;
+            else  // 否则，默认当做 D6
+            {
+                ver = 6;
+            }
+            return ver;
         }
 
         // 编译Excel文件或者后台Sql
@@ -792,42 +745,132 @@ namespace MakeAuto
             // 标定index
             bool Result = true;
             int index = MAConf.instance.Dls.IndexOf(d) + 1;
-            string LocalSrc = dir + "\\";
+            string LocalSrc = MAConf.instance.OutDir + "\\";
 
             // 在 src 文件不完整时才执行编译
-            if (!File.Exists(LocalSrc + d.Gcc) || !File.Exists(LocalSrc + d.Cpp)
-                || !File.Exists(LocalSrc + d.Header) || !File.Exists(LocalSrc + d.Pc))
-            {
+            //if ((ctype == ComType.SO && (!File.Exists(LocalSrc + d.Gcc) || !File.Exists(LocalSrc + d.Cpp)
+            //      || !File.Exists(LocalSrc + d.Header) || !File.Exists(LocalSrc + d.Pc))) 
+            //    || (ctype == ComType.Sql && (!File.Exists(LocalSrc + d.Sql))) )
+            //{
                 Result = ExcelMacroHelper.instance.ScmRunExcelMacro(m, index, LocalSrc);
-            }
+            //}
 
             if (!Result)
             {
                 return false;
             }
 
-            // 编译完成后，需要上传到 ssh 服务器上得到 SO，sql不需要处理
-            if (ctype == ComType.SO)
-            {
+            return Result;
+        }
+    }
 
-                ReSSH s = MAConf.instance.ReConns["scm"];  // 一定要配置这个
-                if (s == null)
+    /// <summary>
+    /// 主要是进行源代码对比工作，包括 so 源文件和 sql 源文件的检查，应该是调用外部工具如 Beyond Compare 之类
+    /// </summary>
+    class PackerDiffer : State
+    {
+        public override string StateName
+        {
+            get { return "文件对比"; }
+        }
+
+        public override bool DoWork(AmendPack ap)
+        {
+            // 对于相同的，可以不提示用户，对于不同的，需要集成的同学确认，这个还需要想办法来写
+            bool Result = true;
+            foreach (CommitCom c in ap.ComComms)
+            {
+                // 小包直接跳过
+                if (c.ctype == ComType.Ssql)
                 {
-                    log.WriteErrorLog("集成ssh配置不存在！");
-                    return false;
+                    c.cstatus = ComStatus.Normal;
+                    continue;
                 }
 
-                s.localdir = LocalSrc;
-                // 上传、编译、下载
-                Result = s.UploadModule(d) && s.Compile(d) && s.DownloadModule(d);
-            }
-            else if (ctype == ComType.Sql)
-            { 
-                // 送到 Oracle 上执行，暂时没有
-                Result = true;
-            }
+                if (c.cstatus == ComStatus.NoChange)
+                    continue;
 
-            return Result;
+                if (c.ctype == ComType.SO || c.ctype == ComType.Sql)
+                {
+                    // 对比实现
+                        break;
+                }
+
+                c.cstatus = ComStatus.Normal;
+            }
+            return true;
+        }
+    }
+
+    /// <summary>
+    /// 对比完成后，生成SO
+    /// </summary>
+    class PackerSO : State
+    {
+        public override string StateName
+        {
+            get { return "转移源文件，生成So"; }
+        }
+
+        public override bool DoWork(AmendPack ap)
+        {
+            bool Result = true;
+            foreach (CommitCom c in ap.ComComms)
+            {
+                // 小包直接跳过
+                if (c.ctype == ComType.Ssql)
+                {
+                    c.cstatus = ComStatus.Normal;
+                    continue;
+                }
+
+                if (c.cstatus == ComStatus.NoChange)
+                    continue;
+
+                // 编译完成后，需要上传到 ssh 服务器上得到 SO，sql不需要处理
+                if (c.ctype == ComType.SO)
+                {
+                    ReSSH s = MAConf.instance.ReConns["scm"];  // 一定要配置这个
+                    if (s == null)
+                    {
+                        log.WriteErrorLog("集成ssh配置不存在！");
+                        return false;
+                    }
+                    s.localdir = ap.SCMAmendDir + "\\";
+
+                    // 把OutDir下的文件移动过来
+                    Detail d = MAConf.instance.Dls.FindBySo(c.cname);
+                    if (d == null)
+                    {
+                        log.WriteErrorLog("无法定位组件" + c.cname + "详细设计说明书位置，编译失败");
+                        return false;
+                    }
+
+                    foreach (string f in d.ProcFiles)
+                    {
+                        File.Copy(Path.Combine(MAConf.instance.OutDir, f),
+                            Path.Combine(ap.SCMAmendDir, f),
+                            true);
+                    }
+
+                    // 上传、编译、下载
+                    Result = s.UploadModule(d) && s.Compile(d) && s.DownloadModule(d);
+                }
+                else if (c.ctype == ComType.Sql)
+                {
+                    // 送到 Oracle 上执行，暂时没有
+                    //Detail d = MAConf.instance.Dls.FindBySql(c.cname);
+                    
+                    File.Copy(Path.Combine(MAConf.instance.OutDir, c.cname),
+                        Path.Combine(ap.SCMAmendDir, c.cname),
+                        true);
+
+                    Result = true;
+                }
+
+                c.cstatus = ComStatus.Normal;
+            } 
+            return true;
         }
     }
 
@@ -875,7 +918,7 @@ namespace MakeAuto
                 if (SrcFlag == true)
                 {
                     // 打包 Src
-                    p.StartInfo.Arguments = " m -ep " + ap.LocalDir + "\\" + "src-V" + (ap.ScmVer + 1).ToString() + ".rar "
+                    p.StartInfo.Arguments = " m -ep " + ap.SCMSrcRar + " "
                         + ap.SCMAmendDir + "\\" + "*.h " + ap.SCMAmendDir + "\\" + "*.pc "
                         + ap.SCMAmendDir + "\\" + "*.cpp " + ap.SCMAmendDir + "\\" + "*.gcc ";   // 设置执行参数  
 
@@ -888,8 +931,8 @@ namespace MakeAuto
                 }
 
                 // 打包Pack
-                p.StartInfo.Arguments = " a -ep " + ap.SCMAmendDir + ".rar "
-                    + ap.SCMAmendDir;   // 设置执行参数  
+                p.StartInfo.Arguments = " a -ep " + ap.SCMLocalFile + " "
+                    + ap.SCMAmendDir + " " + "-x" +ap.SCMSrcRar;   // 设置执行参数
 
                 p.Start();    // 启动
 
@@ -921,6 +964,22 @@ namespace MakeAuto
 
         public override bool DoWork(AmendPack ap)
         {
+            // 对于重新集成，先删除掉上一次集成的软件包，然后按照新集成处理
+            if (ap.scmtype == ScmType.ReScm)
+            {
+                // 删除ftp软件包，删除本地软件包
+                FTPConnection ftp = MAConf.instance.ftp;
+                if (ftp.IsConnected == false)
+                {
+                    ftp.Connect();
+                }
+
+                log.WriteInfoLog("重新集成，删除服务器集成包" + ap.SCMRemoteFile);
+                //ftp.DeleteFile(SCMRemoteFile);
+
+                // 重新标定，暂时不考虑重复集成
+            }
+
             return true;
         }
     }
@@ -937,7 +996,13 @@ namespace MakeAuto
 
         public override bool DoWork(AmendPack ap)
         {
+            if (File.Exists(ap.SCMLocalFile))
+            {
+                File.Delete(ap.SCMLocalFile);
+            }
             return true;
         }
     }
+
+
 }

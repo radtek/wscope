@@ -23,7 +23,7 @@ namespace MakeAuto
         // 本地初始化路径
         public string LocalDir { get; set; }
 
-        // 保存
+        // 保存不同递交单的基础路径
         public Dictionary<string, string> PathCorr;
     }
 
@@ -130,6 +130,7 @@ namespace MakeAuto
             // 读取VSS配置
             log.WriteFileLog("读取VSS配置"); 
             xn = root.SelectSingleNode("SCMS");
+            OutDir = xn.Attributes["OutDir"].Value;
             xnl = xn.ChildNodes;
             foreach (XmlNode x in xnl)
             {
@@ -149,6 +150,17 @@ namespace MakeAuto
 
                 // 添加此连接到配置组
                 SAWs.Add(sv);
+            }
+
+            log.WriteFileLog("读取Delphi编译版本配置");
+            DelCom = new Dictionary<string, int>();
+            xn = root.SelectSingleNode("DelCom");
+            xnl = xn.ChildNodes;
+            foreach (XmlNode x in xnl)
+            {
+                if (x.NodeType == XmlNodeType.Comment)
+                    continue;
+                DelCom.Add(x.Attributes["name"].Value, int.Parse(x.Attributes["ver"].Value));
             }
 
             log.WriteFileLog("配置初始化完成");
@@ -372,7 +384,9 @@ namespace MakeAuto
         public bool ShowCrdt;
         public bool ShowFutu;
 
+        public string OutDir;
 
+        public Dictionary<string, int> DelCom;
 
         // 取配置文件名称
         private readonly string conf = "MAConf.xml";

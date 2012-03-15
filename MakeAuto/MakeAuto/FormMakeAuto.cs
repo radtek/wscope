@@ -380,7 +380,7 @@ namespace MakeAuto
             if (ap.QueryFTP() == true)
             {
                 txtSubmitVer.Text = ap.SubmitVer.ToString();
-                txtScmVer.Text = ap.ScmVer.ToString();
+                txtScmVer.Text = ap.SCMLastVer.ToString();
             }
             else 
             {
