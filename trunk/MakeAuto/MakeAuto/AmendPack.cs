@@ -188,18 +188,20 @@ namespace MakeAuto
                 // 从CommitPath中分解递交项和主单号 /融资融券/20111123054-国金短信，分解得到 20111123054
                 MainNo = CommitPath.Substring(CommitPath.LastIndexOf("/") + 1, 11);
                 // 得到递交模块，融资融券 广发版技术支持测试
-                AmendSubject = CommitPath.Substring(0, CommitPath.IndexOf("/"));  // 融资融券
-                CommitDir = CommitPath.Substring(CommitPath.LastIndexOf("/") + 1);  // 20111123054-国金短短信
+                int i = CommitPath.LastIndexOf("/");
+                AmendSubject = CommitPath.Substring(1,  i - 1);  // 融资融券
+                CommitDir = CommitPath.Substring(i + 1);  // 20111123054-国金短短信
 
                 // Readme 文件名称
                 Readme = "Readme-" + CommitDir + ".txt";
 
                 // 标定路径
                 RemoteDir = MAConf.instance.fc.ServerDir + CommitPath;
+
                 string val;
                 if (MAConf.instance.fc.PathCorr.TryGetValue(AmendSubject, out val))
                 {
-                    LocalDir = val;  // 没有 20111123054-国金短短信 这一级文件夹，直接把压缩包放到这个目录
+                    LocalDir = val;
                 }
                 else
                 {
@@ -385,45 +387,55 @@ namespace MakeAuto
                 SubmitVer = 0;
             }
 
+            // 决定是新集成还是修复集成还是重新集成
+            if (SCMLastVer == 0)
+            {
+                scmtype = ScmType.NewScm;
+            }
+            else if (SCMLastVer == SubmitVer)
+            {
+                scmtype = ScmType.ReScm;
+            }
+            else if (SCMLastVer < SubmitVer)
+            {
+                scmtype = ScmType.BugScm;  // 修复集成
+            }
+
+            string dir = Path.GetFileNameWithoutExtension(currVerFile);
+
+            //AmendDir = LocalDir + "\\" + dir;
+            SCMAmendDir = LocalDir + "\\" + "集成-" + dir;
+
+            ScmVer = SubmitVer;
+            LocalFile = LocalDir + "\\" + currVerFile;
+            RemoteFile = RemoteDir + "\\" + currVerFile;
+
+            SCMLocalFile = SCMAmendDir + "\\" + "集成-" + currVerFile;
+            SCMRemoteFile = RemoteDir + "\\" + "集成-" +currVerFile;
+
+            SrcRar = SCMAmendDir + "\\" + "src-V" + ScmVer.ToString() + ".rar";
+            SCMSrcRar = SCMAmendDir + "\\" + "集成-src-V" + ScmVer.ToString() + ".rar";
+
+            // 生成一些上次集成的变量，需要把上次的覆盖到本次来
             if (ScmL.Count > 0)
             {
                 ScmL.Sort();
                 s = ScmL[ScmL.Count - 1].ToString();
-                SCMLastFile = LocalDir + "\\" + s;  // 上次集成文件夹
+                dir = Path.GetFileNameWithoutExtension(s);
+                // 上次数据
+                SCMLastAmendDir = LocalDir + "\\" + dir;
+                SCMLastLocalFile = SCMLastAmendDir + "\\" + s;
+
                 // 取递交版本号 
                 // 20111207012-委托管理-高虎-20120116-V13.rar --> 20111207012-委托管理-高虎-20120116-V13 -> 13
                 s = s.Substring(0, s.LastIndexOf('.'));
-                SCMLastVer = int.Parse(s.Substring(s.LastIndexOf('V') + 1)); 
+                SCMLastVer = int.Parse(s.Substring(s.LastIndexOf('V') + 1));
+                SCMLastSrcRar = SCMLastAmendDir + "\\" + "集成-src-V" + SCMLastVer.ToString() + ".rar";
             }
             else
             {
                 SCMLastVer = 0;
             }
-
-            ScmVer = SubmitVer;
-
-            // 决定是新集成还是修复集成还是重新集成
-            if (ScmVer == 0)
-            {
-                scmtype = ScmType.NewScm;
-            }
-            else if (ScmVer == SubmitVer)
-            {
-                scmtype = ScmType.ReScm;
-            }
-            else if (ScmVer < SubmitVer)
-            {
-                scmtype = ScmType.BugScm;  // 修复集成
-            }
-
-            LocalFile = LocalDir + "\\" + currVerFile;
-            RemoteFile = RemoteDir + "\\" + currVerFile;
-
-            SCMLocalFile = LocalDir + "\\" + "集成-" + currVerFile;
-            SCMRemoteFile = RemoteDir + "\\" + "集成-" +currVerFile;
-
-            AmendDir = LocalDir + "\\" + Path.GetFileNameWithoutExtension(currVerFile);
-            SCMAmendDir = LocalDir + "\\" + "集成-" + Path.GetFileNameWithoutExtension(currVerFile);
 
             return true;
         }
@@ -465,13 +477,20 @@ namespace MakeAuto
         public string SCMRemoteFile {get; private set;} // 远程集成输出文件
  
         // 本地修改单V*文件夹路径，不带最后的 /
-        public string AmendDir { get; private set; } // E:\xgd\融资融券\20111123054-国金短信\20111123054-国金短信-李景杰-20120117-V1
+        //public string AmendDir { get; private set; } // E:\xgd\融资融券\20111123054-国金短信\20111123054-国金短信-李景杰-20120117-V1
 
         // 集成文件夹路径
         public string SCMAmendDir { get; private set; }  // E:\xgd\融资融券\20111123054-国金短信\集成-20111123054-国金短信-李景杰-20120117-V1
 
         // 需求单号，暂时不用
         //private string ReqNo {get; set;}
+
+        public string SrcRar { get; private set; }
+        public string SCMSrcRar { get; private set; }
+
+        public string SCMLastAmendDir { get; private set; }
+        public string SCMLastLocalFile { get; private set; }
+        public string SCMLastSrcRar { get; private set; }
 
         // 修改单递交组件，以字符串对象和对象两种形态体现，调整字符串对象为私有（主要是使用不方便）
         public string ComString {get; private set;}

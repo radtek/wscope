@@ -87,10 +87,23 @@ namespace MakeAuto
 
         public string SO
         {
-            get { return Pas.Trim() == string.Empty ? string.Empty : "libs_" + Pas + "flow.10.so"; }
+            get 
+            { 
+                if(Pas.Trim() == string.Empty)
+                {
+                    return string.Empty;
+                }
+                else if(Pas.Trim() == "public")
+                {
+                    return "libs_" + Pas + "func.10.so";
+                }
+                else
+                {
+                    return "libs_" + Pas + "flow.10.so"; 
+                }
+            }
         }
         #endregion
-        
     }
 
     class Details : ArrayList

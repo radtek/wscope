@@ -79,8 +79,10 @@ namespace MakeAuto
                 Login();
             }
 
-            log.WriteLog("获取修改单代码文件,修改单号:" + AmendNo + "，递交类型：" 
-                + Enum.GetName(typeof(SAWType), sf.Type));
+            log.WriteLog("获取修改单代码文件,修改单号:" + AmendNo + 
+                " 递交类型：" + Enum.GetName(typeof(SAWType), sf.Type) + 
+                " 文件：" + sf.SAWPath + 
+                " 本地路径：" + sf.LocalPath);
             int FileVersion = 0;
             string FileName;
             string Project, File;
@@ -124,14 +126,14 @@ namespace MakeAuto
                     {
                         if (o.OperationResult != 0)
                         {
-                            Debug.WriteLine("检出文件" + o.ItemFullName + "失败，" + o.Description);
+                            log.WriteErrorLog("检出文件" + o.ItemFullName + "失败，" + o.Description);
                             return false;
                         }
                     }
                 }
                 else
                 {
-                    Debug.WriteLine("GetLatestProject 失败，" + ResultDescription);
+                    log.WriteErrorLog("GetLatestProject 失败，" + ResultDescription);
                     return false;
                 }
 
@@ -160,12 +162,11 @@ namespace MakeAuto
 
                 if (Found == false)
                 {
-                    Debug.WriteLine("无法找到工程信息。");
+                    log.WriteErrorLog("无法找到工程信息。");
                     return false;
                 }
 
                 // 重新检出检出代码
-                Debug.WriteLine("回滚代码...");
                 foreach (SAWVProjectHistory his in ProjectHistorySet)
                 {
                     if (his.Comment.IndexOf(AmendNo + "-" + sf.Version) >= 0)
@@ -181,8 +182,10 @@ namespace MakeAuto
                     Project = FileName.Substring(0, FileName.LastIndexOf("/"));
                     File = FileName.Substring(FileName.LastIndexOf("/") + 1);
 
+                    Debug.WriteLine("回滚代码...");
                     Debug.WriteLine("检出代码：" + Project + " " + File + " " +
                         FileVersion.ToString() + " " + LocalPath);
+                    
                     GetOldVersionFile(Project, File, FileVersion, LocalPath);
                 }
 

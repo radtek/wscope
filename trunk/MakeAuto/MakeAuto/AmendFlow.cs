@@ -21,11 +21,13 @@ namespace MakeAuto
             // 下载递交包-预处理递交包-检查递交包-检出VSS代码-编译-递交-清理
             _aflow = new ArrayList();
             _aflow.Add(new PackerDownload());
-            _aflow.Add(new PackerProcess());
             _aflow.Add(new PackerReadMe());
+            _aflow.Add(new PackerProcess());
             _aflow.Add(new PackerCheck());
             _aflow.Add(new PackerVSSCode());
             _aflow.Add(new PackerCompile());
+            _aflow.Add(new PackerDiffer());
+            _aflow.Add(new PackerSO());
             _aflow.Add(new PackerRePack());
             _aflow.Add(new PackerUpload());
             _aflow.Add(new PackCleanUp());
@@ -40,10 +42,13 @@ namespace MakeAuto
                 log.WriteLog(s.StateName + " 开始");
                 if (!s.DoWork(_amend))
                     return false;
+                
                 log.WriteLog(s.StateName + " 完成");
+                //System.Windows.Forms.MessageBox.Show(s.StateName);
             }
 
             log.WriteLog("[流程结束]");
+            log.WriteLog("");
             return true;
         }
 

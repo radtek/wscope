@@ -386,7 +386,7 @@
             this.txbAmenNo.Name = "txbAmenNo";
             this.txbAmenNo.Size = new System.Drawing.Size(121, 21);
             this.txbAmenNo.TabIndex = 12;
-            this.txbAmenNo.Text = "20111125026";
+            this.txbAmenNo.Text = "20120227036";
             // 
             // btnReadInfo
             // 
@@ -406,7 +406,7 @@
             this.tabPage1.Location = new System.Drawing.Point(4, 22);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(742, 201);
+            this.tabPage1.Size = new System.Drawing.Size(769, 205);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "编译集成";
             this.tabPage1.UseVisualStyleBackColor = true;
@@ -513,7 +513,7 @@
             this.tabPage2.Location = new System.Drawing.Point(4, 22);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(742, 201);
+            this.tabPage2.Size = new System.Drawing.Size(769, 205);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "修改递交";
             this.tabPage2.UseVisualStyleBackColor = true;
