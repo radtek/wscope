@@ -149,11 +149,35 @@ namespace MakeAuto
 
             log = OperLog.instance;
 
+            DiffDir = MAConf.instance.OutDir;
+
+            if (DiffDir[DiffDir.Length - 1] != '\\')
+                DiffDir += "\\";
+
+            if (!Directory.Exists(DiffDir))
+            {
+                try
+                {
+                    Directory.CreateDirectory(DiffDir);
+                }
+                catch (Exception e)
+                {
+                    log.WriteErrorLog("创建编译目录失败，请调整配置文件 OutDir 节点位置，或者手工创建。" + e.Message);
+                    //return;
+                }
+            }
+
             // 查询修改单信息
             if (QueryAmendInfo() == true)
             {
                 // 生成修改单组件包信息
                 SetComs();
+            }
+
+            if (QueryFTP() == false)
+            {
+                log.WriteErrorLog("查询FTP目录信息错误。");
+                //return;
             }
         }
 
@@ -326,6 +350,7 @@ namespace MakeAuto
         // 获取FTP递交信息
         public Boolean QueryFTP()
         {
+            log.WriteInfoLog("查询FTP目录信息...");
             // 输出递交包，到本地集成环境处理，需要使用ftp连接
             FTPConnection ftp = MAConf.instance.ftp;
             FtpConf fc = MAConf.instance.fc;
@@ -338,7 +363,14 @@ namespace MakeAuto
             // 强制重新连接，防止时间长了就断掉了
             if (ftp.IsConnected == false)
             {
-                ftp.Connect();
+                try
+                {
+                    ftp.Connect();
+                }
+                catch(Exception e)
+                {
+                    log.WriteErrorLog("连接FTP服务器失败，错误信息：" + e.Message);
+                }
             }
 
             // 取递交版本信息，确认要输出哪个版本的压缩包，确保只刷出最大的版本
@@ -355,6 +387,9 @@ namespace MakeAuto
             //string[] files = ftp.GetFiles(fc.ServerDir + ap.CommitPath, true); 
             string[] files = ftp.GetFiles(RemoteDir);
 
+            log.WriteInfoLog("查询FTP目录信息...完成");
+
+            #region 确定修改单基本属性
             // 检查是否存在集成*的文件夹
             // 获取当前的版本信息，先标定版本信息
             SubmitL.Clear();
@@ -436,6 +471,7 @@ namespace MakeAuto
             {
                 SCMLastVer = 0;
             }
+            #endregion
 
             return true;
         }
@@ -456,10 +492,6 @@ namespace MakeAuto
         public string CommitDir { get; private set; } // 20111223029-深圳大宗
 
         public string AmendSubject { get; private set; } // 融资融券 广发版技术支持测试
-
-        // 上次集成版本
-        public int SCMLastVer {get; private set;}
-        public string SCMLastFile { get; private set; }
 
         // 本地修改单路径，不带最后的 /
         public string LocalDir {get; private set;} // E:\xgd\融资融券\20111123054-国金短信
@@ -488,6 +520,8 @@ namespace MakeAuto
         public string SrcRar { get; private set; }
         public string SCMSrcRar { get; private set; }
 
+        // 上次集成版本
+        public int SCMLastVer { get; private set; }
         public string SCMLastAmendDir { get; private set; }
         public string SCMLastLocalFile { get; private set; }
         public string SCMLastSrcRar { get; private set; }
@@ -517,6 +551,7 @@ namespace MakeAuto
 
         public SAWV sv;
 
+        public string DiffDir { get; private set; }
         private OperLog log;
     }
 }
