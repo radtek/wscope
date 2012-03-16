@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Collections;
+using System.Windows.Forms;
 
 namespace MakeAuto
 {
@@ -37,18 +38,33 @@ namespace MakeAuto
 
         public bool Work()
         {
-            foreach (State s in _aflow)
+
+            int i;
+            for (i = _aflow.IndexOf(_state); i < _aflow.Count; ++i)
             {
-                log.WriteLog(s.StateName + " 开始");
-                if (!s.DoWork(_amend))
+                _state = (State)_aflow[i];
+
+                string message = "下一步 " + _state.StateName + " 继续 ？";
+                string caption = "测试";
+
+                DialogResult result = MessageBox.Show(message, caption, MessageBoxButtons.YesNoCancel);
+                if (result == System.Windows.Forms.DialogResult.Cancel)
+                {
+                    continue;
+                }
+                else if (result == System.Windows.Forms.DialogResult.No)
+                {
+                    break;
+                }
+
+                log.WriteLog(_state.StateName + " 开始");
+                if (!_state.DoWork(_amend))
                     return false;
-                
-                log.WriteLog(s.StateName + " 完成");
-                //System.Windows.Forms.MessageBox.Show(s.StateName);
+
+                log.WriteLog(_state.StateName + " 完成");
             }
 
             log.WriteLog("[流程结束]");
-            log.WriteLog("");
             return true;
         }
 

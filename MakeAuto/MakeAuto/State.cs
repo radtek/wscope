@@ -6,6 +6,7 @@ using EnterpriseDT.Net.Ftp;
 using System.IO;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
+using System.Security.Cryptography;
 
 namespace MakeAuto
 {
@@ -98,7 +99,7 @@ namespace MakeAuto
                     file = " ";
                 }
 
-                p.StartInfo.Arguments = " E -y -ep " + rarfile + " " + file + " " + dir;   // 设置执行参数  
+                p.StartInfo.Arguments = " E -y " + rarfile + " " + file + " " + dir;   // 设置执行参数  
                 p.StartInfo.UseShellExecute = false;        // 关闭Shell的使用  
                 p.StartInfo.RedirectStandardInput = true; // 重定向标准输入
                 p.StartInfo.RedirectStandardOutput = true;  //重定向标准出  
@@ -169,7 +170,15 @@ namespace MakeAuto
                 System.Windows.Forms.MessageBox.Show("FTP文件 " + ap.RemoteFile + " 不存在！");
                 return false;
             }
-            ftp.DownloadFile(ap.LocalFile, ap.RemoteFile);
+            try
+            {
+                ftp.DownloadFile(ap.LocalFile, ap.RemoteFile);
+            }
+            catch (IOException)
+            {
+                log.WriteErrorLog("下载文件失败，请检查压缩文件是否被锁定！");
+                return false;
+            }
 
             // 集成包不需要下载，使用本地文件夹处理
             /*
@@ -210,20 +219,50 @@ namespace MakeAuto
         // 所以直接使用数据库的stuff字段有问题，调整为使用readme处理
         public override bool DoWork(AmendPack ap)
         {
+            bool result = true;
+
             // 检查集成本地文件夹是否存在，不存在则创建
             if (!Directory.Exists(ap.SCMAmendDir))
             {
                 Directory.CreateDirectory(ap.SCMAmendDir);
             }
 
-            // 对于下载的递交文件，解压缩readme到集成文件夹，以便根据本次变动取出需要重新集成的文件
-            UnRar(ap.LocalFile, ap.SCMAmendDir, ap.Readme);
+            // 如果本地集成文件已存在，删除本地集成文件
+            if (File.Exists(ap.SCMLocalFile))
+            {
+                File.Delete(ap.SCMLocalFile);
+            }
+
+            // 下载压缩包之后，解压缩包，得到 集成-[修改单号]-[模块]-[修改人]-[日期]-V* 的一个文件夹
+            UnRar(ap.LocalFile, ap.SCMAmendDir);
+
+            // 如果存在 src 压缩文件夹，解压缩 src 文件夹
+            if (File.Exists(ap.SrcRar))
+            {
+                UnRar(ap.SrcRar, ap.SCMAmendDir);  // 解压处理，供对比用
+                File.Delete(ap.SrcRar);  // 删除掉，不需要留着了
+            }
+
+            // 如果Readme不存在，之后的的操作不用执行
+            if(!File.Exists(Path.Combine(ap.SCMAmendDir, ap.Readme)))
+            {
+                log.WriteErrorLog("Readme文件不存在，" + Path.Combine(ap.SCMAmendDir, ap.Readme));
+                return false;
+            }
 
             // 处理 ReadMe，以获取变动
             // 读取readme分成两步，先重新生成递交组件，然后检测修改
-            ProcessComs(ap);
+            result = ProcessComs(ap);
+            if(!result)
+                return false;
+
             ProcessMods(ap);
+            if(!result)
+                return false;
+
             ProcessSAWPath(ap);
+            if(!result)
+                return false;
 
             // 显示处理结果，打开ReadMe文件
             ProcessReadMe(ap);
@@ -505,21 +544,7 @@ namespace MakeAuto
         
         public override bool DoWork(AmendPack ap)
         {
-            // 如果本地集成文件已存在，删除本地集成文件
-            if (File.Exists(ap.SCMLocalFile))
-            {
-                File.Delete(ap.SCMLocalFile);
-            }
-
-            // 下载压缩包之后，解压缩包，得到 集成-[修改单号]-[模块]-[修改人]-[日期]-V* 的一个文件夹
-            UnRar(ap.LocalFile, ap.SCMAmendDir);
-
-            // 如果存在 src 压缩文件夹，解压缩 src 文件夹
-            if (File.Exists(ap.SrcRar))
-            {
-                UnRar(ap.SrcRar, ap.SCMAmendDir);  // 解压处理，供对比用
-                File.Delete(ap.SrcRar);  // 删除掉，不需要留着了
-            }
+            log.WriteInfoLog("集成类型:" + Enum.GetName(typeof(ScmType), ap.scmtype));
 
             // 根据集成类型执行集成操作
             if (ap.scmtype == ScmType.NewScm)
@@ -537,27 +562,55 @@ namespace MakeAuto
                     // 对于没有变动的组件，复制老的集成到新的集成包里
                     if (c.cstatus == ComStatus.NoChange)  // 无变动的可以复制了
                     {
+                        log.WriteInfoLog("复制文件，源地址：" + Path.Combine(ap.SCMLastAmendDir, c.cname) + "，"
+                            + "目标文件：" + Path.Combine(ap.SCMAmendDir, c.cname));
+
                         File.Copy(Path.Combine(ap.SCMLastAmendDir, c.cname), 
                             Path.Combine(ap.SCMAmendDir, c.cname), 
                             true);
-                    }
-                    else if (c.cstatus == ComStatus.Delete) // 如果是删除的，那么删除文件（对于so，需要删除src文件）
-                    {
-                        // SO删除了，源文件也删除掉
-                        File.Delete(ap.SCMAmendDir + "\\" + c.cname);
+
+                        // 对于 SO，需要把压缩文件从上次递交中解压缩，覆盖掉本次包里的文件
                         if (c.ctype == ComType.SO)
                         {
-                            foreach (Detail d in MAConf.instance.Dls)
+                            Detail d= MAConf.instance.Dls.FindBySo(c.cname);
+                            if(d == null)
                             {
-                                if (d.SO == c.cname)
-                                {
-                                    foreach (string s in d.ProcFiles)
-                                    {
-                                        File.Delete(ap.SCMAmendDir + "\\" + s);
-                                    }
+                                log.WriteErrorLog("无法定位" + c.cname + "的详细设计组件！");
+                                return false;
+                            }
 
-                                    break;
-                                }
+                            string st = string.Empty;
+                            foreach(string s in d.ProcFiles)
+                            {
+                                st += s;
+                                st += " ";
+                            }
+                            log.WriteInfoLog("解压缩源文件，源文件夹：" + ap.SCMLastSrcRar + "， "
+                                + "文件：" + st + "， "
+                                + "目标文件夹：" + ap.SCMAmendDir);
+                            UnRar(ap.SCMLastSrcRar, ap.SCMAmendDir, st);
+                        }
+                    }
+                    // 如果是删除的，那么删除文件（对于so，需要删除src文件），
+                    // 由于是以递交包为基础的，所以对于删除的，应该不会再存在在文件夹里
+                    else if (c.cstatus == ComStatus.Delete) 
+                    {
+                        log.WriteInfoLog("删除文件：" + Path.Combine(ap.SCMAmendDir, c.cname));
+                        File.Delete(Path.Combine(ap.SCMAmendDir, c.cname));
+                        // SO删除了，源文件也删除掉
+                        if (c.ctype == ComType.SO)
+                        {
+                            Detail d = MAConf.instance.Dls.FindBySo(c.cname);
+                            if(d == null)
+                            {
+                                log.WriteErrorLog("无法定位" + c.cname + "的详细设计组件！");
+                                return false;
+                            }
+
+                            foreach (string s in d.ProcFiles)
+                            {
+                                log.WriteInfoLog("删除文件：" + Path.Combine(ap.SCMAmendDir, s));
+                                File.Delete(Path.Combine(ap.SCMAmendDir, s));
                             }
                         }
                         
@@ -579,8 +632,10 @@ namespace MakeAuto
 
         public override bool DoWork(AmendPack ap)
         {
+            
             return true;
         }
+
     }
 
     /// <summary>
@@ -638,7 +693,7 @@ namespace MakeAuto
                 // Patch 和 Ini 刷下来，拷贝过去就可以
                 else if (c.ctype == ComType.Patch || c.ctype == ComType.Ini)
                 {
-                    File.Copy(c.sawfile.LocalPath, ap.SCMAmendDir + "//" + c.cname, true);
+                    File.Copy(c.sawfile.LocalPath, Path.Combine(ap.SCMAmendDir, c.cname), true);
                 }
                 else if (c.ctype == ComType.Dll || c.ctype == ComType.Exe)
                 {
@@ -653,7 +708,7 @@ namespace MakeAuto
                 else if (c.ctype == ComType.SO || c.ctype == ComType.Sql)
                 {
                     // 这里不能并发执行，有可能锁住Excel，可能只能等待执行
-                    Result = CompileExcel(c.ctype, c.cname, ap.SCMAmendDir);
+                    Result = CompileExcel(c.ctype, c.cname, ap.DiffDir);
                     if (Result == false)
                         break;
                 }
@@ -745,15 +800,8 @@ namespace MakeAuto
             // 标定index
             bool Result = true;
             int index = MAConf.instance.Dls.IndexOf(d) + 1;
-            string LocalSrc = MAConf.instance.OutDir + "\\";
 
-            // 在 src 文件不完整时才执行编译
-            //if ((ctype == ComType.SO && (!File.Exists(LocalSrc + d.Gcc) || !File.Exists(LocalSrc + d.Cpp)
-            //      || !File.Exists(LocalSrc + d.Header) || !File.Exists(LocalSrc + d.Pc))) 
-            //    || (ctype == ComType.Sql && (!File.Exists(LocalSrc + d.Sql))) )
-            //{
-                Result = ExcelMacroHelper.instance.ScmRunExcelMacro(m, index, LocalSrc);
-            //}
+            Result = ExcelMacroHelper.instance.ScmRunExcelMacro(m, index, dir);
 
             if (!Result)
             {
@@ -792,13 +840,89 @@ namespace MakeAuto
 
                 if (c.ctype == ComType.SO || c.ctype == ComType.Sql)
                 {
-                    // 对比实现
-                        break;
+                    // 按照Hash对比，希望是可行的，
+                    Detail d = MAConf.instance.Dls.FindBySo(c.cname);
+                    if (d == null)
+                    {
+                        log.WriteErrorLog("无法确认组件详细设计说明书信息，" + c.cname);
+                        return false;
+                    }
+
+                    foreach(string s in d.ProcFiles)
+                    {
+                        string file1 = Path.Combine(ap.SCMAmendDir, s);
+                        string file2 =  Path.Combine(ap.DiffDir, s);
+                        log.WriteInfoLog("组件对比，文件1： " + file1 + ", 文件2：" + file2);
+                        if (!HashCom(file1, file2))
+                        {
+                            log.WriteErrorLog("对比不同。");
+                            return false;
+                        }
+                        else
+                        {
+ 
+                        }
+                    }
+
+                    break;
                 }
 
                 c.cstatus = ComStatus.Normal;
             }
-            return true;
+            return Result;
+        }
+
+        private bool HashCom(string file1, string file2)
+        {
+
+            string hash1 = getMd5Hash(file1);
+            return verifyMd5Hash(file2, hash1);
+
+        }
+
+        // Hash an input string and return the hash as
+        // a 32 character hexadecimal string.
+        private string getMd5Hash(string file)
+        {
+            // Create a new instance of the MD5CryptoServiceProvider object.
+            MD5 md5Hasher = MD5.Create();
+
+            FileStream fileStream = File.Open(file, FileMode.Open);
+            // Convert the input string to a byte array and compute the hash.
+            byte[] data = md5Hasher.ComputeHash(fileStream);
+
+            fileStream.Close();
+            // Create a new Stringbuilder to collect the bytes
+            // and create a string.
+            StringBuilder sBuilder = new StringBuilder();
+
+            // Loop through each byte of the hashed data 
+            // and format each one as a hexadecimal string.
+            for (int i = 0; i < data.Length; i++)
+            {
+                sBuilder.Append(data[i].ToString("x2"));
+            }
+
+            // Return the hexadecimal string.
+            return sBuilder.ToString();
+        }
+
+        // Verify a hash against a string.
+        private bool verifyMd5Hash(string file, string hash)
+        {
+            string hashOfInput = getMd5Hash(file);
+
+            // Create a StringComparer an compare the hashes.
+            StringComparer comparer = StringComparer.OrdinalIgnoreCase;
+
+            if (0 == comparer.Compare(hashOfInput, hash))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
     }
 
