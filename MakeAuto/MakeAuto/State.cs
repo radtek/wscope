@@ -838,7 +838,7 @@ namespace MakeAuto
                 if (c.cstatus == ComStatus.NoChange)
                     continue;
 
-                if (c.ctype == ComType.SO || c.ctype == ComType.Sql)
+                if (c.ctype == ComType.SO)
                 {
                     // 按照Hash对比，希望是可行的，
                     Detail d = MAConf.instance.Dls.FindBySo(c.cname);
@@ -852,32 +852,56 @@ namespace MakeAuto
                     {
                         string file1 = Path.Combine(ap.SCMAmendDir, s);
                         string file2 =  Path.Combine(ap.DiffDir, s);
-                        log.WriteInfoLog("组件对比，文件1： " + file1 + ", 文件2：" + file2);
                         if (!HashCom(file1, file2))
                         {
-                            log.WriteErrorLog("对比不同。");
-                            return false;
+                            log.WriteErrorLog("文件对比不同：" + s);
+                            if (Result)
+                            {
+                                Result = false;
+                            }
                         }
                         else
                         {
- 
+                            //log.WriteInfoLog("文件对比相同，文件1： " + file1 + ", 文件2：" + file2 + "。");
                         }
                     }
+                }
+                else if(c.ctype == ComType.Sql)
+                {
+                    // 按照Hash对比，希望是可行的，
+                    Detail d = MAConf.instance.Dls.FindBySql(c.cname);
+                    if (d == null)
+                    {
+                        log.WriteErrorLog("无法确认组件详细设计说明书信息，" + c.cname);
+                        return false;
+                    }
 
-                    break;
+                    string file1 = Path.Combine(ap.SCMAmendDir, c.cname);
+                    string file2 = Path.Combine(ap.DiffDir, c.cname);
+                    if (!HashCom(file1, file2))
+                    {
+                        log.WriteErrorLog("文件对比不同，" + c.cname);
+                        if (Result)
+                        {
+                            Result = false;
+                        }
+                    }
+                    else
+                    {
+                        //log.WriteInfoLog("文件对比相同。");
+                    }
                 }
 
                 c.cstatus = ComStatus.Normal;
             }
+            log.WriteInfoLog("源代码对比完成。");
             return Result;
         }
 
         private bool HashCom(string file1, string file2)
         {
-
             string hash1 = getMd5Hash(file1);
             return verifyMd5Hash(file2, hash1);
-
         }
 
         // Hash an input string and return the hash as

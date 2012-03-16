@@ -374,23 +374,11 @@ namespace MakeAuto
             AmendPack ap = new AmendPack(txbAmenNo.Text);
             txbMainNo.Text = ap.MainNo;
             txbCommitPath.Text = ap.CommitPath;
-
-            log.WriteInfoLog("查询FTP目录信息...");
-
-            if (ap.QueryFTP() == true)
-            {
-                txtSubmitVer.Text = ap.SubmitVer.ToString();
-                txtScmVer.Text = ap.SCMLastVer.ToString();
-            }
-            else 
-            {
-                log.WriteErrorLog("查询FTP目录信息错误。");
-                return;
-            }
+            txtSubmitVer.Text = ap.SubmitVer.ToString();
+            txtScmVer.Text = ap.SCMLastVer.ToString();
 
             secuflow = new AmendFlow(ap);
-
-           log.WriteInfoLog("查询FTP目录信息...完成");
+            secuflow.Work();
         }
 
         private void button8_Click(object sender, EventArgs e)
@@ -423,7 +411,7 @@ namespace MakeAuto
 
         private void button6_Click(object sender, EventArgs e)
         {
-            secuflow.Work();
+
         }
 
 

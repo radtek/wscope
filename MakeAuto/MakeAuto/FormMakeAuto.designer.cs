@@ -157,7 +157,7 @@
             // 
             // statusStrip1
             // 
-            this.statusStrip1.Location = new System.Drawing.Point(0, 470);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 492);
             this.statusStrip1.Name = "statusStrip1";
             this.statusStrip1.Size = new System.Drawing.Size(857, 22);
             this.statusStrip1.TabIndex = 3;
@@ -201,7 +201,7 @@
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel1.Location = new System.Drawing.Point(0, 50);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(857, 420);
+            this.panel1.Size = new System.Drawing.Size(857, 442);
             this.panel1.TabIndex = 21;
             // 
             // panel2
@@ -211,7 +211,7 @@
             this.panel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel2.Location = new System.Drawing.Point(0, 0);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(857, 420);
+            this.panel2.Size = new System.Drawing.Size(857, 442);
             this.panel2.TabIndex = 23;
             // 
             // rbLog
@@ -221,7 +221,7 @@
             this.rbLog.Location = new System.Drawing.Point(0, 231);
             this.rbLog.Name = "rbLog";
             this.rbLog.ReadOnly = true;
-            this.rbLog.Size = new System.Drawing.Size(857, 189);
+            this.rbLog.Size = new System.Drawing.Size(857, 211);
             this.rbLog.TabIndex = 24;
             this.rbLog.Text = "";
             this.rbLog.TextChanged += new System.EventHandler(this.rbLog_TextChanged);
@@ -652,7 +652,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(857, 492);
+            this.ClientSize = new System.Drawing.Size(857, 514);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.toolStrip1);
             this.Controls.Add(this.statusStrip1);
