@@ -24,14 +24,12 @@ Function CreateAs3CodePub(sFileDir As String, iBeginNo As Integer, iEndNo As Int
   
   
   Set fs = CreateObject("Scripting.FileSystemObject")
-  If fs.FolderExists(Trim(Sheets(1).tbFileDir.Text)) Then
-'    If Right(Trim(tbFileDir.Text), 1) = "\" Then
-'      sFileDictionary = Trim(tbFileDir.Text)
-'    Else
-'      sFileDictionary = Trim(tbFileDir.Text) & "\"
-'    End If
-     
-    sFileDictionary = sFileDir
+  If fs.FolderExists(sFileDir) Then
+    If Right(Trim(sFileDir), 1) = "\" Then
+      sFileDictionary = Trim(sFileDir)
+    Else
+      sFileDictionary = Trim(sFileDir) & "\"
+    End If
   
     sVersionName = "ORACLE"
     
@@ -119,14 +117,12 @@ Function CreateSQLCodePub(sFileDir As String, iBeginNo As Integer, iEndNo As Int
 
   
   Set fs = CreateObject("Scripting.FileSystemObject")
-  If fs.FolderExists(Trim(Sheets(1).tbFileDir.Text)) Then
-    'If Right(Trim(tbFileDir.Text), 1) = "\" Then
-    '  sFileDictionary = Trim(tbFileDir.Text)
-    'Else
-    '  sFileDictionary = Trim(tbFileDir.Text) & "\"
-    'End If
-    
-    sFileDictionary = sFileDir
+  If fs.FolderExists(sFileDir) Then
+    If Right(Trim(tbFileDir.Text), 1) = "\" Then
+      sFileDictionary = Trim(sFileDir)
+    Else
+      sFileDictionary = Trim(sFileDir) & "\"
+    End If
   
     sVersionName = "ORACLE"
     
