@@ -39,21 +39,30 @@ namespace MakeAuto
         public bool Work()
         {
 
+            if (_amend.scmstatus == ScmStatus.Error)
+            {
+                log.WriteErrorLog("修改单状态不正常，退出流程。");
+                return false;
+            }
+
             int i;
             for (i = _aflow.IndexOf(_state); i < _aflow.Count; ++i)
             {
                 _state = (State)_aflow[i];
 
                 string message = "下一步 " + _state.StateName + " 继续 ？";
+                message += "\r\n【是】-继续 【否】-结束流程 【取消】-跳过当前步骤，进行下一步";
                 string caption = "测试";
 
                 DialogResult result = MessageBox.Show(message, caption, MessageBoxButtons.YesNoCancel);
                 if (result == System.Windows.Forms.DialogResult.Cancel)
                 {
+                    log.WriteInfoLog("跳过流程，当前步骤：" + _state.StateName);
                     continue;
                 }
                 else if (result == System.Windows.Forms.DialogResult.No)
                 {
+                    log.WriteInfoLog("结束流程，当前步骤：" + _state.StateName);
                     break;
                 }
 

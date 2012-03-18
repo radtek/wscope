@@ -1,27 +1,19 @@
-Attribute VB_Name = "timepub"
+Attribute VB_Name = "scmextpub_proc"
 Sub getTime()
-
     Sheets(1).Cells(1, 1) = "我们"
-
 End Sub
 
-
 Sub getTime2(title As String)
-
     Sheets(1).Cells(2, 1) = title & " 我们所有人" & Now
-
 End Sub
 
 Function getTime3(title As String)
-
     getTime3 = title & " : " & Now
-
 End Function
 
 Function CreateAs3CodePub(sFileDir As String, iBeginNo As Integer, iEndNo As Integer) As Integer
 '  Dim iBeginNo As Integer, iEndNo As Integer
   'Dim sStartListName As String, sEndListName As String
-  
   
   Set fs = CreateObject("Scripting.FileSystemObject")
   If fs.FolderExists(sFileDir) Then
@@ -118,7 +110,7 @@ Function CreateSQLCodePub(sFileDir As String, iBeginNo As Integer, iEndNo As Int
   
   Set fs = CreateObject("Scripting.FileSystemObject")
   If fs.FolderExists(sFileDir) Then
-    If Right(Trim(tbFileDir.Text), 1) = "\" Then
+    If Right(Trim(sFileDir), 1) = "\" Then
       sFileDictionary = Trim(sFileDir)
     Else
       sFileDictionary = Trim(sFileDir) & "\"
@@ -245,3 +237,75 @@ Function DocHyberLinkPub(sFileDir As String, iBeginNo As Integer, iEndNo As Inte
 
   'Sheets(1).Select
 End Function
+Function FunctionListXMLPub(sFileDir As String, iBeginNo As Integer, iEndNo As Integer) As Integer
+  'Dim iBeginNo As Integer, iEndNo As Integer
+  'Dim sStartListName As String, sEndListName As String
+  
+  Set fs = CreateObject("Scripting.FileSystemObject")
+  If fs.FolderExists(Trim(sFileDir)) Then
+    If Right(Trim(sFileDir), 1) = "\" Then
+      sFileDictionary = Trim(sFileDir)
+    Else
+      sFileDictionary = Trim(sFileDir) & "\"
+    End If
+  
+'    If obHsPlat3.Value = True Then
+'      sCodeVerName = "HsPlat3"
+'    ElseIf obHsFEBS.Value = True Then
+      sCodeVerName = "HsFEBS"
+'    End If
+    
+    'sStartListName = Trim(cbxStartPage.List(cbxStartPage.ListIndex))
+    'sEndListName = Trim(cbxEndPage.List(cbxEndPage.ListIndex))
+    
+    'iBeginNo = Val(Left(sStartListName, InStr(sStartListName, " ") - 1))
+    'iEndNo = Val(Left(sEndListName, InStr(sEndListName, " ") - 1))
+  
+    FunctionListXMLPub = -1
+    'If iBeginNo > iEndNo Then
+    '  MsgBox ("起始页面不能在结束页面之后！请重新选择")
+    'Else
+        'If MsgBox("系统将创建AS2版FunctionList.XML文件！请确认...", vbYesNo) = vbYes Then
+            '位1 模块定义 2 标准字段目录 3 特殊字段列表 4 表修改顺序目录 5 服务实现缺省参数 6 函数实现缺省参数
+            '7 后台过程缺省参数 8 宏定义 9 调换功能替换参数
+            Call SetPublicVarValue("100000000")
+            
+            Call CreateFunctionListXML(iBeginNo, iEndNo)
+            
+            FunctionListXMLPub = 0
+            'MsgBox ("文件生成在" & sFileDictionary & "下！")
+        'Else
+        '  MsgBox ("你取消了创建客户端功能类AS2版的FunctionList.XML文件的操作！")
+        'End If
+    'End If
+
+    'Sheets(1).Select
+  Else
+    MsgBox ("生成的文件路径不正确！请检查路径")
+  End If
+End Function
+ 
+Function ScmExtPub(OperType As Integer, sFileDir As String, iBeginNo As Integer, iEndNo As Integer) As Integer
+  ExtPub = -1
+  Select Case OperType
+    Case 1
+      Call CreateAs3CodePub(sFileDir, iBeginNo, iEndNo)  '1 Proc SO源文件
+      ExtPub = 0
+    Case 2
+      Call CreateSQLCodePub(sFileDir, iBeginNo, iEndNo)  ' 2 SQL代码
+      ExtPub = 0
+    Case 3
+      Call FunctionListXMLPub(sFileDir, iBeginNo, iEndNo) '3 创建 xml 文件
+      ExtPub = 0
+    Case 4
+      Call DocHyberLinkPub(sFileDir, iBeginNo, iEndNo)  '4 创建超链接
+      ExtPub = 0
+    Case Else
+      ExtPub = 99
+  End Select
+End Function
+
+'测试的宏
+Sub ExtPub1()
+  Call ScmExtPub(1, "C:\src", 13, 13)
+End Sub

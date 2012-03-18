@@ -221,11 +221,12 @@ namespace MakeAuto
         {
             bool result = true;
 
-            // 检查集成本地文件夹是否存在，不存在则创建
-            if (!Directory.Exists(ap.SCMAmendDir))
+            // 检查集成本地文件夹是否存在，不存在则创建，存在则先删除后创建
+            if (Directory.Exists(ap.SCMAmendDir))
             {
-                Directory.CreateDirectory(ap.SCMAmendDir);
+                Directory.Delete(ap.SCMAmendDir, true);
             }
+            Directory.CreateDirectory(ap.SCMAmendDir);
 
             // 如果本地集成文件已存在，删除本地集成文件
             if (File.Exists(ap.SCMLocalFile))
@@ -240,7 +241,7 @@ namespace MakeAuto
             if (File.Exists(ap.SrcRar))
             {
                 UnRar(ap.SrcRar, ap.SCMAmendDir);  // 解压处理，供对比用
-                File.Delete(ap.SrcRar);  // 删除掉，不需要留着了
+                File.Delete(ap.SrcRar);  // 删除掉递交的src，不需要留着了
             }
 
             // 如果Readme不存在，之后的的操作不用执行
@@ -249,6 +250,11 @@ namespace MakeAuto
                 log.WriteErrorLog("Readme文件不存在，" + Path.Combine(ap.SCMAmendDir, ap.Readme));
                 return false;
             }
+
+            // 优先处理集成注意
+            result = ProcessScmNotice(ap);
+            if (!result)
+                return false;
 
             // 处理 ReadMe，以获取变动
             // 读取readme分成两步，先重新生成递交组件，然后检测修改
@@ -301,6 +307,68 @@ namespace MakeAuto
                     + "SAW路径：" + s.SAWPath + " "
                     + "文件状态：" + Enum.GetName(typeof(FileStatus), s.fstatus));
             }
+        }
+
+        /// <summary>
+        /// 对于有集成注意的，提示集成注意，集成注意现在还不能自动处理
+        /// </summary>
+        /// <param name="ap"></param>
+        /// <returns></returns>
+        private bool ProcessScmNotice(AmendPack ap)
+        {
+            List<string> notice = new List<string>();
+            // 读取readme，生成集成注意
+            try
+            {
+                // Create an instance of StreamReader to read from a file.
+                // The using statement also closes the StreamReader.
+                using (StreamReader sr = new StreamReader(ap.SCMAmendDir + "/" + ap.Readme,
+                    Encoding.GetEncoding("gb2312")))
+                {
+                    string line;
+
+
+                    // 读到时停止
+                    while ((line = sr.ReadLine()) != null && line.IndexOf("集成注意：") < 0)
+                        ;
+
+                    sr.ReadLine(); // 跳过"涉及的程序及文件 ..."这行字
+
+                    // 处理递交的组件
+                    while ((line = sr.ReadLine()) != null && line.IndexOf("涉及的程序及文件: ") < 0)
+                    {
+                        // 跳过空行
+                        if (line.Trim() == string.Empty)
+                            continue;
+
+                        if (line.Trim() == "暂无!")   // 没有集成注意，会填写一行暂无表示，这个也跳过去
+                            continue;
+
+                        // 把集成注意读进来
+                        notice.Add(line);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                log.WriteErrorLog("ProcessScmNotice异常 ReadMe：" + ap.Readme + " " + ex.Message);
+                return false;
+            }
+
+            // 如果集成注意不为空，那么提示用户先处理集成注意
+            if (notice.Count > 0)
+            {
+                string s = "Readme中有如下集成注意，请在处理完成后点击确定继续：";
+                foreach(string t in notice)
+                {
+                    s += "\r\n" + t;
+                }
+                System.Windows.Forms.MessageBox.Show(s,
+                    "集成注意",
+                    System.Windows.Forms.MessageBoxButtons.OK);
+            }
+
+            return true;
         }
 
         private bool ProcessComs(AmendPack ap)
@@ -1144,13 +1212,17 @@ namespace MakeAuto
 
         public override bool DoWork(AmendPack ap)
         {
-            if (File.Exists(ap.SCMLocalFile))
+            // 删除本地下载的递交压缩包
+            log.WriteInfoLog("删除下载的递交包");
+            if (File.Exists(ap.LocalFile))
             {
-                File.Delete(ap.SCMLocalFile);
+                File.Delete(ap.LocalFile);
             }
+
+            // 删除 src 下的源文件和 SO
+            //log.WriteInfoLog("删除临时源文件和SO");
+
             return true;
         }
     }
-
-
 }
