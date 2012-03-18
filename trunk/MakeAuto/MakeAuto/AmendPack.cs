@@ -173,11 +173,18 @@ namespace MakeAuto
                 // 生成修改单组件包信息
                 SetComs();
             }
+            else
+            {
+                scmstatus = ScmStatus.Error;
+                log.WriteErrorLog("查询修改单信息失败！");
+                return;
+            }
 
             if (QueryFTP() == false)
             {
+                scmstatus = ScmStatus.Error;
                 log.WriteErrorLog("查询FTP目录信息错误。");
-                //return;
+                return;
             }
         }
 
@@ -236,6 +243,7 @@ namespace MakeAuto
             }
             catch (Exception e)
             {
+                result = false;
                 log.WriteLog("查询修改单递交路径失败，" + e.Message, LogLevel.Error);
             }
             finally
@@ -532,7 +540,8 @@ namespace MakeAuto
         public SAWFileList SAWFiles { get; set; }
 
         // sql server 连接串，定义为私有，对外不可见
-        private readonly string ConnString = "server=192.168.60.60;database =manage;uid =jiangshen;pwd=jiangshen";
+        private readonly string ConnString = "server=192.168.60.60;Initial Catalog=manage;Integrated Security=false;"
+            + "uid=jiangshen;pwd=jiangshen;Connection Timeout=5";
 
         // 建立连接对象
         private SqlConnection sqlconn;

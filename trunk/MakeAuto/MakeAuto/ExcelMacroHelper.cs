@@ -8,8 +8,9 @@ namespace MakeAuto
     {
         Nothing = 0,
         ProC = 1,
-        SQL = 2,
-        Hyper = 3,
+        SQL,
+        FuncXml,
+        Hyper,
     }
 
     public enum CState
@@ -47,25 +48,6 @@ namespace MakeAuto
     /// </summary>
     class ExcelMacroHelper
     {
-        public string ExcelFilePath { get; private set; }
-        
-        public bool ShowExcel { get; private set; }
-
-        private Detail currDetail { get; set; }
-        
-        // 这三个属性对应于通过菜单功能说明书时操作的选择
-        private string SrcDir{ get; set;}
-        private int BeginNo { get; set;}
-        private int EndNo { get; set;}
-        // 对应菜单功能说明书的函数
-        private string MacroName { get; set; }
-
-        public MacroType McrType { get; set; }
-
-        public VBAState state;
-
-        private OperLog log = OperLog.instance;
-
         private ExcelMacroHelper()
         {
             SrcDir = MAConf.instance.SrcDir;
@@ -89,8 +71,6 @@ namespace MakeAuto
 
             // 根据不同功能调用对应的宏
             MacroType m = (MacroType)e.Argument;
-            McrType = m;
-            MacroName = GetMacroName(m);
             
             // 对所有选中的模块执行编译
             
@@ -130,7 +110,6 @@ namespace MakeAuto
                 // 计算已完成个数
                 percent = (int) (num * 100.0 / count);
 
-
                 // 置status状态值
                 state.dl = dl;
                 state.index = num;
@@ -158,7 +137,7 @@ namespace MakeAuto
                 worker.ReportProgress(percent, state);
                 try
                 {
-                    if (RunExcelMacro(SrcDir, BeginNo, EndNo) == 0)
+                    if (RunExcelMacro((int)m, SrcDir, BeginNo, EndNo) == 0)
                     {
                         ++num;
                         percent = (int)(num * 100.0 / count);
@@ -192,40 +171,13 @@ namespace MakeAuto
             worker.ReportProgress(percent, state);
         }
 
-        public int RunExcelMacro(string SrcDir, int BeginNo, int EndNo)
-        {
-            object r = null;
-            RunExcelMacro(ExcelFilePath, MacroName, new object[] { SrcDir, BeginNo, EndNo }, out r, ShowExcel);
-            if (r != null)
-            {
-                return int.Parse(r.ToString());
-            }
-            else 
-            {
-                return -1;
-            }
-        }
-
-        public string GetMacroName(MacroType m)
-        {
-            if (m == MacroType.ProC)
-                return "CreateAs3CodePub";
-            else if (m == MacroType.SQL)
-                return "CreateSQLCodePub";
-            else if (m == MacroType.Hyper)
-                return "DocHyberLinkPub";
-            
-            return string.Empty;
-        }
-
         public bool ScmRunExcelMacro(MacroType m, int FileNo, string outdir)
         {
-            McrType = m;
-            MacroName = GetMacroName(m);
+            int OperType = (int)m;
 
             try
             {
-                if (RunExcelMacro(outdir, FileNo, FileNo) != 0)
+                if (RunExcelMacro(OperType, outdir, FileNo, FileNo) != 0)
                 {
                     log.WriteLog("编译excel失败");
                     return false;
@@ -240,6 +192,21 @@ namespace MakeAuto
             return true;
         }
 
+        private int RunExcelMacro(int OperType, string SrcDir, int BeginNo, int EndNo)
+        {
+            object r = null;
+            RunExcelMacro(ExcelFilePath, MacroName, new object[] {OperType, SrcDir, BeginNo, EndNo }, out r, ShowExcel);
+            
+            if (r != null)
+            {
+                return int.Parse(r.ToString());
+            }
+            else 
+            {
+                return -1;
+            }
+        }
+
         /// <summary>
         /// 执行Excel中的宏
         /// </summary>
@@ -248,7 +215,7 @@ namespace MakeAuto
         /// <param name="parameters">宏参数组</param>
         /// <param name="rtnValue">宏返回值</param>
         /// <param name="isShowExcel">执行时是否显示Excel</param>
-        public void RunExcelMacro(string excelFilePath, string macroName, object[] parameters,
+        private void RunExcelMacro(string excelFilePath, string macroName, object[] parameters,
             out object rtnValue, bool isShowExcel)
         {
             try
@@ -390,5 +357,23 @@ namespace MakeAuto
                 }
             }
         }
+
+        public string ExcelFilePath { get; private set; }
+
+        public bool ShowExcel { get; private set; }
+
+        private Detail currDetail { get; set; }
+
+        // 这三个属性对应于通过菜单功能说明书时操作的选择
+        private string SrcDir { get; set; }
+        private int BeginNo { get; set; }
+        private int EndNo { get; set; }
+
+        public VBAState state;
+
+        private OperLog log = OperLog.instance;
+
+        // 外调宏名称，现在写成 ExtPub
+        private static readonly string MacroName = "ScmExtPub";
     }
 }

@@ -372,13 +372,15 @@ namespace MakeAuto
             log.WriteInfoLog("查询递交包路径，修改单编号：" + txbAmenNo.Text + "...");
 
             AmendPack ap = new AmendPack(txbAmenNo.Text);
+            if (ap.scmstatus == ScmStatus.Error)
+                return;
+
             txbMainNo.Text = ap.MainNo;
             txbCommitPath.Text = ap.CommitPath;
             txtSubmitVer.Text = ap.SubmitVer.ToString();
             txtScmVer.Text = ap.SCMLastVer.ToString();
 
             secuflow = new AmendFlow(ap);
-            secuflow.Work();
         }
 
         private void button8_Click(object sender, EventArgs e)
@@ -409,11 +411,10 @@ namespace MakeAuto
             }
         }
 
-        private void button6_Click(object sender, EventArgs e)
+        private void button2_Click(object sender, EventArgs e)
         {
-
+            secuflow.Work();
         }
-
 
     }
 }
