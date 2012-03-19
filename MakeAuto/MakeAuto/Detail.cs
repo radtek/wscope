@@ -45,10 +45,10 @@ namespace MakeAuto
         public bool Show { get; set; }
 
         #region 一些属性，用来保存模块编号及相关的文件名
-        public string Name { get; set; }
-        public string File {get; set;}
-        public string Pas {get; set;}
-        public string Sql {get; set;}
+        public string Name { get; private set; }
+        public string File {get; private set;}
+        public string Pas {get; private set;}
+        public string Sql;
 
         public string Gcc
         {
@@ -103,6 +103,12 @@ namespace MakeAuto
                 }
             }
         }
+
+        public string SqlFile
+        {
+            get { return Sql + "_or.sql";  }
+        }
+
         #endregion
     }
 
@@ -114,7 +120,7 @@ namespace MakeAuto
             {
                 foreach (Detail d in this)
                 {
-                    if (d.Name == name)
+                    if (name.Equals(d.Name, System.StringComparison.Ordinal))
                     {
                         return d;
                     }
@@ -128,8 +134,10 @@ namespace MakeAuto
         {
             foreach (Detail d in this)
             {
-                if (d.SO == name)
+                if (name.Equals(d.SO, System.StringComparison.Ordinal))
+                {
                     return d;
+                }
             }
             return null;
         }
@@ -138,7 +146,7 @@ namespace MakeAuto
         {
             foreach (Detail d in this)
             {
-                if (d.Sql == name)
+                if (name.Equals(d.SqlFile, System.StringComparison.Ordinal))
                 {
                     return d;
                 }

@@ -233,7 +233,7 @@ namespace MakeAuto
 
             int Result = sv.GetOldVersionFile(Project, File, Version,
                 LocalPath, false, 
-                Enum_WritableFileHandling.Enum_WritableFileHandlingCanceled,
+                Enum_WritableFileHandling.Enum_WritableFileHandlingReplace,
                 Enum_EOL.Enum_CRLF, 
                 Enum_SetLocalFileTime.Enum_SetLocalFileTimeCurrent,
                 "", "", out Canceled,

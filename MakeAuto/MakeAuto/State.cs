@@ -128,6 +128,13 @@ namespace MakeAuto
         //
         public virtual string StateName
         { get { return "test";  } }
+
+        public virtual bool Tip
+        {
+            get { return _tip; }
+        }
+
+        private bool _tip = false;
     }
 
     /// <summary>
@@ -135,11 +142,6 @@ namespace MakeAuto
     /// </summary>
     class PackerDownload : State
     {
-        public override string StateName
-        {
-            get { return "下载压缩包"; }
-        }
-
         public override bool DoWork(AmendPack ap)
         {
             // 输出递交包，到本地集成环境处理，需要使用ftp连接
@@ -202,6 +204,18 @@ namespace MakeAuto
              * */
             return true;
         }
+        
+        public override string StateName
+        {
+            get { return "下载压缩包"; }
+        }
+
+        public override bool Tip
+        {
+            get {return _tip;}
+        }
+
+        public bool _tip = false;
     }
 
     /// <summary>
@@ -232,6 +246,12 @@ namespace MakeAuto
             if (File.Exists(ap.SCMLocalFile))
             {
                 File.Delete(ap.SCMLocalFile);
+            }
+
+            if (!File.Exists(ap.LocalFile))
+            {
+                log.WriteErrorLog("本地递交包丢失，无法解压缩！");
+                return false;
             }
 
             // 下载压缩包之后，解压缩包，得到 集成-[修改单号]-[模块]-[修改人]-[日期]-V* 的一个文件夹
@@ -419,7 +439,15 @@ namespace MakeAuto
                         {
                             c.path = "";
                         }
-                        ap.ComComms.Add(c);
+
+                        if (c.ctype == ComType.SO)
+                        {
+                            AddToComs(ap, c);
+                        }
+                        else
+                        {
+                            ap.ComComms.Add(c);
+                        }
                     }
                 }
             }
@@ -601,6 +629,47 @@ namespace MakeAuto
 
             return true;
         }
+
+        private bool AddToComs(AmendPack ap, CommitCom c)
+        {
+            // 标定该组件在 Order中的顺序
+            int t = MAConf.instance.Order.IndexOf(c.cname);
+            int t1, t2;
+            if (t == -1)
+            {
+                ap.ComComms.Add(c);
+                return true;
+            }
+
+            // 检索已经存在的组件库中，第一个当前组件的索引靠后的，处理掉
+            foreach (CommitCom m in ap.ComComms)
+            {
+                if (m.ctype != ComType.SO)
+                    continue;
+
+                // 标定当前组件的索引值
+                t2 = ap.ComComms.IndexOf(m);
+
+                // 标定当前组件的编译顺序
+                t1 = MAConf.instance.Order.IndexOf(m.cname);
+
+                // 如果没有指定编译该操作的顺序
+                if (t1 == -1 || t1 > t)
+                {
+                    ap.ComComms.Insert(t2, c);
+                    break;
+                }
+                else
+                {
+                    ap.ComComms.Add(c);
+                    break;
+                }
+            }
+
+            return true;
+        }
+
+        public bool _tip = false;
     }
 
     class PackerProcess : State
@@ -704,6 +773,7 @@ namespace MakeAuto
             return true;
         }
 
+        public bool _tip = false;
     }
 
     /// <summary>
@@ -729,6 +799,13 @@ namespace MakeAuto
 
             return true;
         }
+
+        public override bool Tip
+        {
+            get { return _tip; }
+        }
+
+        public bool _tip = false;
     }
 
     /// <summary>
@@ -756,6 +833,10 @@ namespace MakeAuto
                 }
 
                 if (c.cstatus == ComStatus.NoChange)
+                    continue;
+
+                // 重复编译时，对于上次已经编译过的，不需要再进行编译了
+                if (c.cstatus == ComStatus.Normal)
                     continue;
 
                 // Patch 和 Ini 刷下来，拷贝过去就可以
@@ -869,15 +950,33 @@ namespace MakeAuto
             bool Result = true;
             int index = MAConf.instance.Dls.IndexOf(d) + 1;
 
+            // 先把存在的CError删除，以检测是否发生编译错误
+            if (File.Exists(Path.Combine(dir, "CError.txt")))
+            {
+                File.Delete(Path.Combine(dir, "CError.txt"));
+            }
+
             Result = ExcelMacroHelper.instance.ScmRunExcelMacro(m, index, dir);
 
             if (!Result)
             {
                 return false;
             }
+            else if (File.Exists(Path.Combine(dir, "CError.txt")))
+            {
+                Result = false;
+                log.WriteErrorLog("检测到编译错误文件，请确认！");
+            }
 
             return Result;
         }
+
+        public override bool Tip
+        {
+            get { return _tip; }
+        }
+
+        public bool _tip = true;
     }
 
     /// <summary>
@@ -920,17 +1019,22 @@ namespace MakeAuto
                     {
                         string file1 = Path.Combine(ap.SCMAmendDir, s);
                         string file2 =  Path.Combine(ap.DiffDir, s);
-                        if (!HashCom(file1, file2))
+                        
+                        if (!File.Exists(file1) || !File.Exists(file2))
                         {
-                            log.WriteErrorLog("文件对比不同：" + s);
+                            log.WriteErrorLog("对比源文件不存在，请检查是否进行了编译输出。");
+                        }
+
+                        //if (!HashCom(file1, file2))
+                        if (!CompareSrc(file1, file2))
+                        {
+                            log.WriteErrorLog("文件对比不同，请手工处理一致后继续。" + s);
                             if (Result)
                             {
                                 Result = false;
                             }
-                        }
-                        else
-                        {
-                            //log.WriteInfoLog("文件对比相同，文件1： " + file1 + ", 文件2：" + file2 + "。");
+
+                            continue;
                         }
                     }
                 }
@@ -946,17 +1050,21 @@ namespace MakeAuto
 
                     string file1 = Path.Combine(ap.SCMAmendDir, c.cname);
                     string file2 = Path.Combine(ap.DiffDir, c.cname);
-                    if (!HashCom(file1, file2))
+
+                    if (!File.Exists(file1) || !File.Exists(file2))
                     {
-                        log.WriteErrorLog("文件对比不同，" + c.cname);
+                        log.WriteErrorLog("对比源文件不存在，请检查是否进行了编译输出。");
+                    }
+
+                    //if (!HashCom(file1, file2))
+                    if(!CompareSrc(file1, file2))
+                    {
+                        log.WriteErrorLog("文件对比不同，请手工处理一致后继续。" + c.cname);
                         if (Result)
                         {
                             Result = false;
                         }
-                    }
-                    else
-                    {
-                        //log.WriteInfoLog("文件对比相同。");
+                        continue;
                     }
                 }
 
@@ -1016,6 +1124,47 @@ namespace MakeAuto
                 return false;
             }
         }
+
+        private bool CompareSrc(string filescm, string filesub)
+        { 
+            // 使用 diff 来作对比
+            string strOutput = string.Empty;
+            Process p = new Process();
+            try
+            {
+                p.StartInfo.FileName = MAConf.instance.Diff;           // diff 程序，现在先使用 diff
+
+                p.StartInfo.UseShellExecute = false;        // 关闭Shell的使用  
+                p.StartInfo.RedirectStandardInput = true; // 重定向标准输入
+                p.StartInfo.RedirectStandardOutput = true;  //重定向标准出  
+                p.StartInfo.RedirectStandardError = true; //重定向错误输出  
+                p.StartInfo.CreateNoWindow = true;             // 不显示窗口
+
+                // 打包Pack
+                p.StartInfo.Arguments = MAConf.instance.DiffArg + " " + filescm + " " + filesub;   // 设置执行参数
+                p.Start();    // 启动
+                strOutput = p.StandardOutput.ReadToEnd();        // 从输出流取得命令执行结果
+                p.WaitForExit();
+
+                p.Close();
+            }
+            catch (Exception ex)
+            {
+                log.WriteErrorLog("执行rar失败" + ex.Message);
+            }
+
+            // 处理执行结果
+            if (strOutput.Trim().Equals(string.Empty, StringComparison.Ordinal))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public bool _tip = false;
     }
 
     /// <summary>
@@ -1086,8 +1235,10 @@ namespace MakeAuto
 
                 c.cstatus = ComStatus.Normal;
             } 
-            return true;
+            return Result;
         }
+
+        public bool _tip = false;
     }
 
     /// <summary>
@@ -1166,6 +1317,8 @@ namespace MakeAuto
 
             return true;
         }
+
+        public bool _tip = false;
     }
 
     /// <summary>
@@ -1198,6 +1351,8 @@ namespace MakeAuto
 
             return true;
         }
+
+        public bool _tip = true;
     }
 
     /// <summary>
@@ -1224,5 +1379,7 @@ namespace MakeAuto
 
             return true;
         }
+
+        public bool _tip = false;
     }
 }

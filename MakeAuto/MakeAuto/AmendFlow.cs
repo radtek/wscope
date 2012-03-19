@@ -24,7 +24,7 @@ namespace MakeAuto
             _aflow.Add(new PackerDownload());
             _aflow.Add(new PackerReadMe());
             _aflow.Add(new PackerProcess());
-            _aflow.Add(new PackerCheck());
+            //_aflow.Add(new PackerCheck());
             _aflow.Add(new PackerVSSCode());
             _aflow.Add(new PackerCompile());
             _aflow.Add(new PackerDiffer());
@@ -50,23 +50,27 @@ namespace MakeAuto
             {
                 _state = (State)_aflow[i];
 
-                string message = "下一步 " + _state.StateName + " 继续 ？";
-                message += "\r\n【是】-继续 【否】-结束流程 【取消】-跳过当前步骤，进行下一步";
-                string caption = "测试";
+                if (_state.Tip)  // 如果这步流程比较重要，需要提示，需要调整步骤的提示为 true，对于 true 的要求用户确认
+                {
+                    string message = "下一步 " + _state.StateName + " 继续 ？";
+                    message += "\r\n【是】-继续 【否】-结束流程 【取消】-跳过当前步骤，进行下一步";
+                    string caption = "测试";
 
-                DialogResult result = MessageBox.Show(message, caption, MessageBoxButtons.YesNoCancel);
-                if (result == System.Windows.Forms.DialogResult.Cancel)
-                {
-                    log.WriteInfoLog("跳过流程，当前步骤：" + _state.StateName);
-                    continue;
-                }
-                else if (result == System.Windows.Forms.DialogResult.No)
-                {
-                    log.WriteInfoLog("结束流程，当前步骤：" + _state.StateName);
-                    break;
+                    DialogResult result = MessageBox.Show(message, caption, MessageBoxButtons.YesNoCancel);
+                    if (result == System.Windows.Forms.DialogResult.Cancel)
+                    {
+                        log.WriteInfoLog("跳过流程，当前步骤：" + _state.StateName);
+                        continue;
+                    }
+                    else if (result == System.Windows.Forms.DialogResult.No)
+                    {
+                        log.WriteInfoLog("结束流程，当前步骤：" + _state.StateName);
+                        break;
+                    }
                 }
 
                 log.WriteLog(_state.StateName + " 开始");
+
                 if (!_state.DoWork(_amend))
                     return false;
 

@@ -44,7 +44,7 @@ namespace MakeAuto
         BugScm = 3, // 补丁修复递交，如V2, V3等
     }
 
-    // 集成处理的状态，其实就是处理的流程和函数的调用顺序，暂时还没有用到
+    // 集成处理的状态，其实就是处理的流程和函数的调用顺序
     enum ScmStatus
     {
         Nothing = 0,
@@ -59,6 +59,7 @@ namespace MakeAuto
         ProcessSAWPath,
         GetFile,
         Compile,
+        DiffFile,
         ReNewFile,
         TarPack,
         UpLoad,

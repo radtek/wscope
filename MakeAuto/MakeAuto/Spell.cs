@@ -11,10 +11,6 @@ namespace MakeAuto
 {
     class Spell
     {
-
-        public Spell()
-        { }
-
         public Spell(Details dls)
         {
             polyphone = new Dictionary<char, char>();
