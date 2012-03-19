@@ -39,6 +39,26 @@ namespace MakeAuto
             fc = new FtpConf();
             ftp = new FTPConnection();
 
+            // 加载配置文件
+            LoadConf();
+
+            // 初始化 ftp配置
+            ftp.ServerAddress = fc.host;
+            ftp.ServerPort = fc.port;
+            ftp.UserName = fc.user;
+            ftp.Password = fc.pass;
+            ftp.TransferType = FTPTransferType.BINARY;  // 指定 BINARY 传输，否则对于压缩包会失败
+            ftp.CommandEncoding = Encoding.GetEncoding("gb2312"); // 重要，否则乱码且连接不
+
+            // 读取编译顺序
+            LoadComOrder();
+        }
+
+        // 单例化 MAConf
+        public static readonly MAConf instance = new MAConf();
+
+        private void LoadConf()
+        {
             log.WriteFileLog("加载配置文件");
             XmlDocument xmldoc = new XmlDocument();
             xmldoc.Load(conf);
@@ -107,7 +127,7 @@ namespace MakeAuto
             fc.LocalDir = xn.Attributes["LocalDir"].Value;
 
             //fc.PathCorr.Add(fc.ServerDir, fc.LocalDir);
-            
+
             // 读取本地对应目录节点
             fc.PathCorr = new Dictionary<string, string>();
             xnl = xn.ChildNodes;
@@ -120,15 +140,8 @@ namespace MakeAuto
                 fc.PathCorr.Add(x.Attributes["Subject"].Value, x.Attributes["LocalDir"].Value);
             }
 
-            ftp.ServerAddress = fc.host;
-            ftp.ServerPort = fc.port;
-            ftp.UserName = fc.user;
-            ftp.Password = fc.pass;
-            ftp.TransferType = FTPTransferType.BINARY;  // 指定 BINARY 传输，否则对于压缩包会失败
-            ftp.CommandEncoding = Encoding.GetEncoding("gb2312"); // 重要，否则乱码且连接不
-            
             // 读取VSS配置
-            log.WriteFileLog("读取VSS配置"); 
+            log.WriteFileLog("读取VSS配置");
             xn = root.SelectSingleNode("SCMS");
             OutDir = xn.Attributes["OutDir"].Value;
             xnl = xn.ChildNodes;
@@ -163,11 +176,45 @@ namespace MakeAuto
                 DelCom.Add(x.Attributes["name"].Value, int.Parse(x.Attributes["ver"].Value));
             }
 
+            log.WriteFileLog("读取Diff信息");
+            xn = root.SelectSingleNode("Diff");
+            Diff = xn.Attributes["pro"].Value;
+            DiffArg = xn.Attributes["arg"].Value;
+
             log.WriteFileLog("配置初始化完成");
         }
 
-        // 单例化 MAConf
-        public static readonly MAConf instance = new MAConf();
+        private void LoadComOrder()
+        {
+            if (!File.Exists(orderconf))
+            {
+                return;
+            }
+
+            log.WriteFileLog("加载编译配置顺序");
+            XmlDocument xmldoc = new XmlDocument();
+            xmldoc.Load(orderconf);
+
+            XmlElement root = xmldoc.DocumentElement;
+
+            // 读取显示属性
+            log.WriteFileLog("读取组件节点");
+            Order = new List<string>();
+            XmlNode xn = root.SelectSingleNode("secu");
+            XmlNodeList xnl = xn.ChildNodes;
+            foreach (XmlNode x in xnl)
+            {
+                // 跳过注释，否则格式不对，会报错
+                if (x.NodeType == XmlNodeType.Comment)
+                    continue;
+
+
+                // 添加此连接到配置组
+                Order.Add(x.Attributes["name"].Value);
+            }
+
+            log.WriteFileLog("初始化编译顺序完成");
+        }
 
         // 刷新详细设计说明书
         public void RefreshDetailList()
@@ -388,8 +435,14 @@ namespace MakeAuto
 
         public Dictionary<string, int> DelCom;
 
+        public string Diff;
+        public string DiffArg;
+
+        public List<string> Order;
+
         // 取配置文件名称
         private readonly string conf = "MAConf.xml";
+        private readonly string orderconf = "order.xml";
 
     }
 }

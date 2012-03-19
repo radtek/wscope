@@ -21,8 +21,6 @@
         <FBASE compile="false" restartas="false" />
       </Conn>
     </Conns>
-	<!-- RAR路径，处理压缩包使用 -->
-	<RAR Path="C:\Program Files\WinRAR\Rar.exe" />
     <Smallball host="192.168.51.46" port="1021" user="GuangFa" pass="laisha" ServerDir ="/d:/测试代码站点/产品一部/" LocalDir="E:\xgd">
         <!-- ftp目录与本地目录对应关系，按照匹配度处理 -->
 		<BaseDir Subject ="广发版技术支持测试" LocalDir="E:\xgd\gfb\2011SP1PACK" />
@@ -39,4 +37,7 @@
 	  <Com name="HsCentrTrans.exe" ver="5"/>
 	  <Com name="HsCbpTrans.exe" ver="5"/>
 	</DelCom>
+	<!-- RAR路径，处理压缩包使用 -->
+	<RAR Path="C:\Program Files\WinRAR\Rar.exe" />
+	<Diff pro="diff.exe" arg="-I &quot;ppv->iVersion = &quot; -I &quot;/* 源程序名称: .* */&quot;"/>
 </MakeAuto>
