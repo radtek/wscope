@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="gb2312"?>
 <!--excel详细设计说明书-->
-<detail gentime="2012-03-18 16:29:44" detailtime="2012-03-18 16:23:29">
+<detail gentime="2012-04-20 8:40:00" detailtime="2012-03-18 16:23:29">
   <公用模块 file="金融产品销售系统_详细设计说明书_公用模块.xls" sql="user_public" pas="public" />
   <系统管理 file="金融产品销售系统_详细设计说明书_系统管理.xls" sql="user_system" pas="system" />
   <用户管理 file="金融产品销售系统_详细设计说明书_用户管理.xls" sql="user_users" pas="users" />
@@ -92,6 +92,7 @@
   <历史外部接口 file="金融产品销售系统_详细设计说明书_外部接口.xls" sql="his_extsvr" pas="" />
   <外部接口扩展 file="金融产品销售系统_详细设计说明书_外部接口扩展.xls" sql="" pas="extsvrex" />
   <报价回购 file="金融产品销售系统_详细设计说明书_报价回购.xls" sql="secu_qrp" pas="qrp" />
+  <约定购回 file="金融产品销售系统_详细设计说明书_约定购回.xls" sql="secu_arp" pas="arp" />
   <深圳大宗交易 file="金融产品销售系统_详细设计说明书_深圳大宗交易.xls" sql="secusz_szblocktrade" pas="szblocktrade" />
   <深圳大宗资金 file="金融产品销售系统_详细设计说明书_深圳大宗交易.xls" sql="fund_szblocktrade" pas="" />
   <上海综合申报回报 file="金融产品销售系统_详细设计说明书_上海综合申报回报.xls" sql="secu_cbpreal" pas="cbpreal" />

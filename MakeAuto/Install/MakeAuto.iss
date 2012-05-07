@@ -47,15 +47,18 @@ Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescrip
 Source: "E:\MakeAuto\MakeAuto\bin\Release\MakeAuto.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: E:\MakeAuto\MakeAuto\bin\Release\SAWVSDK.dll; DestDir: {app}; Flags: regserver; 
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
-Source: E:\MakeAuto\MakeAuto\bin\Release\ChilkatDotNet4.dll; DestDir: {app}; 
 Source: E:\MakeAuto\MakeAuto\bin\Release\edtFTPnet.dll; DestDir: {app}; 
 Source: E:\MakeAuto\MakeAuto\bin\Release\ChnCharInfo.dll; DestDir: {app}; 
-Source: E:\MakeAuto\MakeAuto\bin\Release\ChnCharInfo.xml; DestDir: {app}; 
-Source: E:\MakeAuto\MakeAuto\bin\Release\zh-CN\ChnCharInfo.resources.dll; DestDir: {app}\zh-CN; 
 Source: E:\MakeAuto\MakeAuto\bin\Release\cm.bat; DestDir: {app}; 
 Source: E:\MakeAuto\MakeAuto\bin\Release\detail.xml; DestDir: {app}; 
-Source: E:\MakeAuto\MakeAuto\bin\Release\MAConf.xml; DestDir: {app}; 
-Source: E:\MakeAuto\MakeAuto\bin\Release\scmpub.bas; DestDir: {app}; 
+Source: E:\MakeAuto\MakeAuto\bin\Release\MAConf.xml; DestDir: {app}; Flags: onlyifdoesntexist; 
+Source: E:\MakeAuto\MakeAuto\bin\Release\diff.exe; DestDir: {app}; 
+Source: E:\MakeAuto\MakeAuto\bin\Release\libiconv2.dll; DestDir: {app}; 
+Source: E:\MakeAuto\MakeAuto\bin\Release\libintl3.dll; DestDir: {app}; 
+Source: E:\MakeAuto\MakeAuto\bin\Release\MAConf-Eg.xml; DestDir: {app}; 
+Source: E:\MakeAuto\MakeAuto\bin\Release\order.xml; DestDir: {app}; 
+Source: E:\MakeAuto\MakeAuto\bin\Release\ScmExtPub_proc.bas; DestDir: {app}; 
+Source: E:\MakeAuto\MakeAuto\bin\Release\Renci.SshNet.dll; DestDir: {app}; 
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
@@ -99,7 +102,6 @@ begin
 
   Result := true;
 end;
-
 
 [UninstallDelete]
 Name: {app}\*; Type: filesandordirs;
