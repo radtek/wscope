@@ -59,20 +59,24 @@ namespace MakeAuto
 
         private void btnSO_Click(object sender, EventArgs e)
         {
-            Detail dl = null; // 取当前文件
-
-            // 如果选择的序号pas文件字段为空，那么不需要编译SO
-            if (dl.Pas == " ")
+            foreach (Detail dl in MAConf.instance.Dls)
             {
-                MessageBox.Show("不是函数模块，不需要编译SO！");
-                return;
+                if (!dl.Compile)
+                    continue;
+                
+                // 如果选择的序号pas文件字段为空，那么不需要编译SO
+                if (dl.Pas == " ")
+                {
+                    MessageBox.Show("不是函数模块，不需要编译SO！");
+                    return;
+                }
+
+                // 上传文件到服务器
+                currSsh.UploadModule(dl);
+
+                // 执行编译
+                currSsh.Compile(dl);
             }
-
-            // 上传文件到服务器
-            currSsh.UploadModule(dl);
-
-            // 执行编译
-            currSsh.Compile(dl);
         }
 
         private void btnAS_Click(object sender, EventArgs e)

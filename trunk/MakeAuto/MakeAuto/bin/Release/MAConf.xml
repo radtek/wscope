@@ -21,9 +21,9 @@
         <FBASE compile="false" restartas="false" />
       </Conn>
     </Conns>
-    <Smallball host="192.168.51.46" port="1021" user="GuangFa" pass="laisha" ServerDir ="/d:/测试代码站点/产品一部/" LocalDir="E:\xgd">
+    <Smallball host="192.168.51.46" port="1021" user="GuangFa" pass="laisha" ServerDir ="/d:/测试代码站点/产品一部" LocalDir="E:\xgd">
         <!-- ftp目录与本地目录对应关系，按照匹配度处理 -->
-		<BaseDir Subject ="广发版技术支持测试" LocalDir="E:\xgd\gfb\2011SP1PACK" />
+		<BaseDir Subject ="广发版技术支持测试" LocalDir="E:\xgd\gfb" />
 		<BaseDir Subject ="融资融券" LocalDir="E:\xgd\rzrq" />
     </Smallball>
     <!-- 集成节点，主要是VSS配置库的位置 -->

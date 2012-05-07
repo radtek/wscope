@@ -134,7 +134,7 @@ namespace MakeAuto
             get { return _tip; }
         }
 
-        private bool _tip = false;
+        private bool _tip = true;
     }
 
     /// <summary>
@@ -215,7 +215,7 @@ namespace MakeAuto
             get {return _tip;}
         }
 
-        public bool _tip = false;
+        public bool _tip = true;
     }
 
     /// <summary>
@@ -669,7 +669,7 @@ namespace MakeAuto
             return true;
         }
 
-        public bool _tip = false;
+        public bool _tip = true;
     }
 
     class PackerProcess : State
@@ -773,7 +773,7 @@ namespace MakeAuto
             return true;
         }
 
-        public bool _tip = false;
+        public bool _tip = true;
     }
 
     /// <summary>
@@ -805,7 +805,7 @@ namespace MakeAuto
             get { return _tip; }
         }
 
-        public bool _tip = false;
+        public bool _tip = true;
     }
 
     /// <summary>
@@ -1164,7 +1164,7 @@ namespace MakeAuto
             }
         }
 
-        public bool _tip = false;
+        public bool _tip = true;
     }
 
     /// <summary>
@@ -1238,7 +1238,7 @@ namespace MakeAuto
             return Result;
         }
 
-        public bool _tip = false;
+        public bool _tip = true;
     }
 
     /// <summary>
@@ -1318,7 +1318,7 @@ namespace MakeAuto
             return true;
         }
 
-        public bool _tip = false;
+        public bool _tip = true;
     }
 
     /// <summary>
@@ -1380,6 +1380,6 @@ namespace MakeAuto
             return true;
         }
 
-        public bool _tip = false;
+        public bool _tip = true;
     }
 }
