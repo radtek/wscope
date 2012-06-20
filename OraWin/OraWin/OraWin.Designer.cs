@@ -1,6 +1,6 @@
-﻿namespace WindowsFormsApplication1
+﻿namespace OraWin
 {
-    partial class Form1
+    partial class OraWin
     {
         /// <summary>
         /// 必需的设计器变量。
