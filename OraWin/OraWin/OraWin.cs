@@ -44,10 +44,10 @@ namespace OraWin
             StringBuilder sb = new StringBuilder();
             string file = "zq06-BL2011SP1PACK4_user_20120618.sql";
 
-            RemoveComment("test.sql", sb);
+            RemoveComment(file, sb);
 
             // 读取文件
-            cmd.CommandText = ProcessSql("test.sql");
+            cmd.CommandText = sb.ToString();
 
             //cmd.CommandType = CommandType.Text;
             // 脚本执行的几个过程
@@ -60,16 +60,21 @@ namespace OraWin
              */
             // ExecuteNonQuery 执行脚本时 -1 表示执行没有问题，但是编译出来的脚本，可能还是失败的，需要做一下检查
             // 
-            //cmd.CommandText.Replace("\r\n", "\r");
+            cmd.CommandText = cmd.CommandText.Replace("\r\n", "\n"); // 用 \r\n 各种报错
 
             // delcar型脚本
             // 处理换行符号
             // 
-            //int rowsUpdated = cmd.ExecuteNonQuery();
+            try
+            {
+                //int rowsUpdated = cmd.ExecuteNonQuery();
 
-            //label1.Text = rowsUpdated.ToString();
-
-            conn.Dispose();
+                //label1.Text = rowsUpdated.ToString();
+            }
+            finally
+            {
+                conn.Dispose();
+            }
         }
         
         /// <summary>
@@ -109,7 +114,7 @@ namespace OraWin
         private Boolean RemoveComment(string file, StringBuilder sb)
         {
             
-            string s, sbc, sec, stemp;
+            string s, stemp;
             int i, j;
             bool bComment = false;
             // 读取readme，生成集成注意
@@ -123,20 +128,32 @@ namespace OraWin
                     // 读取一行，处理掉注释行
                     while ((s = sr.ReadLine()) != null)
                     {
-                        s = s.Trim();
+                        s = s.TrimEnd();
 
-                        // 跳过空行
+                        // 跳过空行，保留，便于过程格式定义处理，原有的空行保留，这里用于处理掉
                         if (s == string.Empty)
+                        {
+                            sb.AppendLine();
+                            //OperLog.instance.WriteInfo(s);
                             continue;
+                        }
 
                         // 如果是注释匹配模式，获取第一个 */
                         if (bComment)
                         {
                             if ((i = s.IndexOf("*/")) >= 0)
                             {
-                                // 取注释之后部分的行
-                                s = s.Substring(Math.Min(i + 2, s.Length));
                                 bComment = false;
+                                // 取注释之后部分的行
+                                if (i + 2 < s.Length)
+                                {
+                                    s = s.Substring(i + 2);
+                                }
+                                else
+                                {
+                                    //s = string.Empty;
+                                    continue; // 空行跳过
+                                }
                             }
                             else  // 否则，跳过中间的注释行
                             {
@@ -148,10 +165,12 @@ namespace OraWin
                         if (s.IndexOf("--") >= 0)
                         {
                             s = s.Substring(0, s.IndexOf("--"));
-                        }
 
-                        if (s.Trim() == string.Empty)
-                            continue;
+                            if (s.Trim() == string.Empty)
+                            {
+                                continue;
+                            }
+                        }
 
                         // 处理 /* */ 的注释，但是要略过 /*+ +*/ 和 /*+ */ 这种模式，这样写不知道有没有风险
                         // 不会出现 包含了 /* ... /*+ */ ... */ 这种， pl/sql 就过不去
@@ -168,7 +187,7 @@ namespace OraWin
                         {
                             bComment = true;
 
-                            s = s.Substring(0, i); // 忽略掉
+                            s = s.Substring(0, i); // 循环忽略
                         }
                         
                         // 处理一行中间的注释
@@ -182,18 +201,43 @@ namespace OraWin
                                 break;
                             }
 
-                            // 把注释忽略掉，处理到行内的配对
-                            s = s.Substring(0, i) + s.Substring(Math.Min(j + 2, s.Length));
+                            // 把注释忽略掉，处理行内的配对
+                            stemp = string.Empty;
+
+                            if (i > 0)
+                            {
+                                stemp = s.Substring(0, i);
+                            }
+
+                            if (i > 0 && j + 2 < s.Length && s[i-1] != ' ' && s[j+2] != ' ')
+                            {
+                                stemp += " "; // 注释前后无空格，补空格
+                            }
+
+                            if (j + 2 < s.Length)
+                            {
+                                stemp += s.Substring(j + 2);
+                            }
+
+                            s = stemp.TrimEnd(); // 原值转回
                         }
 
-                        if (s.Trim() == string.Empty)
+                        s = s.TrimEnd();
+                        if (s == string.Empty)
                             continue;
 
-                        sb.AppendLine(s); 
+                        sb.AppendLine(s);
+                        //OperLog.instance.WriteInfo(s);
                     }
 
-                    OperLog.instance.WriteLog("注释处理：", LogLevel.Info);
-                    OperLog.instance.WriteLog(sb.ToString(), LogLevel.Info);
+                    //OperLog.instance.WriteLog("注释处理：", LogLevel.Info);
+                    //OperLog.instance.WriteLog(sb.ToString(), LogLevel.Info);
+
+                    // 处理掉最后两行，包括sql文档分割线和最后一个不可显示字符。以最后一个 /作为标记
+                    //i = sb.ToString().LastIndexOf("/\r\n");
+                    //sb.Remove(i + 1, sb.Length - i - 1);
+
+                    //OperLog.instance.WriteInfo(sb.ToString());
 
                     return true;
                 }
