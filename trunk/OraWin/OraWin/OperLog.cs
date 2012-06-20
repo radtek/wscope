@@ -21,7 +21,7 @@ namespace OraWin
         private OperLog()
         {
             LogDir = "Log";
-            LogFile = LogDir + "\\" + "OraWin" + DateTime.Now.ToString("yyyyMMdd") + ".Log";
+            LogFile = LogDir + "\\" + "OraWin" + DateTime.Now.ToString("yyyyMMdd") + ".sql";
             if (!System.IO.Directory.Exists(LogDir))
             {
                 try
@@ -90,6 +90,28 @@ namespace OraWin
             {
                 System.Windows.Forms.MessageBox.Show("w Exception\r\n" + ex.Message);
             }
+        }
+
+        public void WriteInfo(string info)
+        {
+            try
+            {
+                writer.WriteLine(info);
+                writer.Flush(); // 及时写入
+            }
+            catch (ObjectDisposedException ex)
+            {
+                System.Windows.Forms.MessageBox.Show("w ObjectDisposedException\r\n" + ex.Message);
+            }
+            catch (IOException ex)
+            {
+                System.Windows.Forms.MessageBox.Show("w IOException\r\n" + ex.Message);
+            }
+            catch (Exception ex)
+            {
+                System.Windows.Forms.MessageBox.Show("w Exception\r\n" + ex.Message);
+            }
+ 
         }
 
         public string LogType(LogLevel level)

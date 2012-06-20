@@ -3,7 +3,7 @@
 declare  v_rowcount integer; 
 
    --- sjfalsdfja
-begin  select count(*) into v_rowcount /* womendajia */ from 
+begin  select count(*) into v_rowcount/* womendajia */from 
 dual where /* weororq
        fadsfa
           djfdla*/
