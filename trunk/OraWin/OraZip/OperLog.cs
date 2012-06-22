@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.IO;
 
-namespace OraWin
+namespace OraZip
 {
     enum LogLevel
     {
@@ -112,6 +112,11 @@ namespace OraWin
                 System.Windows.Forms.MessageBox.Show("w Exception\r\n" + ex.Message);
             }
  
+        }
+
+        public void WriteFileLog(string info)
+        {
+            WriteLog(info , LogLevel.Info);
         }
 
         public string LogType(LogLevel level)

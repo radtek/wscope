@@ -34,6 +34,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Ionic.Zip">
+      <HintPath>..\ziplib\Ionic.Zip.dll</HintPath>
+    </Reference>
     <Reference Include="Oracle.DataAccess, Version=2.112.3.0, Culture=neutral, PublicKeyToken=89b483f429c47342, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>D:\app\gaohu\product\11.2.0\client_1\odp.net\bin\4\Oracle.DataAccess.dll</HintPath>
@@ -50,13 +53,24 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\OraZip\CVSArg.cs">
+      <Link>CVSArg.cs</Link>
+    </Compile>
+    <Compile Include="..\OraZip\Nhs.cs">
+      <Link>Nhs.cs</Link>
+    </Compile>
+    <Compile Include="..\OraZip\OperLog.cs">
+      <Link>OperLog.cs</Link>
+    </Compile>
+    <Compile Include="..\OraZip\OraConf.cs">
+      <Link>OraConf.cs</Link>
+    </Compile>
     <Compile Include="OraWin.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="OraWin.Designer.cs">
       <DependentUpon>OraWin.cs</DependentUpon>
     </Compile>
-    <Compile Include="OperLog.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="OraWin.resx">
