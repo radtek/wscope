@@ -6,37 +6,33 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using Oracle.DataAccess.Client;
-using Oracle.DataAccess.Types;
 using System.IO;
-using OraZip;
+using Ionic.Zip;
 
-namespace OraWin
+namespace OraZip
 {
-    public partial class OraWin : Form
+    public partial class OraZip : Form
     {
-        public OraWin()
+        public OraZip()
         {
             InitializeComponent();
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            Nhs nhs = new Nhs("test1.nhs");
-
-            nhs.RunNhs();
-        } 
+        }
 
         private void button2_Click(object sender, EventArgs e)
         {
-            label1.Text = DBUser.EncPass(maskedTextBox1.Text);
+            CVSArg cv = new CVSArg("06版", 1, 4, 1, 4);
+            Nhs nhs = new Nhs("test1.sql");
+            nhs.ProcessSql(cv, "hs_user", "test1.sql");
+            MessageBox.Show("over");
         }
 
-        private void OraWin_Load(object sender, EventArgs e)
+        private void OraZip_Load(object sender, EventArgs e)
         {
-            OraConf oraconf = OraConf.instance;
+
         }
-
-
     }
 }
