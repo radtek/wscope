@@ -215,7 +215,7 @@ namespace OraZip
 
         public Boolean RunNhs()  // 执行Nhs文件
         {
-            string s, stemp = string.Empty;
+            string s, SqlContent = string.Empty;
 
             // 先解压缩，然后执行
             Extract(file);
@@ -243,9 +243,20 @@ namespace OraZip
             {
                 conn.Open();
             }
-            catch
+            catch (OracleException e)
             {
-                // 报错返回
+                string err = "连接Oracle数据库失败，TNSNAME:" + dbconf.tnsname + "，Oracle异常信息：" + e.Message;
+                oplog.WriteLog(err, LogLevel.Error);
+                System.Windows.Forms.MessageBox.Show(err);
+     
+                return false;
+            }
+            catch (Exception e)
+            {
+                string err = "连接Oracle数据库失败，TNSNAME:" + dbconf.tnsname +  "，异常信息：" + e.Message;
+                oplog.WriteLog(err, LogLevel.Error);
+                System.Windows.Forms.MessageBox.Show(err);
+
                 return false;
             }
 
@@ -255,21 +266,26 @@ namespace OraZip
             // 读取文件
             try
             {
+                // 重定位流，否则读取从最后开始，无数据了
+                ms.Seek(0, SeekOrigin.Begin);  
                 using (StreamReader sr = new StreamReader(ms,
                     Encoding.GetEncoding("gb2312")))
                 {
                     // 读取到 Sql 分隔符
                     while ((s = sr.ReadLine()) != null)
                     {
-                        stemp += s;
-
                         // 读到了 /，做一次提交
                         if (s.Trim().Equals("/"))
                         {
-                            if (!ExSqlBlock(stemp))
+                            if (!ExSqlBlock(SqlContent))
                                 return false;
 
-                            stemp = string.Empty;
+                            SqlContent = string.Empty;
+                        }
+                        else
+                        {
+                            // readline 会去掉最后的换行符，这里把格式补上，否则编译出来的过程都不换行，很难看
+                            SqlContent = SqlContent + "\n" + s;
                         }
                     }
 
@@ -295,7 +311,7 @@ namespace OraZip
             cmd.CommandText = sql;
             cmd.CommandType = System.Data.CommandType.Text;
 
-            cmd.CommandText = cmd.CommandText.Replace("\r\n", "\n"); // 用 \r\n 各种报错
+            //cmd.CommandText = cmd.CommandText.Replace("\r\n", "\n"); // 包含了 \r\n 就是各种报错，如果有，千万要换掉
 
             // delcar型脚本
             // 处理换行符号
@@ -307,8 +323,9 @@ namespace OraZip
             }
             catch(Exception ex)
             {
-                OperLog.instance.WriteLog("执行异常\r\n" + "[sql语句] " + sql + "\r\n[报错信息] " + ex.Message,
-                   LogLevel.Error);
+                string err = "执行异常，[sql语句] " + sql + "， [报错信息] " + ex.Message;
+                OperLog.instance.WriteLog(err, LogLevel.Error);
+                System.Windows.Forms.MessageBox.Show("执行sql语句失败，请检查日志确认。");
                 return false;
             }
         }

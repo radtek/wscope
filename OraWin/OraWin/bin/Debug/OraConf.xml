@@ -4,7 +4,7 @@
 	<encry_str key="dev"></encry_str>
     <!-- Oracle用户连接 -->
     <DBBase>
-      <DB dbtns="rzgh" note="日终测试">
+      <DB dbtns="devgh" note="日终测试">
 		<User name="hs_user" pass="BRbpK8L2jgGwdN9CnMQnVw==" note="用户数据库" />
 		<User name="hs_fund" pass="BRbpK8L2jgGwdN9CnMQnVw==" note="资金数据库" />
 		<User name="hs_secu" pass="BRbpK8L2jgGwdN9CnMQnVw==" note="上海数据库" />
