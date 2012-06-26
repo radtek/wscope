@@ -7,6 +7,8 @@ using Ionic.Zip;
 using Oracle.DataAccess.Client;
 using Oracle.DataAccess.Types;
 using System.Data;
+using System.Management;
+using System.Net.NetworkInformation;
 
 namespace OraZip
 {
@@ -294,7 +296,7 @@ namespace OraZip
             }
             catch (Exception ex)
             {
-                OperLog.instance.WriteLog("脚本注释处理异常" + ex.Message, LogLevel.Error);
+                OperLog.instance.WriteLog("Nhs文件读取异常。" + ex.Message, LogLevel.Error);
 
                 return false;
             }
@@ -311,7 +313,7 @@ namespace OraZip
             cmd.CommandText = sql;
             cmd.CommandType = System.Data.CommandType.Text;
 
-            //cmd.CommandText = cmd.CommandText.Replace("\r\n", "\n"); // 包含了 \r\n 就是各种报错，如果有，千万要换掉
+            cmd.CommandText = cmd.CommandText.Replace("\r\n", "\n"); // 包含了 \r\n 就是各种报错，如果有，千万要换掉
 
             // delcar型脚本
             // 处理换行符号
@@ -321,9 +323,16 @@ namespace OraZip
                 int rowsUpdated = cmd.ExecuteNonQuery();
                 return true;
             }
-            catch(Exception ex)
+            catch (OracleException e)
             {
-                string err = "执行异常，[sql语句] " + sql + "， [报错信息] " + ex.Message;
+                string err = "Oracle语句执行异常，[sql语句] " + sql + "， [Oracle报错信息] " + e.Message;
+                OperLog.instance.WriteLog(err, LogLevel.Error);
+                System.Windows.Forms.MessageBox.Show("执行sql语句失败，请检查日志确认。");
+                return false;
+            }
+            catch (Exception e)
+            {
+                string err = "执行异常，[sql语句] " + sql + "， [报错信息] " + e.Message;
                 OperLog.instance.WriteLog(err, LogLevel.Error);
                 System.Windows.Forms.MessageBox.Show("执行sql语句失败，请检查日志确认。");
                 return false;
@@ -348,6 +357,56 @@ namespace OraZip
             return true;
         }
 
+        public static string GetMacAddr()
+        {
+            try
+            {
+                ManagementObjectSearcher searcher =
+                    new ManagementObjectSearcher("SELECT * FROM Win32_NetworkAdapter WHERE NetConnectionID = '本地连接' AND PhysicalAdapter = True");
+ 
+                foreach (ManagementObject queryObj in searcher.Get())
+                {
+                    //System.Diagnostics.Debug.WriteLine("-----------------------------------");
+                    //System.Diagnostics.Debug.WriteLine("Win32_NetworkAdapter instance");
+                    //System.Diagnostics.Debug.WriteLine("-----------------------------------");
+                    System.Diagnostics.Debug.WriteLine("PhysicalAdapter: {0}, {1}, {2}, {3}, {4}, {5}",
+                        queryObj["Caption"], queryObj["MACAddress"], 
+                        queryObj["NetConnectionID"],
+                        queryObj["NetEnabled"], queryObj["Manufacturer"], queryObj["ServiceName"]
+                        );
+
+                }
+            }
+            catch (ManagementException e)
+            {
+                System.Windows.Forms.MessageBox.Show("An error occurred while querying for WMI data: " + e.Message);
+            }
+
+            return " ";
+
+        }
+
+        public static string get2()
+        {
+            IPGlobalProperties computerProperties = IPGlobalProperties.GetIPGlobalProperties();
+            NetworkInterface[] nics = NetworkInterface.GetAllNetworkInterfaces();
+            Console.WriteLine("Interface information for {0}.{1}     ",
+                    computerProperties.HostName, computerProperties.DomainName);
+            foreach (NetworkInterface adapter in nics)
+            {
+                IPInterfaceProperties properties = adapter.GetIPProperties();
+                System.Diagnostics.Debug.WriteLine(adapter.Description);
+                System.Diagnostics.Debug.WriteLine(String.Empty.PadLeft(adapter.Description.Length, '='));
+                System.Diagnostics.Debug.WriteLine("  Interface type .......................... : {0}", adapter.NetworkInterfaceType);
+                System.Diagnostics.Debug.WriteLine("  Physical Address ........................ : {0}",
+                           adapter.GetPhysicalAddress().ToString());
+                System.Diagnostics.Debug.WriteLine("  Is receive only.......................... : {0}", adapter.IsReceiveOnly);
+                System.Diagnostics.Debug.WriteLine("  Multicast................................ : {0}", adapter.SupportsMulticast);
+                System.Diagnostics.Debug.WriteLine(" ");
+            }
+            return "";
+
+        }
         const string G_PASS = "best12deal3"; //默认的加密密码值
         const EncryptionAlgorithm G_ENCRYPT = EncryptionAlgorithm.None;
         const String G_POFIX = ".nhs";

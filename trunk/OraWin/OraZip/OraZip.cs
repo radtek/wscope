@@ -20,6 +20,8 @@ namespace OraZip
 
         private void button1_Click(object sender, EventArgs e)
         {
+            Nhs.GetMacAddr();
+            //Nhs.get2();
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -31,6 +33,11 @@ namespace OraZip
         }
 
         private void OraZip_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void lstFile_SelectedIndexChanged(object sender, EventArgs e)
         {
 
         }
