@@ -1,0 +1,9 @@
+C:\Users\gaohu.HS\documents\visual studio 2010\Projects\ExMer\ExMer\bin\Debug\ExMer.exe
+C:\Users\gaohu.HS\documents\visual studio 2010\Projects\ExMer\ExMer\bin\Debug\ExMer.pdb
+C:\Users\gaohu.HS\documents\visual studio 2010\Projects\ExMer\ExMer\obj\x86\Debug\ResolveAssemblyReference.cache
+C:\Users\gaohu.HS\documents\visual studio 2010\Projects\ExMer\ExMer\obj\x86\Debug\ExMer.Form1.resources
+C:\Users\gaohu.HS\documents\visual studio 2010\Projects\ExMer\ExMer\obj\x86\Debug\ExMer.Properties.Resources.resources
+C:\Users\gaohu.HS\documents\visual studio 2010\Projects\ExMer\ExMer\obj\x86\Debug\GenerateResource.read.1.tlog
+C:\Users\gaohu.HS\documents\visual studio 2010\Projects\ExMer\ExMer\obj\x86\Debug\GenerateResource.write.1.tlog
+C:\Users\gaohu.HS\documents\visual studio 2010\Projects\ExMer\ExMer\obj\x86\Debug\ExMer.exe
+C:\Users\gaohu.HS\documents\visual studio 2010\Projects\ExMer\ExMer\obj\x86\Debug\ExMer.pdb
