@@ -87,8 +87,6 @@ namespace ExMer
             }
         }
 
-
-
         public bool ReadService()
         {
 
@@ -119,6 +117,10 @@ namespace ExMer
             //DiffPlex.Model.d dfresult = df.CreateLineDiffs(f.BusinFlow.ToString(), f1.BusinFlow.ToString(), false);
             
             // 分析对比结果，怎么分析？
+            // 以eques 为分界
+            // 到下一个 equas 为止
+            // 如何界定多少行
+            //
 
             return;
         }
