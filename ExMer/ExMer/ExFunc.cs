@@ -414,6 +414,7 @@ namespace ExMer
                     r = ds.Tables["Func"].Rows[++i];
                 }
 
+                //f.BusinFlow = f.BusinFlow.Replace("\r\n", "\n");
                 FuncList.Add(f);
 
                 // 向下扫描
