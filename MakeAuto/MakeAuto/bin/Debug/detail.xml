@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="gb2312"?>
 <!--excel详细设计说明书-->
-<detail gentime="2012-03-19 8:39:02" detailtime="2012-03-18 16:23:29">
+<detail gentime="2012-12-15 15:46:16" detailtime="2012-11-26 14:59:02">
   <公用模块 file="金融产品销售系统_详细设计说明书_公用模块.xls" sql="user_public" pas="public" />
   <系统管理 file="金融产品销售系统_详细设计说明书_系统管理.xls" sql="user_system" pas="system" />
   <用户管理 file="金融产品销售系统_详细设计说明书_用户管理.xls" sql="user_users" pas="users" />
@@ -92,6 +92,8 @@
   <历史外部接口 file="金融产品销售系统_详细设计说明书_外部接口.xls" sql="his_extsvr" pas="" />
   <外部接口扩展 file="金融产品销售系统_详细设计说明书_外部接口扩展.xls" sql="" pas="extsvrex" />
   <报价回购 file="金融产品销售系统_详细设计说明书_报价回购.xls" sql="secu_qrp" pas="qrp" />
+  <约定购回 file="金融产品销售系统_详细设计说明书_约定购回.xls" sql="secu_arp" pas="arp" />
+  <上海大宗交易 file="金融产品销售系统_详细设计说明书_上海大宗交易.xls" sql="secu_blocktrade" pas="blocktrade" />
   <深圳大宗交易 file="金融产品销售系统_详细设计说明书_深圳大宗交易.xls" sql="secusz_szblocktrade" pas="szblocktrade" />
   <深圳大宗资金 file="金融产品销售系统_详细设计说明书_深圳大宗交易.xls" sql="fund_szblocktrade" pas="" />
   <上海综合申报回报 file="金融产品销售系统_详细设计说明书_上海综合申报回报.xls" sql="secu_cbpreal" pas="cbpreal" />
@@ -105,6 +107,8 @@
   <广发短信定制 file="金融产品销售系统_详细设计说明书_广发短信定制.xls" sql="fund_shot" pas="shot" />
   <三板业务 file="金融产品销售系统_详细设计说明书_三板业务.xls" sql="secusz_stb" pas="stb" />
   <三板业务历史 file="金融产品销售系统_详细设计说明书_三板业务.xls" sql="his_stb" pas="" />
+  <转账易 file="金融产品销售系统_详细设计说明书_转账易.xls" sql="fund_easytrans" pas="easytrans" />
+  <深圳自主行权 file="金融产品销售系统_详细设计说明书_深圳自主行权.xls" sql="secusz_selfopt" pas="szselfopt" />
   <资金日终 file="金融产品销售系统_详细设计说明书_资金日终.xls" sql="fund_init" pas="init" />
   <用户资金日终 file="金融产品销售系统_详细设计说明书_资金日终.xls" sql="user_init" pas="" />
   <历史资金日终 file="金融产品销售系统_详细设计说明书_资金日终.xls" sql="his_init" pas="" />
@@ -115,6 +119,10 @@
   <多账户存管 file="金融产品销售系统_详细设计说明书_多账户存管.xls" sql="fund_mltcts" pas="mltcts" />
   <多账户存管周边 file="金融产品销售系统_详细设计说明书_多账户存管周边接口.xls" sql="fund_mltctsout" pas="mltctsout" />
   <国债逆回购 file="金融产品销售系统_详细设计说明书_国债逆回购.xls" sql="secu_impawnplan" pas="impawnplan" />
+  <统一接入接口 file="金融产品销售系统_详细设计说明书_统一接入接口.xls" sql="fund_unionacce" pas="unionacce" />
+  <牛熊宝 file="金融产品销售系统_详细设计说明书_牛熊宝.xls" sql="opfund_ofbb" pas="ofbb" />
+  <UFT对接管理 file="金融产品销售系统_详细设计说明书_UFT对接管理.xls" sql="secu_uft" pas="secuuft" />
+  <资金代收代付 file="金融产品销售系统_详细设计说明书_资金代收代付.xls " sql="fund_fbb" pas="fbb" />
   <统一认证同步管理 file="金融产品销售系统_详细设计说明书_统一认证同步管理.xls" sql="" pas="authget" />
   <融资融券公用 file="金融产品销售系统_详细设计说明书_融资融券公用.xls" sql="crdt_pub" pas="crdtpub" />
   <融资融券公用证券 file="金融产品销售系统_详细设计说明书_融资融券公用.xls" sql="secu_secusz_rzpub" pas="" />
@@ -144,6 +152,9 @@
   <融资融券系统转融通接口 file="金融产品销售系统_详细设计说明书_融资融券系统转融通接口.xls" sql="crdt_crdtref" pas="crdtref" />
   <交易系统转融通接口 file="金融产品销售系统_详细设计说明书_交易系统转融通接口.xls" sql="secu_secusz_securef" pas="securef" />
   <交易系统转融通接口资金 file="金融产品销售系统_详细设计说明书_交易系统转融通接口.xls" sql="fund_securef" pas="" />
+  <融资融券统计监测 file="金融产品销售系统_详细设计说明书_融资融券统计监测.xls" sql="crdt_file" pas="crdtfile" />
+  <融资融券转融通外部接口 file="金融产品销售系统_详细设计说明书_融资融券转融通外部接口.xls" sql="crdt_outcrdtref" pas="outcrdtref" />
+  <交易系统转融通外部接口 file="金融产品销售系统_详细设计说明书_交易系统转融通外部接口.xls" sql="secu_secusz_outsecuref" pas="outsecuref" />
   <融资融券非交易过户 file="金融产品销售系统_详细设计说明书_融资融券非交易过户.xls" sql="crdt_transfer" pas="crdttransfer" />
   <期货公用 file="金融产品销售系统_详细设计说明书_期货公用.xls" sql="futures_pub" pas="fupub" />
   <期货参数管理 file="金融产品销售系统_详细设计说明书_期货参数管理.xls" sql="futures_arg" pas="fuarg" />

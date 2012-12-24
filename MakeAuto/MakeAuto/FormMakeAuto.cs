@@ -5,6 +5,8 @@ using System.Text;
 using System.IO;
 using System.Diagnostics;
 using Renci.SshNet;
+using SharpSvn;
+using System.Collections.Generic;
 
 namespace MakeAuto
 {
@@ -28,7 +30,7 @@ namespace MakeAuto
         // 当前活动编译服务器
         private ReSSH currSsh;
 
-        Spell sp;
+        //Spell sp;
 
         AmendFlow secuflow;
 
@@ -396,9 +398,49 @@ namespace MakeAuto
 
         private void button9_Click(object sender, EventArgs e)
         {
-            // 读取方法名
-            //string s = System.Reflection.MethodBase.GetCurrentMethod().Name;
-            //rbLog.AppendText(s);
+            rbLog.Clear();
+            SvnClient client = new SvnClient();
+            //SvnUriTarget sut = 
+            SvnPathTarget spt = new SvnPathTarget(@"E:\06trade\HSTRADES11\trunk\Sources\特殊程序\国债逆回购");
+            //client.Update(spt.FullPath);
+            // Get Log
+            SvnInfoEventArgs info;
+            SvnInfoArgs info1;
+            SvnLogArgs arg = new SvnLogArgs();
+            System.Collections.ObjectModel.Collection<SvnLogEventArgs> logs;
+            List<string> changelog = new List<string>();
+            //long endRevistion = serverInfo.Revision;
+            long Revision = 0;
+
+            // 时间正序，版本历史从小到大；时间反向，版本历史从大到小
+            arg.Range = new SvnRevisionRange(new SvnRevision(DateTime.Now.AddDays(-10)), new SvnRevision(DateTime.Now.AddDays(-20)));
+   
+            client.GetLog(spt.FullPath, arg, out  logs);
+
+            Uri l = null;
+             foreach (SvnLogEventArgs log in logs)
+             {
+                        string loginfo = log.LogMessage.Trim();
+                        if(loginfo != string.Empty)
+                            changelog.Add(loginfo);
+                        l = log.LogOrigin;
+                      Revision = log.Revision;
+                 rbLog.AppendText(log.Author + " " +log.LogMessage + " " +log.Revision + "\r\n");
+
+              }
+             logs = null;
+
+            //
+            SvnUpdateArgs uarg = new SvnUpdateArgs();
+            SvnUpdateResult urs = null;
+
+            //rbLog.AppendText(urs.Revision.ToString());
+            uarg.UpdateParents = true;
+            uarg.Revision = Revision;
+
+            //client.Update(spt.FullPath, uarg, out urs);
+            //rbLog.AppendText(urs.Revision.ToString());
+
         }
 
         private void rbLog_TextChanged(object sender, EventArgs e)

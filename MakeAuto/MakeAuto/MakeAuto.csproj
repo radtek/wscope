@@ -100,6 +100,7 @@
     <Compile Include="FormMakeAuto.designer.cs">
       <DependentUpon>FormMakeAuto.cs</DependentUpon>
     </Compile>
+    <Compile Include="IVerControl.cs" />
     <Compile Include="MAConf.cs" />
     <Compile Include="OperLog.cs" />
     <Compile Include="Program.cs" />
@@ -109,6 +110,7 @@
     <Compile Include="AmendPack.cs" />
     <Compile Include="Spell.cs" />
     <Compile Include="State.cs" />
+    <Compile Include="SvnFace.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="AboutBoxMakeAuto.resx">
@@ -133,6 +135,10 @@
     </Reference>
     <Reference Include="Renci.SshNet">
       <HintPath>..\depbin\Renci.SshNet.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpSvn, Version=1.7002.1998.12257, Culture=neutral, PublicKeyToken=d729672594885a28, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\Release\SharpSvn.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.configuration" />
@@ -186,6 +192,9 @@
   <ItemGroup>
     <Content Include="MakeAuto.ico" />
     <Content Include="MakeAuto_1.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

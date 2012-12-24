@@ -36,12 +36,12 @@ VersionInfoDescription=MakeAuto
 VersionInfoProductName=MakeAuto
 VersionInfoProductVersion=1.0.0.0
 
-[Languages]
-Name: english; MessagesFile: "D:\Program Files\Inno Setup 5\Default.isl"; 
-
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked; OnlyBelowVersion: 0,6.1
+
+[Languages]
+Name: english; MessagesFile: "C:\Program Files\Inno Setup 5\Default.isl";
 
 [Files]
 Source: "E:\MakeAuto\MakeAuto\bin\Release\MakeAuto.exe"; DestDir: "{app}"; Flags: ignoreversion
