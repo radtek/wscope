@@ -100,7 +100,7 @@
     <Compile Include="FormMakeAuto.designer.cs">
       <DependentUpon>FormMakeAuto.cs</DependentUpon>
     </Compile>
-    <Compile Include="IVerControl.cs" />
+    <Compile Include="IVersion.cs" />
     <Compile Include="MAConf.cs" />
     <Compile Include="OperLog.cs" />
     <Compile Include="Program.cs" />
