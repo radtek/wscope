@@ -3,7 +3,7 @@
 <MakeAuto>
     <Part showsecu="true" showcrdt="true" showfutu="false" tmpdir="tmp" />
     <!-- 详细设计说明书的位置，据此上推代码目录，-->
-	<Detail DetailFile="E:\VSS\HSTRADES11\Documents\D2.Designs\详细设计\金融产品销售系统_详细设计说明书.xls" SrcDir="C:\src" DetailList="detail.xml"/>
+	<Detail DetailFile="E:\06trade\HSTRADES11\trunk\Documents\D2.Designs\详细设计\金融产品销售系统_详细设计说明书.xls" SrcDir="C:\src" DetailList="detail.xml"/>
     <!-- 修改单递交基本目录，自动生成递交的修改单在此目录下 -->
 	<Amend BaseDir="E:\Work\xgd"  Author="高虎" ModuleList="module.xml"/>
     <Conns>

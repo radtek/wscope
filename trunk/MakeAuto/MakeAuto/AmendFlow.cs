@@ -20,6 +20,8 @@ namespace MakeAuto
 
             // 准备流程
             // 下载递交包-预处理递交包-检查递交包-检出VSS代码-编译-递交-清理
+            // 下载递交包-从ftp 上获取压缩包
+            // 预处理递交包，包括解压缩，检查
             _aflow = new ArrayList();
             _aflow.Add(new PackerDownload());
             _aflow.Add(new PackerReadMe());
