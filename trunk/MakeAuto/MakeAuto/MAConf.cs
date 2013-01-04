@@ -34,7 +34,8 @@ namespace MakeAuto
             log = OperLog.instance;
             //Conns = new SshConns();
             ReConns = new ReSSHConns();
-            SAWs = new SAWVList();
+            //SAWs = new SAWVList();
+            Svns = new SvnList();
             Dls = new Details();
             fc = new FtpConf();
             ftp = new FTPConnection();
@@ -140,8 +141,8 @@ namespace MakeAuto
                 fc.PathCorr.Add(x.Attributes["Subject"].Value, x.Attributes["LocalDir"].Value);
             }
 
-            // 读取VSS配置
-            log.WriteFileLog("读取VSS配置");
+            // 读取Svn配置
+            log.WriteFileLog("读取Svn配置");
             xn = root.SelectSingleNode("SCMS");
             OutDir = xn.Attributes["OutDir"].Value;
             xnl = xn.ChildNodes;
@@ -150,19 +151,15 @@ namespace MakeAuto
                 if (x.NodeType == XmlNodeType.Comment)
                     continue;
 
-                SAWV sv = new SAWV(x.Attributes["name"].Value,
-                    x.Attributes["server"].Value,
-                    int.Parse(x.Attributes["port"].Value),
-                    x.Attributes["database"].Value,
-                    x.Attributes["user"].Value,
-                    x.Attributes["pass"].Value);
+                SvnVersion svn = new SvnVersion(x.Attributes["name"].Value,
+                    x.Attributes["server"].Value);
 
                 // 读取FBASE节点，以决定是否进行编译和重启AS
-                sv.Workspace = x.Attributes["WorkSpace"].Value;
-                sv.Amend = x.Attributes["Amend"].Value;
+                svn.Workspace = x.Attributes["Workspace"].Value;
+                svn.Amend = x.Attributes["Amend"].Value;
 
                 // 添加此连接到配置组
-                SAWs.Add(sv);
+                Svns.Add(svn);
             }
 
             log.WriteFileLog("读取Delphi编译版本配置");
@@ -424,7 +421,8 @@ namespace MakeAuto
         public FtpConf fc;
         public FTPConnection ftp;
 
-        public SAWVList SAWs;
+        //public SAWVList SAWs;
+        public SvnList Svns;
 
         // 是否显示对应模块
         public bool ShowSecu;

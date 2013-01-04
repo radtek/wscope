@@ -26,16 +26,17 @@
 		<BaseDir Subject ="广发版技术支持测试" LocalDir="E:\xgd\gfb" />
 		<BaseDir Subject ="融资融券" LocalDir="E:\xgd\rzrq" />
     </Smallball>
-    <!-- 集成节点，主要是VSS配置库的位置 -->
+    <!-- 集成节点，主要是配置库的位置 -->
 	<SCMS OutDir="C:\src">
-        <SCM name="CRDT11" server="cm02.hundsun.com" port="8884" database="10106-证券一部-2006版" user="gaohu"  pass="Hundsun_2" WorkSpace="E:\VSS" Amend="融资融券" />
-		<SCM name="HSTRADES11" server="cm02.hundsun.com" port="8884" database="10106-证券一部-2006版" user="gaohu"  pass="Hundsun_2" WorkSpace="E:\VSS" Amend="广发版技术支持测试" />
+        <SCM name="HSTRADES11" server="https://60.191.25.170:4000/secu/dep1/06trade" Workspace="E:\06trade" Amend="融资融券" />
+		<SCM name="HSTRADES11" server="https://60.191.25.170:4000/secu/dep1/06trade" Workspace="E:\06trade" Amend="广发版技术支持测试" />
     </SCMS>
 	<!-- 此处指定要使用不同版本的Delphi编译的组件，默认是6，所以此处只需要写用Delphi 5 的版本就可以了-->
 	<DelCom>
-	  <Com name="HsTools.exe" ver="5"/>
-	  <Com name="HsCentrTrans.exe" ver="5"/>
-	  <Com name="HsCbpTrans.exe" ver="5"/>
+        <Com name="HsTools.exe" ver="5"/>
+        <Com name="HsCentrTrans.exe" ver="5"/>
+        <Com name="HsCbpTrans.exe" ver="5"/>
+        <Com name="BondRate.dll" ver="5" />
 	</DelCom>
 	<!-- RAR路径，处理压缩包使用 -->
 	<RAR Path="C:\Program Files\WinRAR\Rar.exe" />

@@ -41,24 +41,22 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked; OnlyBelowVersion: 0,6.1
 
 [Languages]
-Name: english; MessagesFile: "C:\Program Files\Inno Setup 5\Default.isl";
+Name: english; MessagesFile: "D:\Program Files\Inno Setup 5\Default.isl";
 
 [Files]
-Source: "E:\MakeAuto\MakeAuto\bin\Release\MakeAuto.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: E:\MakeAuto\MakeAuto\bin\Release\SAWVSDK.dll; DestDir: {app}; Flags: regserver; 
+Source: E:\MakeAuto\MakeAuto\bin\Release\MakeAuto.exe; DestDir: {app}; Flags: ignoreversion; Tasks: "desktopicon quicklaunchicon"; 
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 Source: E:\MakeAuto\MakeAuto\bin\Release\edtFTPnet.dll; DestDir: {app}; 
 Source: E:\MakeAuto\MakeAuto\bin\Release\ChnCharInfo.dll; DestDir: {app}; 
-Source: E:\MakeAuto\MakeAuto\bin\Release\cm.bat; DestDir: {app}; 
-Source: E:\MakeAuto\MakeAuto\bin\Release\detail.xml; DestDir: {app}; 
-Source: E:\MakeAuto\MakeAuto\bin\Release\MAConf.xml; DestDir: {app}; Flags: onlyifdoesntexist; 
-Source: E:\MakeAuto\MakeAuto\bin\Release\diff.exe; DestDir: {app}; 
-Source: E:\MakeAuto\MakeAuto\bin\Release\libiconv2.dll; DestDir: {app}; 
-Source: E:\MakeAuto\MakeAuto\bin\Release\libintl3.dll; DestDir: {app}; 
-Source: E:\MakeAuto\MakeAuto\bin\Release\MAConf-Eg.xml; DestDir: {app}; 
-Source: E:\MakeAuto\MakeAuto\bin\Release\order.xml; DestDir: {app}; 
-Source: E:\MakeAuto\MakeAuto\bin\Release\ScmExtPub_proc.bas; DestDir: {app}; 
+Source: E:\MakeAuto\MakeAuto\bin\Debug\cm.bat; DestDir: {app}; 
+Source: E:\MakeAuto\MakeAuto\bin\Debug\detail.xml; DestDir: {app}; Flags: onlyifdoesntexist; 
+Source: E:\MakeAuto\MakeAuto\bin\Debug\MAConf.xml; DestDir: {app}; Flags: onlyifdoesntexist; DestName: MAConfg.xml.eg; 
 Source: E:\MakeAuto\MakeAuto\bin\Release\Renci.SshNet.dll; DestDir: {app}; 
+Source: E:\MakeAuto\MakeAuto\bin\Release\SharpPlink-Win32.svnExe; DestDir: {app}; 
+Source: E:\MakeAuto\MakeAuto\bin\Release\SharpSvn.dll; DestDir: {app}; 
+Source: E:\MakeAuto\MakeAuto\bin\Release\SharpSvn-DB44-20-win32.dll; DestDir: {app}; 
+Source: E:\MakeAuto\MakeAuto\bin\Release\SharpSvn-Sasl21-23-win32.dll; DestDir: {app}; 
+Source: E:\MakeAuto\MakeAuto\bin\Debug\MAConf.xml; DestDir: {app}; Flags: onlyifdoesntexist; 
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"

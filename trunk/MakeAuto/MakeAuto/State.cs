@@ -324,7 +324,7 @@ namespace MakeAuto
             {
                 log.WriteInfoLog("路径：" + s.Path + " "
                     + "本地路径：" + s.LocalPath + " "
-                    + "SAW路径：" + s.SAWPath + " "
+                    + "SAW路径：" + s.UriPath + " "
                     + "文件状态：" + Enum.GetName(typeof(FileStatus), s.fstatus));
             }
         }
@@ -433,6 +433,11 @@ namespace MakeAuto
                         if (line.IndexOf("小包-") < 0)
                         {
                             line = sr.ReadLine().Trim();
+                            if (line == string.Empty)
+                            {
+                                log.WriteErrorLog("无法取到文件路径信息，请检查！组件名：" + name);
+                                return false;
+                            }
                             c.path = line.Substring(1, line.Length - 2); // 去除头部和尾部的 []
                         }
                         else
@@ -565,7 +570,15 @@ namespace MakeAuto
         // 处理 SAWPath，设置检出代码的路径
         private bool ProcessSAWPath(AmendPack ap)
         {
-            #region 第一步，生成基本的SAWFile
+            // 确认修改单的配置库
+            ap.svn = MAConf.instance.Svns.GetByAmend(ap.AmendSubject);
+            if (ap.svn == null)
+            {
+                log.WriteInfoLog("获取对应配置库失败，在配置文件节点无法找到该递交主题的配置库路径");
+                ap.scmstatus = ScmStatus.Error;
+                return false;
+            }
+ 
             // 处理 SAWFile
             foreach (CommitCom c in ap.ComComms)
             {
@@ -574,73 +587,59 @@ namespace MakeAuto
                     continue;
 
                 // 标记文件需要刷新，添加到文件状态列表中
-                if (ap.SAWFiles[c.path] == null)
+                SAWFile f = ap.SAWFiles[c.path];
+                if (f == null)
                 {
-                    SAWFile f = new SAWFile(c.path, FileStatus.Old);
-                    f.Version = c.cver;
+                    f = new SAWFile(c.path, FileStatus.Old);
                     ap.SAWFiles.Add(f);
-                    c.sawfile = f;
                 }
-                else
-                {
-                    // 如果第一个文件不是更新，那就改成需要更新，但是不会有这种情况吧，所以直接改掉好了。
-                    SAWFile f = ap.SAWFiles[c.path];
-                    f.fstatus = FileStatus.Old;
-                    f.Version = c.cver;
-                    c.sawfile = f;
-                }
-            }
-            #endregion
-
-            #region 第二步，生出每个文件的配置库路径
-            // 确认修改单的配置库
-            ap.sv = MAConf.instance.SAWs.GetByAmend(ap.AmendSubject);
-            if (ap.sv == null)
-            {
-                log.WriteInfoLog("获取对应配置库失败，在配置文件节点无法找到该递交主题的配置库路径");
-                ap.scmstatus = ScmStatus.Error;
-                return false;
-            }
-
-            // 处理SAW代码的路径，暂时只对06版有效，因为目录是固定的，需要写死，这段代码可能需要很多变动
-            foreach (SAWFile s in ap.SAWFiles)
-            {
-                if (s.Path.IndexOf("小包-") >= 0)
+                c.sawfile = f;
+                
+                #region 根据组件类别，统一路径处理
+                if (c.ctype == ComType.Ssql)
                     continue;
 
-                // 根据 s 的名称来处理，这是一段很纠结的代码
-                if (s.Path.IndexOf("金融产品销售系统_详细设计说明书") >= 0) // 
+                if (c.ctype == ComType.SO || c.ctype == ComType.Sql || c.ctype == ComType.Xml) // 
                 {
-                    string temp = @"HSTRADES11\Documents\D2.Designs\详细设计\后端\";
-                    s.LocalPath = ap.sv.Workspace + "\\" + temp + s.Path;
-                    s.SAWPath = @"$/" + temp.Replace('\\', '/') + s.Path;
+                    string temp = @"HSTRADES11\trunk\Documents\D2.Designs\详细设计\后端\";
+                    f.LocalPath = ap.svn.Workspace + "\\" + temp + c.path;
+                    f.UriPath = ap.svn.Server + "/"+ temp.Replace('\\', '/') + c.path.Replace('\\', '/');
 
+                }
+                else if (c.ctype == ComType.Patch)
+                {
+                    if (c.path[0] != '\\')
+                        c.path = "\\" + c.path;
+                    f.LocalPath = ap.svn.Workspace + @"\HSTRADES11\trunk" + c.path + c.cname;
+                    f.UriPath = ap.svn.Server + @"/HSTRADES11/trunk" + c.path.Replace('\\', '/') + c.cname.Replace('\\', '/');
                 }
                 else
                 {
                     // 如果第一个不是路径分隔符号，那么补路径分隔符号
-                    if (s.Path[0] != '\\')
-                        s.Path = "\\" + s.Path;
-                    s.LocalPath = ap.sv.Workspace + "\\" + @"HSTRADES11" + s.Path;
-                    s.SAWPath = @"$/" + @"HSTRADES11" + s.Path.Replace('\\', '/');
+                    if (c.path[0] != '\\')
+                        c.path = "\\" + c.path;
+                    f.LocalPath = ap.svn.Workspace + @"\HSTRADES11\trunk" + c.path;
+                    f.UriPath = ap.svn.Server + @"/HSTRADES11/trunk" + c.path.Replace('\\', '/');
                 }
+                #endregion
             }
-            #endregion
-
             return true;
         }
 
         private bool AddToComs(AmendPack ap, CommitCom c)
         {
+            
             // 标定该组件在 Order中的顺序
-            int t = MAConf.instance.Order.IndexOf(c.cname);
-            int t1, t2;
+            //int t = MAConf.instance.Order.IndexOf(c.cname);
+            //int t1, t2;
+             int t = -1;
             if (t == -1)
             {
                 ap.ComComms.Add(c);
                 return true;
             }
 
+            /*
             // 检索已经存在的组件库中，第一个当前组件的索引靠后的，处理掉
             foreach (CommitCom m in ap.ComComms)
             {
@@ -665,6 +664,7 @@ namespace MakeAuto
                     break;
                 }
             }
+             * */
 
             return true;
         }
@@ -777,13 +777,13 @@ namespace MakeAuto
     }
 
     /// <summary>
-    /// 检出VSS代码
+    /// 检出Svn代码
     /// </summary>
-    class PackerVSSCode : State
+    class PackerSvnCode : State
     {
         public override string StateName
         {
-            get { return "检出VSS代码"; }
+            get { return "检出Svn代码"; }
         }
 
         public override bool DoWork(AmendPack ap)
@@ -791,9 +791,14 @@ namespace MakeAuto
             // 这个地方由于没有历史性刷出的办法，对于DLL，可能需要两遍代码刷出，第一遍，先刷出最新版，第二遍，根据递交的版本历史，
             // 把在这个版本之后修改的刷回去
             // 需要注意的是ReadMe中的路径是不全的，这个很恶心
+            SvnVersion svn = new SvnVersion("0", "1");
             foreach (SAWFile s in ap.SAWFiles)
             {
-                ap.sv.GetAmendCode(ap.AmendNo, s);
+                svn.Path = s.LocalPath;
+                svn.Uri = s.UriPath;
+                svn.AmendNo = ap.AmendNo;
+                svn.Version = s.Version;
+                svn.GetAmendCode();
                 s.fstatus = FileStatus.New;
             }
 
@@ -892,12 +897,12 @@ namespace MakeAuto
                 string[] strArr = Regex.Split(strOutput, "\r");
                 log.WriteErrorLog(strArr[strArr.Length - 3]); // 输出最后一行报错信息
             }
-            log.WriteFileLog("[编译日志]");
-            log.WriteFileLog("[Delphi版本] " + dVer.ToString());
-            log.WriteFileLog("[工程] " + dPro);
-            log.WriteFileLog("[输出目录] " + outdir);
-            log.WriteFileLog(strOutput);
-            log.WriteFileLog("[编译日志结束]");
+            log.WriteLog("[编译日志]");
+            log.WriteLog("[Delphi版本] " + dVer.ToString());
+            log.WriteLog("[工程] " + dPro);
+            log.WriteLog("[输出目录] " + outdir);
+            log.WriteLog(strOutput);
+            log.WriteLog("[编译日志结束]");
             p.WaitForExit();
             p.Close();
 
