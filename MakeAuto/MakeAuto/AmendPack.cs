@@ -8,7 +8,6 @@ using System.Data.SqlClient;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
-using SAWVSDKLib;
 using EnterpriseDT.Net.Ftp;
 
 namespace MakeAuto
@@ -102,8 +101,7 @@ namespace MakeAuto
                 ctype = ComType.Sql;
                 if (cname.IndexOf("Patch") > -1)
                     ctype = ComType.Patch;
-                else if (cname.IndexOf("小包") > -1)
-                    ctype = ComType.Ssql;
+                else ctype = ComType.Ssql;
             }
             else if (cname.IndexOf("exe") > -1)
                 ctype = ComType.Exe;
@@ -559,7 +557,8 @@ namespace MakeAuto
         public ScmStatus laststatus;
         public ScmStatus scmstatus;
 
-        public SAWV sv;
+        public SvnVersion svn;
+        //public SAWV sv;
 
         public string DiffDir { get; private set; }
         private OperLog log;

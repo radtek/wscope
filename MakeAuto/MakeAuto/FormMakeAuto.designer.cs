@@ -386,7 +386,7 @@
             this.txbAmenNo.Name = "txbAmenNo";
             this.txbAmenNo.Size = new System.Drawing.Size(121, 21);
             this.txbAmenNo.TabIndex = 12;
-            this.txbAmenNo.Text = "20120227036";
+            this.txbAmenNo.Text = "20130104004";
             // 
             // btnReadInfo
             // 

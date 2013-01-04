@@ -404,8 +404,6 @@ namespace MakeAuto
             SvnPathTarget spt = new SvnPathTarget(@"E:\06trade\HSTRADES11\trunk\Sources\特殊程序\国债逆回购");
             //client.Update(spt.FullPath);
             // Get Log
-            SvnInfoEventArgs info;
-            SvnInfoArgs info1;
             SvnLogArgs arg = new SvnLogArgs();
             System.Collections.ObjectModel.Collection<SvnLogEventArgs> logs;
             List<string> changelog = new List<string>();
@@ -432,7 +430,6 @@ namespace MakeAuto
 
             //
             SvnUpdateArgs uarg = new SvnUpdateArgs();
-            SvnUpdateResult urs = null;
 
             //rbLog.AppendText(urs.Revision.ToString());
             uarg.UpdateParents = true;

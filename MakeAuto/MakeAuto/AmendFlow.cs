@@ -27,13 +27,14 @@ namespace MakeAuto
             _aflow.Add(new PackerReadMe());
             _aflow.Add(new PackerProcess());
             //_aflow.Add(new PackerCheck());
-            _aflow.Add(new PackerVSSCode());
+            //_aflow.Add(new PackerVSSCode());
+            _aflow.Add(new PackerSvnCode());
             _aflow.Add(new PackerCompile());
-            _aflow.Add(new PackerDiffer());
+            //_aflow.Add(new PackerDiffer());
             _aflow.Add(new PackerSO());
             _aflow.Add(new PackerRePack());
-            _aflow.Add(new PackerUpload());
-            _aflow.Add(new PackCleanUp());
+            //_aflow.Add(new PackerUpload());
+            //_aflow.Add(new PackCleanUp());
 
             _state = (State)_aflow[0];  // 起始步骤
         }
