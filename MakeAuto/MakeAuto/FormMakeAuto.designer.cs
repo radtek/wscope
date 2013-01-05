@@ -47,7 +47,7 @@
             this.rbLog = new System.Windows.Forms.RichTextBox();
             this.tcSCM = new System.Windows.Forms.TabControl();
             this.tabPage3 = new System.Windows.Forms.TabPage();
-            this.button2 = new System.Windows.Forms.Button();
+            this.btnFlow = new System.Windows.Forms.Button();
             this.button9 = new System.Windows.Forms.Button();
             this.button8 = new System.Windows.Forms.Button();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
@@ -241,7 +241,7 @@
             // 
             // tabPage3
             // 
-            this.tabPage3.Controls.Add(this.button2);
+            this.tabPage3.Controls.Add(this.btnFlow);
             this.tabPage3.Controls.Add(this.button9);
             this.tabPage3.Controls.Add(this.button8);
             this.tabPage3.Controls.Add(this.groupBox4);
@@ -254,15 +254,16 @@
             this.tabPage3.Text = "集成打包";
             this.tabPage3.UseVisualStyleBackColor = true;
             // 
-            // button2
+            // btnFlow
             // 
-            this.button2.Location = new System.Drawing.Point(360, 46);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(75, 23);
-            this.button2.TabIndex = 32;
-            this.button2.Text = "开始";
-            this.button2.UseVisualStyleBackColor = true;
-            this.button2.Click += new System.EventHandler(this.button2_Click);
+            this.btnFlow.Enabled = false;
+            this.btnFlow.Location = new System.Drawing.Point(360, 46);
+            this.btnFlow.Name = "btnFlow";
+            this.btnFlow.Size = new System.Drawing.Size(75, 23);
+            this.btnFlow.TabIndex = 32;
+            this.btnFlow.Text = "开始";
+            this.btnFlow.UseVisualStyleBackColor = true;
+            this.btnFlow.Click += new System.EventHandler(this.button2_Click);
             // 
             // button9
             // 
@@ -272,6 +273,7 @@
             this.button9.TabIndex = 31;
             this.button9.Text = "test";
             this.button9.UseVisualStyleBackColor = true;
+            this.button9.Visible = false;
             this.button9.Click += new System.EventHandler(this.button9_Click);
             // 
             // button8
@@ -282,6 +284,7 @@
             this.button8.TabIndex = 30;
             this.button8.Text = "版本校验";
             this.button8.UseVisualStyleBackColor = true;
+            this.button8.Visible = false;
             this.button8.Click += new System.EventHandler(this.button8_Click);
             // 
             // groupBox4
@@ -386,7 +389,7 @@
             this.txbAmenNo.Name = "txbAmenNo";
             this.txbAmenNo.Size = new System.Drawing.Size(121, 21);
             this.txbAmenNo.TabIndex = 12;
-            this.txbAmenNo.Text = "20130104004";
+            this.txbAmenNo.Text = "20120919017";
             // 
             // btnReadInfo
             // 
@@ -757,7 +760,7 @@
         private System.Windows.Forms.TextBox txtSubmitVer;
         private System.Windows.Forms.RichTextBox rbLog;
         private System.Windows.Forms.Timer timer1;
-        private System.Windows.Forms.Button button2;
+        private System.Windows.Forms.Button btnFlow;
     }
 }
 
