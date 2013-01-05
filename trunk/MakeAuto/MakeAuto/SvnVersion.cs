@@ -16,6 +16,7 @@ namespace MakeAuto
         {
             Name = name;
             Server = server;
+            // 要发布app.config，否则不能启用混合程序集
             client = new SvnClient();
             log = OperLog.instance;
         }

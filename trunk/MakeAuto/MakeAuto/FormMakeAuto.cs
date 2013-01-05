@@ -387,6 +387,7 @@ namespace MakeAuto
             txtScmVer.Text = ap.SCMLastVer.ToString();
 
             secuflow = new AmendFlow(ap);
+            btnFlow.Enabled = true;
         }
 
         private void button8_Click(object sender, EventArgs e)
@@ -456,6 +457,7 @@ namespace MakeAuto
 
         private void button2_Click(object sender, EventArgs e)
         {
+            btnFlow.Enabled = false;
             secuflow.Work();
         }
 

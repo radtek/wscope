@@ -236,9 +236,10 @@ namespace MakeAuto
             bool result = true;
 
             // 检查集成本地文件夹是否存在，不存在则创建，存在则先删除后创建
+            // 对于本地文件夹存在只读文件的情况，直接删除会报错，这里要去只读属性后来删除
             if (Directory.Exists(ap.SCMAmendDir))
             {
-                Directory.Delete(ap.SCMAmendDir, true);
+                DeleteFolder(ap.SCMAmendDir);
             }
             Directory.CreateDirectory(ap.SCMAmendDir);
 
@@ -669,6 +670,37 @@ namespace MakeAuto
             return true;
         }
 
+        /// <summary>
+        /// 递归删除子文件夹以及文件(包括只读文件)
+        /// </summary>
+        /// <param name="TARGET_PATH">文件路径</param>
+        public void DeleteFolder(string TARGET_PATH)
+        {
+            //如果存在目录文件，就将其目录文件删除
+            if (Directory.Exists(TARGET_PATH))
+            {
+                foreach (string filenamestr in Directory.GetFileSystemEntries(TARGET_PATH))
+                {
+                    if (File.Exists(filenamestr))
+                    {
+                        FileInfo file = new FileInfo(filenamestr);
+                        if (file.Attributes.ToString().IndexOf("ReadOnly") != -1)
+                        {
+                            file.Attributes = FileAttributes.Normal;//去掉文件属性
+                        }
+                        File.Delete(filenamestr);//直接删除其中的文件
+                    }
+                    else {
+                        DeleteFolder(filenamestr);//递归删除
+                    }
+
+                }
+                System.IO.DirectoryInfo DirInfo = new DirectoryInfo(TARGET_PATH);
+                DirInfo.Attributes = FileAttributes.Normal & FileAttributes.Directory;    //去掉文件夹属性     
+                Directory.Delete(TARGET_PATH, true);
+            }
+        }
+
         public bool _tip = true;
     }
 
@@ -847,7 +879,24 @@ namespace MakeAuto
                 // Patch 和 Ini 刷下来，拷贝过去就可以
                 else if (c.ctype == ComType.Patch || c.ctype == ComType.Ini)
                 {
+                    // 去除文件只读属性，否则复制时不能覆盖
+                    FileAttributes attributes = File.GetAttributes(Path.Combine(ap.SCMAmendDir, c.cname));
+                    FileAttributes attr1 = attributes;
+                    if ((attributes & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
+                    {
+                        // Show the file.
+                        attributes = attributes & ~FileAttributes.ReadOnly;
+                        File.SetAttributes(Path.Combine(ap.SCMAmendDir, c.cname), attributes);
+                    }
+
                     File.Copy(c.sawfile.LocalPath, Path.Combine(ap.SCMAmendDir, c.cname), true);
+
+                    // 还原只读属性
+                    attributes = attr1;
+                    if ((attributes & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
+                    {
+                        File.SetAttributes(Path.Combine(ap.SCMAmendDir, c.cname), attributes);
+                    }
                 }
                 else if (c.ctype == ComType.Dll || c.ctype == ComType.Exe)
                 {
@@ -897,12 +946,13 @@ namespace MakeAuto
                 string[] strArr = Regex.Split(strOutput, "\r");
                 log.WriteErrorLog(strArr[strArr.Length - 3]); // 输出最后一行报错信息
             }
-            log.WriteLog("[编译日志]");
-            log.WriteLog("[Delphi版本] " + dVer.ToString());
-            log.WriteLog("[工程] " + dPro);
-            log.WriteLog("[输出目录] " + outdir);
-            log.WriteLog(strOutput);
-            log.WriteLog("[编译日志结束]");
+            log.WriteFileLog("[编译日志]");
+            log.WriteFileLog("[编译命令] " + p.StartInfo.FileName + p.StartInfo.Arguments);
+            log.WriteFileLog("[Delphi版本] " + dVer.ToString());
+            log.WriteFileLog("[工程] " + dPro);
+            log.WriteFileLog("[输出目录] " + outdir);
+            log.WriteFileLog(strOutput);
+            log.WriteFileLog("[编译日志结束]");
             p.WaitForExit();
             p.Close();
 
@@ -1302,8 +1352,8 @@ namespace MakeAuto
                     p.WaitForExit();
                 }
 
-                // 打包Pack
-                p.StartInfo.Arguments = " a -ep " + ap.SCMLocalFile + " "
+                // 打包Pack，替换 压缩.bat 的 a -ep 为 m -ep
+                p.StartInfo.Arguments = " m -ep " + ap.SCMLocalFile + " "
                     + ap.SCMAmendDir + " " + "-x" +ap.SCMSrcRar;   // 设置执行参数
 
                 p.Start();    // 启动

@@ -150,7 +150,7 @@ namespace MakeAuto
             {
                 if (x.NodeType == XmlNodeType.Comment)
                     continue;
-
+                
                 SvnVersion svn = new SvnVersion(x.Attributes["name"].Value,
                     x.Attributes["server"].Value);
 

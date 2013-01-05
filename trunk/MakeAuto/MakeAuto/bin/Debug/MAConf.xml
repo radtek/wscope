@@ -28,8 +28,8 @@
     </Smallball>
     <!-- 集成节点，主要是配置库的位置 -->
 	<SCMS OutDir="C:\src">
-        <SCM name="HSTRADES11" server="https://60.191.25.170:4000/secu/dep1/06trade" Workspace="E:\06trade" Amend="融资融券" />
-		<SCM name="HSTRADES11" server="https://60.191.25.170:4000/secu/dep1/06trade" Workspace="E:\06trade" Amend="广发版技术支持测试" />
+        <SCM name="RZRQ" server="https://60.191.25.170:4000/secu/dep1/06trade" Workspace="E:\06trade" Amend="融资融券" />
+		<SCM name="SECU" server="https://60.191.25.170:4000/secu/dep1/06trade" Workspace="E:\06trade" Amend="广发版技术支持测试" />
     </SCMS>
 	<!-- 此处指定要使用不同版本的Delphi编译的组件，默认是6，所以此处只需要写用Delphi 5 的版本就可以了-->
 	<DelCom>
