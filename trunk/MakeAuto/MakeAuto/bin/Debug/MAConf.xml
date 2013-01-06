@@ -17,8 +17,8 @@
         <FBASE compile="false" restartas="false" />
       </Conn>
 	  <!-- 名为 scm 的节点是集成专用，代码会锁定这个名字，如果要支持集成，那么一定要配置这个节点 -->
-	  <Conn name="scm" host="192.168.87.244" port="22" user="gftrade" pass="handsome">
-        <FBASE compile="false" restartas="false" />
+	  <Conn name="scm" host="192.168.56.101" port="22" user="handsome" pass="handsome">
+        <FBASE compile="true" restartas="false" />
       </Conn>
     </Conns>
     <Smallball host="192.168.51.46" port="1021" user="GuangFa" pass="laisha" ServerDir ="/d:/测试代码站点/产品一部" LocalDir="E:\xgd">

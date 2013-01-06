@@ -7,6 +7,7 @@ using System.IO;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using System.Security.Cryptography;
+using System.Web;
 
 namespace MakeAuto
 {
@@ -215,7 +216,7 @@ namespace MakeAuto
             get {return _tip;}
         }
 
-        public bool _tip = true;
+        public bool _tip = false;
     }
 
     /// <summary>
@@ -592,6 +593,8 @@ namespace MakeAuto
                 if (f == null)
                 {
                     f = new SAWFile(c.path, FileStatus.Old);
+                    f.Version = c.cver;
+                    f.fstatus = FileStatus.Old;
                     ap.SAWFiles.Add(f);
                 }
                 c.sawfile = f;
@@ -701,7 +704,7 @@ namespace MakeAuto
             }
         }
 
-        public bool _tip = true;
+        public bool _tip = false;
     }
 
     class PackerProcess : State
@@ -790,6 +793,8 @@ namespace MakeAuto
             }
             return true;
         }
+
+        public bool _tip = false;
     }
 
     class PackerCheck : State
@@ -820,21 +825,32 @@ namespace MakeAuto
 
         public override bool DoWork(AmendPack ap)
         {
+            bool Result = true;
             // 这个地方由于没有历史性刷出的办法，对于DLL，可能需要两遍代码刷出，第一遍，先刷出最新版，第二遍，根据递交的版本历史，
             // 把在这个版本之后修改的刷回去
             // 需要注意的是ReadMe中的路径是不全的，这个很恶心
             SvnVersion svn = new SvnVersion("0", "1");
             foreach (SAWFile s in ap.SAWFiles)
             {
+                if (s.fstatus == FileStatus.New)
+                {
+                    continue;
+                }
+
                 svn.Path = s.LocalPath;
                 svn.Uri = s.UriPath;
                 svn.AmendNo = ap.AmendNo;
                 svn.Version = s.Version;
-                svn.GetAmendCode();
+                // 检出失败，退出循环
+                Result = svn.GetAmendCode();
+                if (false == Result)
+                {
+                    break;
+                }
                 s.fstatus = FileStatus.New;
             }
 
-            return true;
+            return Result;
         }
 
         public override bool Tip
@@ -1080,8 +1096,8 @@ namespace MakeAuto
                             log.WriteErrorLog("对比源文件不存在，请检查是否进行了编译输出。");
                         }
 
-                        //if (!HashCom(file1, file2))
-                        if (!CompareSrc(file1, file2))
+                        if (!HashCom(file1, file2))
+                        //if (!CompareSrc(file1, file2))
                         {
                             log.WriteErrorLog("文件对比不同，请手工处理一致后继续。" + s);
                             if (Result)
@@ -1111,8 +1127,8 @@ namespace MakeAuto
                         log.WriteErrorLog("对比源文件不存在，请检查是否进行了编译输出。");
                     }
 
-                    //if (!HashCom(file1, file2))
-                    if(!CompareSrc(file1, file2))
+                    if (!HashCom(file1, file2))
+                    //if(!CompareSrc(file1, file2))
                     {
                         log.WriteErrorLog("文件对比不同，请手工处理一致后继续。" + c.cname);
                         if (Result)
@@ -1219,7 +1235,7 @@ namespace MakeAuto
             }
         }
 
-        public bool _tip = true;
+        public bool _tip = false;
     }
 
     /// <summary>
@@ -1289,11 +1305,12 @@ namespace MakeAuto
                 }
 
                 c.cstatus = ComStatus.Normal;
-            } 
+            }
+
             return Result;
         }
 
-        public bool _tip = true;
+        public bool _tip = false;
     }
 
     /// <summary>
@@ -1373,7 +1390,7 @@ namespace MakeAuto
             return true;
         }
 
-        public bool _tip = true;
+        public bool _tip = false;
     }
 
     /// <summary>

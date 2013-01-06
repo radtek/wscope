@@ -458,7 +458,10 @@ namespace MakeAuto
         private void button2_Click(object sender, EventArgs e)
         {
             btnFlow.Enabled = false;
-            secuflow.Work();
+            if (secuflow.Work() == false)
+            {
+                btnFlow.Enabled = true;
+            }
         }
 
     }
