@@ -610,7 +610,7 @@ namespace MakeAuto
                     f.UriPath = ap.svn.Server + "/"+ temp.Replace('\\', '/') + c.path.Replace('\\', '/');
 
                 }
-                else if (c.ctype == ComType.Patch)
+                else if (c.ctype == ComType.Patch || c.ctype == ComType.Ini)
                 {
                     if (c.path[0] != '\\')
                         c.path = "\\" + c.path;
@@ -704,6 +704,11 @@ namespace MakeAuto
             }
         }
 
+        public override bool Tip
+        {
+            get { return _tip; }
+        }
+
         public bool _tip = false;
     }
 
@@ -792,6 +797,11 @@ namespace MakeAuto
                 }
             }
             return true;
+        }
+
+        public override bool Tip
+        {
+            get { return _tip; }
         }
 
         public bool _tip = false;
@@ -1310,6 +1320,11 @@ namespace MakeAuto
             return Result;
         }
 
+        public override bool Tip
+        {
+            get { return _tip; }
+        }
+
         public bool _tip = false;
     }
 
@@ -1390,6 +1405,11 @@ namespace MakeAuto
             return true;
         }
 
+        public override bool Tip
+        {
+            get { return _tip; }
+        }
+
         public bool _tip = false;
     }
 
@@ -1424,6 +1444,11 @@ namespace MakeAuto
             return true;
         }
 
+        public override bool Tip
+        {
+            get { return _tip; }
+        }
+
         public bool _tip = true;
     }
 
@@ -1452,6 +1477,11 @@ namespace MakeAuto
             return true;
         }
 
-        public bool _tip = true;
+        public override bool Tip
+        {
+            get { return _tip; }
+        }
+
+        public bool _tip = false;
     }
 }
