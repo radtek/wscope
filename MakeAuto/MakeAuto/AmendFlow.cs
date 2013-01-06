@@ -30,7 +30,7 @@ namespace MakeAuto
             //_aflow.Add(new PackerVSSCode());
             _aflow.Add(new PackerSvnCode());
             _aflow.Add(new PackerCompile());
-            //_aflow.Add(new PackerDiffer());
+            _aflow.Add(new PackerDiffer());
             _aflow.Add(new PackerSO());
             _aflow.Add(new PackerRePack());
             //_aflow.Add(new PackerUpload());

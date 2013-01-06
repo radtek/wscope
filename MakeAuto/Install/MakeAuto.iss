@@ -19,7 +19,7 @@
 AppID={{6E6B4EE1-3573-4B03-8818-C819036EA956}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
-;AppVerName={#MyAppName} {#MyAppVersion}
+AppVerName={#MyAppName}
 AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
@@ -61,6 +61,7 @@ Source: E:\MakeAuto\MakeAuto\bin\Debug\cm.bat; DestDir: {app};
 Source: E:\MakeAuto\MakeAuto\bin\Debug\detail.xml; DestDir: {app}; Flags: onlyifdoesntexist; 
 Source: E:\MakeAuto\MakeAuto\bin\Debug\MAConf.xml; DestDir: {app}; Flags: onlyifdoesntexist; 
 Source: E:\MakeAuto\MakeAuto\bin\Debug\MAConf.xml; DestDir: {app}; DestName: MAConf.xml.eg; 
+Source: E:\MakeAuto\MakeAuto\bin\Release\polyphone.xml; DestDir: {app}; 
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"

@@ -18,10 +18,10 @@ rem cm 5 E:\VSS\HSTRADES11\Sources\ClientCom\Subsys\TOOLS\HsTools.dpr C:\src
 rem 这里指定Control的位置，需要自行调整
 set DCC5=D:\Program Files\Borland\Delphi5\Bin\DCC32.EXE
 set DCC6=D:\Program Files\Borland\Delphi6\Bin\DCC32.EXE
-set HSControls=E:\VSS\HSTRADES11\Sources\ClientCom\Control;
-set Platform10=E:\VSS\HSTRADES11\Sources\ClientCom\Control\PLATFORM10;
-set Lzrw1_5=E:\VSS\HSTRADES11\Sources\ClientCom\Subsys\TOOLS\CONTROL\LZRW1;
-set Lzrw1_6=E:\VSS\HsSettle\Sources\ClientCom\Control\LZRW1;
+set HsControls=E:\06trade\HSTRADES11\trunk\Sources\ClientCom\Control;
+set Platform10=E:\06trade\HSTRADES11\trunk\Sources\ClientCom\Control\PLATFORM10;
+set Lzrw1_5=E:\06trade\HSTRADES11\trunk\Sources\ClientCom\Subsys\TOOLS\CONTROL\LZRW1;
+set Lzrw1_6=E:\06trade\HsSettle\trunk\Sources\ClientCom\Control\LZRW1;
 set DOA5=D:\Program Files\Borland\Delphi5\DOA;
 set DOA6=D:\Program Files\Borland\Delphi6\DOA;
 
@@ -32,11 +32,13 @@ if "%DelphiVer%"=="6" goto D6
 :D5
 set DCC=%DCC5%
 set UPath=%Platform10%%Lzrw1_5%%DOA5%
+set LUPackage=Platform10
 goto Make
 
 :D6
 set DCC=%DCC6%
 set UPath=%HsControls%%Lzrw1_6%%DOA6%
+set LUPackage=HsControls
 goto Make
 
 :Make
@@ -50,8 +52,8 @@ rem -B Build All
 rem -E 指定输出路径，有些同学不一定都在 D:\Febs2005\Trade\Biz 啥的
 rem -U 指定还从哪里查找使用的单元文件
 rem 这里替换 C_CbpETF为其他DLL
-rem echo "%DCC%" -B "%ProName%" -U"%UPath%" -N"%DCUDir%" -E"%OutPut%"
-"%DCC%" -B "%ProName%" -U"%UPath%" -N"%DCUDir%" -E"%OutPut%"
+echo "%DCC%" -B "%ProName%" -U"%UPath%" -N"%DCUDir%" -LU"%LUPackage%"  -E"%OutPut%"
+"%DCC%" -B "%ProName%" -U"%UPath%" -N"%DCUDir%" -LU"%LUPackage%"  -E"%OutPut%"
 
 rem 如果编译失败，那么需要显示编译信息，以便用户确认来进行处理
 if %ERRORLEVEL%==0 (echo "Complile Success") else (echo "Complile Failed")

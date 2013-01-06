@@ -24,8 +24,8 @@ namespace MakeAuto
         public Boolean GetAmendCode()
         {
             Boolean Result = false;
-            log.WriteLog("获取修改单代码文件,修改单号:" + AmendNo + 
-                " SVNURL：" + Uri + " 本地路径：" + Path);
+            log.WriteLog("获取修改单代码文件，修改单号:" + AmendNo + "，文件版本：" + Version +
+                " SvnURI：" + Uri + " 本地路径：" + Path);
 
             uritarget = new SvnUriTarget(Uri);
             pathtarget = new SvnPathTarget(Path);
@@ -50,6 +50,13 @@ namespace MakeAuto
                 startRevision = 0;
             }
 
+            // 本地文件版本已经最新，不重新获取服务器版本
+            if (startRevision >= endRevision)
+            {
+                log.WriteLog("本地文件与服务器版本一致，不检查Svn服务器版本。Revision = " + startRevision.ToString());
+                return true;
+            }
+
             // Get Log
             System.Collections.ObjectModel.Collection<SvnLogEventArgs> logs;
             List<string> changelog = new List<string>();
@@ -68,15 +75,27 @@ namespace MakeAuto
                 if (g.LogMessage.Trim().IndexOf(AmendNo + "-" + Version) >= 0)
                 {
                     l = g;
-                    log.WriteLog("[版本信息]" + g.LogMessage.Trim() + "，时间：" + g.Time.ToString() 
-                        + "，版本：" + g.Revision + "\r\n");
                     break;
                 }
-                
             }
 
             if (l == null)
+            {
+                log.WriteLog("[无法确认Svn版本信息]，endRevision = " + endRevision.ToString()
+                    + "，startRevision " + startRevision.ToString() + "\r\n");
+
                 return false;
+            }
+            else if (l.Revision == startRevision)
+            {
+                log.WriteLog("本地文件版本满足，不再检出。Revision = "+ l.Revision.ToString());
+                return true;
+            }
+            else
+            {
+                log.WriteLog("[版本信息]" + l.LogMessage.Trim() + "，时间：" + l.Time.ToString()
+                   + "，版本：" + l.Revision + "\r\n");
+            }
 
             // Svn Update
             log.WriteLog("更新文件......");
