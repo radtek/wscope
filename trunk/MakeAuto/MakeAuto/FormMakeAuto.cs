@@ -461,6 +461,11 @@ namespace MakeAuto
             if (secuflow.Work() == false)
             {
                 btnFlow.Enabled = true;
+                MessageBox.Show("集成失败。");
+            }
+            else
+            {
+                MessageBox.Show("处理完成。");
             }
         }
 

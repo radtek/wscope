@@ -98,10 +98,11 @@ namespace MakeAuto
                 ctype = ComType.SO;
             else if (cname.IndexOf("sql") > -1)
             {
-                ctype = ComType.Sql;
                 if (cname.IndexOf("Patch") > -1)
                     ctype = ComType.Patch;
-                else ctype = ComType.Ssql;
+                else if (cname.IndexOf("小包") > -1 || cname.IndexOf("临时") > -1) // 希望能识别出临时修改单，有时会失效
+                    ctype = ComType.Ssql;
+                else ctype = ComType.Sql;
             }
             else if (cname.IndexOf("exe") > -1)
                 ctype = ComType.Exe;
@@ -137,7 +138,7 @@ namespace MakeAuto
         public AmendPack(string AmendNo)
         {
             this.AmendNo = AmendNo;
-            
+
             ComComms = new ComList();
             // 创建连接
             sqlconn = new SqlConnection(ConnString);
@@ -488,6 +489,9 @@ namespace MakeAuto
         
         // 主单号
         public string MainNo {get; private set;}
+
+        // 修改单列表
+        public string AmendList;
 
         // 修改单列表,可以递交N多修改单
         //public int[] Amends {get; set;}

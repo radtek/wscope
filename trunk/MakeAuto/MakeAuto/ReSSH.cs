@@ -177,7 +177,7 @@ namespace MakeAuto
         {
             // bug? 这里如果不读下 bash_profile，就读不出bash_profile的环境变量 
             string s = " cd ~/src; source ~/.bash_profile; " +
-                "rm " + dl.OFlow + " " + dl.OFunc + " "+ dl.FCPP + " " + "../appcom/" + dl.SO + " 2 &> 1;";
+                "rm " + dl.OFlow + " " + dl.OFunc + " " + dl.FCPP + " " + "../appcom/" + dl.SO + " > /dev/null 2>&1;";
             string make = " make -f ";
             string m_g;
             string m_p = " ORA_VER=10";

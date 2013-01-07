@@ -73,17 +73,19 @@ namespace MakeAuto
         }
 
         // 解压缩
-        protected void UnRar(string rarfile, string dir, string file = "")
+        protected Boolean UnRar(string rarfile, string dir, string file = "")
         {
             if (!File.Exists(rarfile))
             {
-                return;
+                return false;
             }
 
             if (!Directory.Exists(dir))
             {
                 Directory.CreateDirectory(dir);
             }
+
+            bool result = true;
 
             // 开启进程执行 rar解压缩
             // 获取 Winrar 的路径（通过注册表或者是配置，这里直接根据xml来处理）
@@ -105,11 +107,19 @@ namespace MakeAuto
                 p.StartInfo.RedirectStandardInput = true; // 重定向标准输入
                 p.StartInfo.RedirectStandardOutput = true;  //重定向标准出  
                 p.StartInfo.RedirectStandardError = true; //重定向错误输出  
-                p.StartInfo.CreateNoWindow = true;             // 不显示窗口 
+                p.StartInfo.CreateNoWindow = true;             // 不显示窗口
+
+                MAConf.instance.WriteLog(p.StartInfo.FileName + " " + p.StartInfo.Arguments, LogLevel.FileLog);
+
                 p.Start();    // 启动
 
-                string strOutput = p.StandardOutput.ReadToEnd();        //從输出流取得命令执行结果
-                MAConf.instance.WriteLog(strOutput, LogLevel.FileLog);
+                //strOutput = p.StandardOutput.ReadToEnd();        // 从输出流取得命令执行结果
+                string strOutput = p.StandardError.ReadToEnd();
+                if (strOutput != string.Empty)
+                {
+                    result = false;
+                    log.WriteErrorLog(strOutput);
+                }
 
                 p.WaitForExit();
                 p.Close();
@@ -118,6 +128,8 @@ namespace MakeAuto
             {
                 MAConf.instance.WriteLog("执行rar失败" + ex.Message, LogLevel.Error);
             }
+
+            return result;
         }
 
         // 日志组件
@@ -284,11 +296,11 @@ namespace MakeAuto
             if(!result)
                 return false;
 
-            ProcessMods(ap);
+            result = ProcessMods(ap);
             if(!result)
                 return false;
 
-            ProcessSAWPath(ap);
+            result = ProcessSAWPath(ap);
             if(!result)
                 return false;
 
@@ -296,39 +308,6 @@ namespace MakeAuto
             ProcessReadMe(ap);
 
             return true;
-        }
-
-        private void ProcessReadMe(AmendPack ap)
-        {
-            // 输出下处理结果
-            log.WriteInfoLog("[递交组件]");
-            foreach (CommitCom c in ap.ComComms)
-            {
-                log.WriteInfoLog("名称：" + c.cname + " "
-                    + "状态：" + Enum.GetName(typeof(ComStatus), c.cstatus) + " "
-                    + "版本：" + c.cver + " "
-                    + "路径：" + c.path);
-                /*
-                if (c.sawfile == null)
-                {
-                    log.WriteInfoLog("本地路径：test__");
-                    log.WriteInfoLog("SAW路径：test__");
-                }
-                else
-                {
-                    log.WriteInfoLog("本地路径：" + c.sawfile.LocalPath);
-                    log.WriteInfoLog("SAW路径：" + c.sawfile.SAWPath);
-                }
-                 * */
-            }
-            log.WriteInfoLog("[配置库文件]");
-            foreach (SAWFile s in ap.SAWFiles)
-            {
-                log.WriteInfoLog("路径：" + s.Path + " "
-                    + "本地路径：" + s.LocalPath + " "
-                    + "SAW路径：" + s.UriPath + " "
-                    + "文件状态：" + Enum.GetName(typeof(FileStatus), s.fstatus));
-            }
         }
 
         /// <summary>
@@ -349,6 +328,10 @@ namespace MakeAuto
                 {
                     string line;
 
+                    // 读取修改单列表
+                    while ((line = sr.ReadLine()) != null && line.IndexOf("修 改 单： ") < 0)
+                        ;
+                    ap.AmendList = line.Replace("修 改 单： ", string.Empty).Trim();
 
                     // 读到时停止
                     while ((line = sr.ReadLine()) != null && line.IndexOf("集成注意：") < 0)
@@ -603,7 +586,13 @@ namespace MakeAuto
                 if (c.ctype == ComType.Ssql)
                     continue;
 
-                if (c.ctype == ComType.SO || c.ctype == ComType.Sql || c.ctype == ComType.Xml) // 
+                if (c.cname == "HsSettle.exe" || c.cname == "HsBkSettle.exe")
+                {
+                    string temp = @"HsSettle\trunk\Sources\ClientCom\" + Path.GetFileNameWithoutExtension(c.cname) + "\\";
+                    f.LocalPath = ap.svn.Workspace + "\\" + temp;
+                    f.UriPath = ap.svn.Server + "/" + temp.Replace('\\', '/');
+                }
+                else if (c.ctype == ComType.SO || c.ctype == ComType.Sql || c.ctype == ComType.Xml) // 
                 {
                     string temp = @"HSTRADES11\trunk\Documents\D2.Designs\详细设计\后端\";
                     f.LocalPath = ap.svn.Workspace + "\\" + temp + c.path;
@@ -614,6 +603,8 @@ namespace MakeAuto
                 {
                     if (c.path[0] != '\\')
                         c.path = "\\" + c.path;
+                    if (c.path[c.path.Length - 1] != '\\')
+                        c.path = c.path + "\\";
                     f.LocalPath = ap.svn.Workspace + @"\HSTRADES11\trunk" + c.path + c.cname;
                     f.UriPath = ap.svn.Server + @"/HSTRADES11/trunk" + c.path.Replace('\\', '/') + c.cname.Replace('\\', '/');
                 }
@@ -622,12 +613,47 @@ namespace MakeAuto
                     // 如果第一个不是路径分隔符号，那么补路径分隔符号
                     if (c.path[0] != '\\')
                         c.path = "\\" + c.path;
+                    if (c.path[c.path.Length - 1] != '\\')
+                        c.path = c.path + "\\";
                     f.LocalPath = ap.svn.Workspace + @"\HSTRADES11\trunk" + c.path;
                     f.UriPath = ap.svn.Server + @"/HSTRADES11/trunk" + c.path.Replace('\\', '/');
                 }
                 #endregion
             }
             return true;
+        }
+
+        private void ProcessReadMe(AmendPack ap)
+        {
+            // 输出下处理结果
+            log.WriteInfoLog("[递交组件]");
+            foreach (CommitCom c in ap.ComComms)
+            {
+                log.WriteInfoLog("名称：" + c.cname + " "
+                    + "状态：" + Enum.GetName(typeof(ComStatus), c.cstatus) + " "
+                    + "版本：" + c.cver + " "
+                    + "路径：" + c.path);
+                /*
+                if (c.sawfile == null)
+                {
+                    log.WriteInfoLog("本地路径：test__");
+                    log.WriteInfoLog("SAW路径：test__");
+                }
+                else
+                {
+                    log.WriteInfoLog("本地路径：" + c.sawfile.LocalPath);
+                    log.WriteInfoLog("SAW路径：" + c.sawfile.SAWPath);
+                }
+                 * */
+            }
+            log.WriteInfoLog("[配置库文件]");
+            foreach (SAWFile s in ap.SAWFiles)
+            {
+                log.WriteInfoLog("路径：" + s.Path + " "
+                    + "本地路径：" + s.LocalPath + " "
+                    + "SvnUri：" + s.UriPath + " "
+                    + "文件状态：" + Enum.GetName(typeof(FileStatus), s.fstatus));
+            }
         }
 
         private bool AddToComs(AmendPack ap, CommitCom c)
@@ -850,6 +876,7 @@ namespace MakeAuto
                 svn.Path = s.LocalPath;
                 svn.Uri = s.UriPath;
                 svn.AmendNo = ap.AmendNo;
+                svn.AmendList = ap.AmendList;
                 svn.Version = s.Version;
                 // 检出失败，退出循环
                 Result = svn.GetAmendCode();
@@ -868,7 +895,7 @@ namespace MakeAuto
             get { return _tip; }
         }
 
-        public bool _tip = true;
+        public bool _tip = false;
     }
 
     /// <summary>
@@ -929,10 +956,16 @@ namespace MakeAuto
                     // 确认Delphi版本
                     int dVer = GetDelphiVer(c.cname);
                     // 确定工程名称
-                    string dPro = c.sawfile.LocalPath + Path.GetFileNameWithoutExtension(c.cname) + ".dpr";
+                    string dPro = Path.Combine(c.sawfile.LocalPath, Path.GetFileNameWithoutExtension(c.cname) + ".dpr");
                     Result = CompileDpr(dVer, dPro, ap.SCMAmendDir);
                     if (Result == false)
                         break;
+                    
+                    // 对于delphi 5 编译输出，可能会生成MAP文件，删除掉生成的MAP文件
+                    if (File.Exists(Path.Combine(ap.SCMAmendDir, Path.GetFileNameWithoutExtension(c.cname) + ".map")))
+                    {
+                        File.Delete(Path.Combine(ap.SCMAmendDir, Path.GetFileNameWithoutExtension(c.cname) + ".map"));
+                    }
                 }
                 else if (c.ctype == ComType.SO || c.ctype == ComType.Sql)
                 {
@@ -964,21 +997,26 @@ namespace MakeAuto
             p.Start();
 
             string strOutput = p.StandardOutput.ReadToEnd();
-            
+            // 输出最后几行
+            string[] strArr = Regex.Split(strOutput, "\r");
+            log.WriteFileLog("[编译命令] " + p.StartInfo.FileName + p.StartInfo.Arguments);
+            log.WriteFileLog("[编译日志]");
             if (strOutput.IndexOf("Complile Failed") >= 0)
             {
                 Result = false;
-                // 输出最后几行
-                string[] strArr = Regex.Split(strOutput, "\r");
-                log.WriteErrorLog(strArr[strArr.Length - 3]); // 输出最后一行报错信息
+                log.WriteErrorLog(strArr[strArr.Length - 3].Replace('\n', ' '));  // 输出最后一行报错信息
+                log.WriteErrorLog(strArr[strArr.Length - 2].Replace('\n', ' '));
+                log.WriteFileLog("编译输出：");
+                log.WriteFileLog(strOutput);
             }
-            log.WriteFileLog("[编译日志]");
-            log.WriteFileLog("[编译命令] " + p.StartInfo.FileName + p.StartInfo.Arguments);
-            log.WriteFileLog("[Delphi版本] " + dVer.ToString());
-            log.WriteFileLog("[工程] " + dPro);
-            log.WriteFileLog("[输出目录] " + outdir);
-            log.WriteFileLog(strOutput);
-            log.WriteFileLog("[编译日志结束]");
+            else
+            {
+                log.WriteFileLog(strArr[strArr.Length - 4].Replace('\n', ' '));
+                log.WriteFileLog(strArr[strArr.Length - 3].Replace('\n', ' '));
+                log.WriteFileLog(strArr[strArr.Length - 2].Replace('\n', ' '));
+            }
+          
+            log.WriteFileLog("[编译结束]");
             p.WaitForExit();
             p.Close();
 
@@ -1245,6 +1283,11 @@ namespace MakeAuto
             }
         }
 
+        public override bool Tip
+        {
+            get { return _tip; }
+        }
+
         public bool _tip = false;
     }
 
@@ -1343,7 +1386,7 @@ namespace MakeAuto
             // 此时，文件夹的组件已完成，对文件夹压包处理
             // 需要把递交组件和src分别压包，这个与开发递交的组件不同
             // 检查是否存在源代码
-            bool SrcFlag = false;
+            bool SrcFlag = false, result = true;
             foreach (CommitCom c in ap.ComComms)
             {
                 if (c.ctype == ComType.SO)  // 交了SO，一定要存在源代码 
@@ -1376,22 +1419,39 @@ namespace MakeAuto
                         + ap.SCMAmendDir + "\\" + "*.h " + ap.SCMAmendDir + "\\" + "*.pc "
                         + ap.SCMAmendDir + "\\" + "*.cpp " + ap.SCMAmendDir + "\\" + "*.gcc ";   // 设置执行参数  
 
+                    log.WriteFileLog(p.StartInfo.FileName + " " + p.StartInfo.Arguments);
+
                     p.Start();    // 启动
 
-                    strOutput = p.StandardOutput.ReadToEnd();        // 从输出流取得命令执行结果
-                    log.WriteFileLog(strOutput);
+                    //strOutput = p.StandardOutput.ReadToEnd();        // 从输出流取得命令执行结果
+                    strOutput = p.StandardError.ReadToEnd();
+                    if (strOutput != string.Empty)
+                    {
+                        result = false;
+                        log.WriteErrorLog(strOutput);
+                    }
 
                     p.WaitForExit();
                 }
 
-                // 打包Pack，替换 压缩.bat 的 a -ep 为 m -ep
-                p.StartInfo.Arguments = " m -ep " + ap.SCMLocalFile + " "
-                    + ap.SCMAmendDir + " " + "-x" +ap.SCMSrcRar;   // 设置执行参数
+                if (result == false)
+                    return result;
 
+                // 打包Pack，替换 压缩.bat 的 a -ep 为 m -ep
+                p.StartInfo.Arguments = " a -ep " + ap.SCMLocalFile + " "
+                    + ap.SCMAmendDir + " " + "-x" +ap.SCMSrcRar;   // 设置执行参数
+                
+                log.WriteFileLog(p.StartInfo.FileName + " " + p.StartInfo.Arguments);
+                
                 p.Start();    // 启动
 
-                strOutput = p.StandardOutput.ReadToEnd();        // 从输出流取得命令执行结果
-                log.WriteFileLog(strOutput);
+                //strOutput = p.StandardOutput.ReadToEnd();        // 从输出流取得命令执行结果
+                strOutput = p.StandardError.ReadToEnd();
+                if (strOutput != string.Empty)
+                {
+                    result = false;
+                    log.WriteErrorLog(strOutput);
+                }
 
                 p.WaitForExit();
 
@@ -1402,7 +1462,7 @@ namespace MakeAuto
                 log.WriteErrorLog("执行rar失败" + ex.Message);
             }
 
-            return true;
+            return result;
         }
 
         public override bool Tip
