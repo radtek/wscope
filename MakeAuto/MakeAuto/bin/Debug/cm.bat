@@ -31,7 +31,7 @@ set DCUDir=E:\06trade\HSTRADES11\trunk\Sources\ClientCom\Obj
 if "%DelphiVer%"=="6" goto D6
 :D5
 set DCC=%DCC5%
-set UPath=%Platform10%%Lzrw1_5%%DOA5%
+set UPath=%Platform10%%Lzrw1_5%%DOA5%%HsControls%
 set LUPackage=Platform10
 goto Make
 

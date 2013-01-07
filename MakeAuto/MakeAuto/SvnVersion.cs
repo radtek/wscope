@@ -25,7 +25,7 @@ namespace MakeAuto
         {
             Boolean Result = false;
             log.WriteLog("获取修改单代码文件，修改单号:" + AmendNo + "，文件版本：" + Version +
-                " SvnURI：" + Uri + " 本地路径：" + Path);
+                " SvnUri：" + Uri + " 本地路径：" + Path);
 
             uritarget = new SvnUriTarget(Uri);
             pathtarget = new SvnPathTarget(Path);
@@ -69,10 +69,13 @@ namespace MakeAuto
             client.GetLog(uritarget.Uri, arg, out logs);
 
             SvnLogEventArgs l = null;
+            string mend, logmsg;
             foreach (SvnLogEventArgs g in logs)
             {
-                // 20111215020-V6.1.4.10-V1
-                if (g.LogMessage.Trim().IndexOf(AmendNo + "-" + Version) >= 0)
+                logmsg = g.LogMessage.Trim();
+                mend = logmsg.Substring(0, logmsg.IndexOf('-'));
+                // 20111215020-V6.1.4.10-V1，考虑多个修改单递交，文件的修改单号可能不是主修改单号，从修改单列表中检索
+                if (logmsg.IndexOf(Version) >= 0 && AmendList.IndexOf(mend) >= 0)
                 {
                     l = g;
                     break;
@@ -108,14 +111,10 @@ namespace MakeAuto
             return Result;
         }
 
-        public Boolean GetAmendCode(string AmendNo, string Version)
-        {
-            return GetAmendCode();
-        }
-
         public string Path { get; set; }
         public string Uri { get; set; }
         public string AmendNo { get; set; }
+        public string AmendList;
         public string Version { get; set; }
         public string Amend { get; set; }
         public string Name { get; set; }

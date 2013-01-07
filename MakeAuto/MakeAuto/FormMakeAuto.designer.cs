@@ -309,7 +309,7 @@
             // label8
             // 
             this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(140, 107);
+            this.label8.Location = new System.Drawing.Point(135, 124);
             this.label8.Name = "label8";
             this.label8.Size = new System.Drawing.Size(53, 12);
             this.label8.TabIndex = 26;
@@ -317,7 +317,7 @@
             // 
             // txtScmVer
             // 
-            this.txtScmVer.Location = new System.Drawing.Point(194, 102);
+            this.txtScmVer.Location = new System.Drawing.Point(189, 119);
             this.txtScmVer.Name = "txtScmVer";
             this.txtScmVer.ReadOnly = true;
             this.txtScmVer.Size = new System.Drawing.Size(66, 21);
@@ -326,7 +326,7 @@
             // label7
             // 
             this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(11, 105);
+            this.label7.Location = new System.Drawing.Point(6, 122);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(53, 12);
             this.label7.TabIndex = 24;
@@ -334,7 +334,7 @@
             // 
             // txtSubmitVer
             // 
-            this.txtSubmitVer.Location = new System.Drawing.Point(65, 100);
+            this.txtSubmitVer.Location = new System.Drawing.Point(65, 117);
             this.txtSubmitVer.Name = "txtSubmitVer";
             this.txtSubmitVer.ReadOnly = true;
             this.txtSubmitVer.Size = new System.Drawing.Size(66, 21);
@@ -360,9 +360,10 @@
             // txbCommitPath
             // 
             this.txbCommitPath.Location = new System.Drawing.Point(65, 73);
+            this.txbCommitPath.Multiline = true;
             this.txbCommitPath.Name = "txbCommitPath";
             this.txbCommitPath.ReadOnly = true;
-            this.txbCommitPath.Size = new System.Drawing.Size(261, 21);
+            this.txbCommitPath.Size = new System.Drawing.Size(261, 38);
             this.txbCommitPath.TabIndex = 20;
             // 
             // label4
@@ -389,7 +390,7 @@
             this.txbAmenNo.Name = "txbAmenNo";
             this.txbAmenNo.Size = new System.Drawing.Size(121, 21);
             this.txbAmenNo.TabIndex = 12;
-            this.txbAmenNo.Text = "20121228036";
+            this.txbAmenNo.Text = "20130104096";
             // 
             // btnReadInfo
             // 
