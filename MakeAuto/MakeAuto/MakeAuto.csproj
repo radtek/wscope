@@ -131,6 +131,10 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="AutoUpdater.NET, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\Release\AutoUpdater.NET.dll</HintPath>
+    </Reference>
     <Reference Include="ChnCharInfo">
       <HintPath>bin\Release\ChnCharInfo.dll</HintPath>
     </Reference>
