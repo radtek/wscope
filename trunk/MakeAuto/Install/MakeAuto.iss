@@ -30,10 +30,11 @@ AllowNoIcons=true
 OutputBaseFilename=setup
 Compression=lzma/Max
 SolidCompression=true
-VersionInfoVersion=1.0.0.0
 VersionInfoCompany=Hundsun
 VersionInfoDescription=MakeAuto
 VersionInfoProductName=MakeAuto
+VersionInfoVersion=1.0.0.0
+VersionInfoTextVersion=1.0.0.0
 VersionInfoProductVersion=1.0.0.0
 
 [Tasks]
@@ -53,6 +54,7 @@ Source: E:\MakeAuto\MakeAuto\bin\Release\MakeAuto.vshost.exe.manifest; DestDir: 
 Source: E:\MakeAuto\MakeAuto\bin\Release\edtFTPnet.dll; DestDir: {app}; 
 Source: E:\MakeAuto\MakeAuto\bin\Release\ChnCharInfo.dll; DestDir: {app}; 
 Source: E:\MakeAuto\MakeAuto\bin\Release\Renci.SshNet.dll; DestDir: {app}; 
+Source: E:\MakeAuto\MakeAuto\bin\Release\AutoUpdater.NET.dll; DestDir: {app}; 
 Source: E:\MakeAuto\MakeAuto\bin\Release\SharpPlink-Win32.svnExe; DestDir: {app}; 
 Source: E:\MakeAuto\MakeAuto\bin\Release\SharpSvn.dll; DestDir: {app}; 
 Source: E:\MakeAuto\MakeAuto\bin\Release\SharpSvn-DB44-20-win32.dll; DestDir: {app}; 

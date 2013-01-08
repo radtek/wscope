@@ -7,6 +7,7 @@ using System.Diagnostics;
 using Renci.SshNet;
 using SharpSvn;
 using System.Collections.Generic;
+using AutoUpdaterDotNET;
 
 namespace MakeAuto
 {
@@ -204,6 +205,8 @@ namespace MakeAuto
                 c.CloseSsh();
                 c.CloseSftp();
             }
+
+            // 执行下文件
         }
 
         private void mniAbout_Click(object sender, EventArgs e)
@@ -339,6 +342,15 @@ namespace MakeAuto
 
             //foreach(sp.Detaildic.key)
             //tbModule.AutoCompleteCustomSource += sp.Detaildic.Keys;
+
+            /* AutoUpdater.Start function takes following Arguments
+             * 1. url of the appcast xml file that specifies download url, changelog url, application Version and title
+             * 2. If you want user to select remind later interval then set lateUserSelectRemindLater as true. If you select true third and fourth arguments will be ignored.
+             * 3. reminderLaterTime is a remind later timespan value if user choose Remind Later.
+             * 4. reminderLaterTimeFormat is a time format enum that specifies if you want to take remind later time span value as minutes, hours or days.
+             * AutoUpdater.Start(string appcastURL, bool lateUserSelectRemindLater, int reminderLaterTime, int reminderLaterTimeFormat)
+            */
+            AutoUpdater.Start("http://192.168.185.89/makeauto/MA_AppCast.xml", true);
         }
 
         private void tbModule_TextChanged(object sender, EventArgs e)
