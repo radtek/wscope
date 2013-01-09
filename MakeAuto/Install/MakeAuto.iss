@@ -36,34 +36,34 @@ VersionInfoProductName=MakeAuto
 VersionInfoVersion=1.0.0.0
 VersionInfoTextVersion=1.0.0.0
 VersionInfoProductVersion=1.0.0.0
+AllowUNCPath=False
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked; OnlyBelowVersion: 0,6.1
 
 [Languages]
-Name: english; MessagesFile: "D:\Program Files\Inno Setup 5\Default.isl";
+Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
-Source: E:\MakeAuto\MakeAuto\bin\Release\MakeAuto.exe; DestDir: {app}; Flags: ignoreversion; Tasks: "desktopicon quicklaunchicon"; 
-; NOTE: Don't use "Flags: ignoreversion" on any shared system files
-Source: E:\MakeAuto\MakeAuto\bin\Release\MakeAuto.exe.config; DestDir: {app}; 
-Source: E:\MakeAuto\MakeAuto\bin\Release\MakeAuto.vshost.exe; DestDir: {app}; 
-Source: E:\MakeAuto\MakeAuto\bin\Release\MakeAuto.vshost.exe.config; DestDir: {app}; 
-Source: E:\MakeAuto\MakeAuto\bin\Release\MakeAuto.vshost.exe.manifest; DestDir: {app}; 
-Source: E:\MakeAuto\MakeAuto\bin\Release\edtFTPnet.dll; DestDir: {app}; 
-Source: E:\MakeAuto\MakeAuto\bin\Release\ChnCharInfo.dll; DestDir: {app}; 
-Source: E:\MakeAuto\MakeAuto\bin\Release\Renci.SshNet.dll; DestDir: {app}; 
-Source: E:\MakeAuto\MakeAuto\bin\Release\AutoUpdater.NET.dll; DestDir: {app}; 
-Source: E:\MakeAuto\MakeAuto\bin\Release\SharpPlink-Win32.svnExe; DestDir: {app}; 
-Source: E:\MakeAuto\MakeAuto\bin\Release\SharpSvn.dll; DestDir: {app}; 
-Source: E:\MakeAuto\MakeAuto\bin\Release\SharpSvn-DB44-20-win32.dll; DestDir: {app}; 
-Source: E:\MakeAuto\MakeAuto\bin\Release\SharpSvn-Sasl21-23-win32.dll; DestDir: {app}; 
-Source: E:\MakeAuto\MakeAuto\bin\Debug\cm.bat; DestDir: {app}; 
-Source: E:\MakeAuto\MakeAuto\bin\Debug\detail.xml; DestDir: {app}; Flags: onlyifdoesntexist; 
-Source: E:\MakeAuto\MakeAuto\bin\Debug\MAConf.xml; DestDir: {app}; Flags: onlyifdoesntexist; 
-Source: E:\MakeAuto\MakeAuto\bin\Debug\MAConf.xml; DestDir: {app}; DestName: MAConf.xml.eg; 
-Source: E:\MakeAuto\MakeAuto\bin\Release\polyphone.xml; DestDir: {app}; 
+Source: "E:\wscope\trunk\MakeAuto\MakeAuto\bin\Release\MakeAuto.exe"; DestDir: "{app}"
+Source: "E:\wscope\trunk\MakeAuto\MakeAuto\bin\Release\MakeAuto.exe.config"; DestDir: "{app}"
+Source: "E:\wscope\trunk\MakeAuto\MakeAuto\bin\Release\MakeAuto.vshost.exe"; DestDir: "{app}"
+Source: "E:\wscope\trunk\MakeAuto\MakeAuto\bin\Release\MakeAuto.vshost.exe.config"; DestDir: "{app}"
+Source: "E:\wscope\trunk\MakeAuto\MakeAuto\bin\Release\MakeAuto.vshost.exe.manifest"; DestDir: "{app}"
+Source: "E:\wscope\trunk\MakeAuto\MakeAuto\bin\Release\edtFTPnet.dll"; DestDir: "{app}"
+Source: "E:\wscope\trunk\MakeAuto\MakeAuto\bin\Release\ChnCharInfo.dll"; DestDir: "{app}"
+Source: "E:\wscope\trunk\MakeAuto\MakeAuto\bin\Release\Renci.SshNet.dll"; DestDir: "{app}"
+Source: "E:\wscope\trunk\MakeAuto\MakeAuto\bin\Release\AutoUpdater.NET.dll"; DestDir: "{app}"
+Source: "E:\wscope\trunk\MakeAuto\MakeAuto\bin\Release\SharpPlink-Win32.svnExe"; DestDir: "{app}"
+Source: "E:\wscope\trunk\MakeAuto\MakeAuto\bin\Release\SharpSvn.dll"; DestDir: "{app}"
+Source: "E:\wscope\trunk\MakeAuto\MakeAuto\bin\Release\SharpSvn-DB44-20-win32.dll"; DestDir: "{app}"
+Source: "E:\wscope\trunk\MakeAuto\MakeAuto\bin\Release\SharpSvn-Sasl21-23-win32.dll"; DestDir: "{app}"
+Source: "E:\wscope\trunk\MakeAuto\MakeAuto\bin\Release\polyphone.xml"; DestDir: "{app}"
+Source: "E:\wscope\trunk\MakeAuto\MakeAuto\bin\Release\cm.bat"; DestDir: "{app}"; Flags: onlyifdoesntexist
+Source: "E:\wscope\trunk\MakeAuto\MakeAuto\bin\Release\cm.bat"; DestDir: "{app}"; DestName: "cm.bat.eg"
+Source: "E:\wscope\trunk\MakeAuto\MakeAuto\bin\Release\MAConf.xml"; DestDir: "{app}"; Flags: onlyifdoesntexist
+Source: "E:\wscope\trunk\MakeAuto\MakeAuto\bin\Release\MAConf.xml"; DestDir: "{app}"; DestName: "MAConf.xml.eg"
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
@@ -88,6 +88,9 @@ Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChang
 #include "scripts\dotnetfx40client.iss"
 #include "scripts\dotnetfx40full.iss"
 #endif
+
+[LangOptions]
+LanguageID=$0804
 
 [Code]
 function InitializeSetup(): boolean;
