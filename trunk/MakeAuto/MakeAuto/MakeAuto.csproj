@@ -146,12 +146,13 @@
       <EmbedInteropTypes>True</EmbedInteropTypes>
       <HintPath>..\..\..\..\..\..\..\WINDOWS\assembly\GAC_MSIL\Microsoft.Office.Interop.Excel\14.0.0.0__71e9bce111e9429c\Microsoft.Office.Interop.Excel.dll</HintPath>
     </Reference>
-    <Reference Include="Renci.SshNet">
-      <HintPath>..\depbin\Renci.SshNet.dll</HintPath>
+    <Reference Include="Renci.SshNet, Version=0.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\Release\Renci.SshNet.dll</HintPath>
     </Reference>
     <Reference Include="SharpSvn, Version=1.7002.1998.12257, Culture=neutral, PublicKeyToken=d729672594885a28, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\depbin\SharpSvn.dll</HintPath>
+      <HintPath>bin\Release\SharpSvn.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.configuration" />
