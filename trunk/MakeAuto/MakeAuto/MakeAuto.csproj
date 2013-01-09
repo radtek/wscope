@@ -131,15 +131,14 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="AutoUpdater.NET, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>bin\Release\AutoUpdater.NET.dll</HintPath>
+    <Reference Include="AutoUpdater.NET">
+      <HintPath>..\depbin\AutoUpdater.NET.dll</HintPath>
     </Reference>
     <Reference Include="ChnCharInfo">
-      <HintPath>bin\Release\ChnCharInfo.dll</HintPath>
+      <HintPath>..\depbin\ChnCharInfo.dll</HintPath>
     </Reference>
     <Reference Include="edtFTPnet">
-      <HintPath>bin\Release\edtFTPnet.dll</HintPath>
+      <HintPath>..\depbin\edtFTPnet.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Office.Interop.Excel, Version=14.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -148,11 +147,11 @@
     </Reference>
     <Reference Include="Renci.SshNet, Version=0.1.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>bin\Release\Renci.SshNet.dll</HintPath>
+      <HintPath>..\depbin\Renci.SshNet.dll</HintPath>
     </Reference>
     <Reference Include="SharpSvn, Version=1.7002.1998.12257, Culture=neutral, PublicKeyToken=d729672594885a28, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>bin\Release\SharpSvn.dll</HintPath>
+      <HintPath>..\depbin\SharpSvn.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.configuration" />
