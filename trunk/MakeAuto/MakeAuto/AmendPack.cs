@@ -24,6 +24,7 @@ namespace MakeAuto
         Ssql,
         Ini,
         Xml,
+        MenuPatch, // 增值Menu
     }
 
     enum ComStatus
@@ -100,7 +101,9 @@ namespace MakeAuto
             {
                 if (cname.IndexOf("Patch") > -1)
                     ctype = ComType.Patch;
-                else if (cname.IndexOf("小包") > -1 || cname.IndexOf("临时") > -1) // 希望能识别出临时修改单，有时会失效
+                else if (cname.IndexOf("user_") >= 0 && cname.IndexOf("菜单功能") > 0)
+                    ctype = ComType.MenuPatch;
+                else if (cname.IndexOf("小包") > -1 || cname.IndexOf("临时") > -1)// 希望能识别出临时修改单，有时会失效
                     ctype = ComType.Ssql;
                 else ctype = ComType.Sql;
             }
@@ -146,6 +149,10 @@ namespace MakeAuto
             sqlcomm = sqlconn.CreateCommand();
 
             SAWFiles = new SAWFileList();
+
+            SubmitL = new ArrayList();
+            ScmL = new ArrayList();
+            ScmSrc = new ArrayList();
 
             log = OperLog.instance;
 
@@ -212,8 +219,8 @@ namespace MakeAuto
                 while (sqldr.Read())
                 {
                     // 获取数据
-                    ComString = sqldr["reference_stuff"].ToString().Trim();
-                    CommitPath = sqldr["program_path_a"].ToString().Trim();
+                    ComString = sqldr["reference_stuff"].ToString();  // 不 Trim() 以保留最后一个换行给 SetComs 判断用
+                    CommitPath = sqldr["program_path_a"].ToString();
                 }
                   
                 // 从CommitPath中分解递交项和主单号 /融资融券/20111123054-国金短信，分解得到 20111123054
@@ -269,28 +276,24 @@ namespace MakeAuto
             // 查询出的组件是如下的一段
             // config.ini  [V6.1.4.7]  GJShortMessage.dll  [V6.1.4.1]  HsNoticeSvr.exe  [V6.1.4.6] 
             // 需要进行分解，操作如下
-            string name, version, cs = ComString;
+            string name, version, line, cs = ComString;
 
-            int s = 0, e = 0;
-            while (cs.Length > 0)
+            int i = -1, s = 0, e = 0;
+            while ((i = cs.IndexOf("\r\n")) > 0)
             {
-                s = cs.IndexOf("["); // 取第一个版本分隔符号
-                e = cs.IndexOf("]"); // 取版本分隔符号
-                name = cs.Substring(0, s - 1).Trim(); // 程序名称 
-                version = cs.Substring(s + 1, e - s - 1);  // 程序版本
+                line = cs.Substring(0, i);
+                s = line.IndexOf("["); // 取第一个版本分隔符号
+                name = line.Substring(0, s).Trim(); // 程序名称
+
+                s = line.LastIndexOf("[");
+                e = line.LastIndexOf("]"); // 取版本分隔符号
+                version = line.Substring(s + 1, e - s - 1);  // 程序版本
                 CommitCom c = new CommitCom(name, version);
                 // 添加组件
                 ComComms.Add(c);
 
                 // 取剩余递交项
-                if (e < cs.Length - 1)
-                {
-                    cs = cs.Substring(e + 1).Trim();
-                }
-                else
-                {
-                    cs = "";
-                }
+                cs = cs.Substring(i + 2);
             }
         }
 
@@ -363,10 +366,6 @@ namespace MakeAuto
             FTPConnection ftp = MAConf.instance.ftp;
             FtpConf fc = MAConf.instance.fc;
             string s;
-            ArrayList SubmitL, ScmL;
-
-            SubmitL = new ArrayList();
-            ScmL = new ArrayList();
 
             // 强制重新连接，防止时间长了就断掉了
             if (ftp.IsConnected == false)
@@ -402,13 +401,15 @@ namespace MakeAuto
             // 获取当前的版本信息，先标定版本信息
             SubmitL.Clear();
             ScmL.Clear();
+            ScmSrc.Clear();
             foreach (string f in files) //查找子目录
             {
                 // 跳过 src-V*.rar 之类的东东
-                if (f.IndexOf(MainNo) < 0)
+                if (f.IndexOf("集成-src-V") >= 0 || f.IndexOf("集成-Src-V") >= 0)
+                    ScmSrc.Add(f);
+                else if (f.IndexOf(MainNo) < 0)
                     continue;
-
-                if (f.IndexOf("集成") == 0)
+                else if (f.IndexOf("集成") == 0)
                     ScmL.Add(f);
                 else
                     SubmitL.Add(f);
@@ -430,20 +431,6 @@ namespace MakeAuto
                 SubmitVer = 0;
             }
 
-            // 决定是新集成还是修复集成还是重新集成
-            if (SCMLastVer == 0)
-            {
-                scmtype = ScmType.NewScm;
-            }
-            else if (SCMLastVer == SubmitVer)
-            {
-                scmtype = ScmType.ReScm;
-            }
-            else if (SCMLastVer < SubmitVer)
-            {
-                scmtype = ScmType.BugScm;  // 修复集成
-            }
-
             string dir = Path.GetFileNameWithoutExtension(currVerFile);
 
             //AmendDir = LocalDir + "\\" + dir;
@@ -460,7 +447,7 @@ namespace MakeAuto
             SCMSrcRar = SCMAmendDir + "\\" + "集成-src-V" + ScmVer.ToString() + ".rar";
 
             // 生成一些上次集成的变量，需要把上次的覆盖到本次来
-            if (ScmL.Count > 0)
+            if (ScmL.Count > 1)
             {
                 ScmL.Sort();
                 s = ScmL[ScmL.Count - 1].ToString();
@@ -468,16 +455,36 @@ namespace MakeAuto
                 // 上次数据
                 SCMLastAmendDir = LocalDir + "\\" + dir;
                 SCMLastLocalFile = SCMLastAmendDir + "\\" + s;
+                ScmLastRemoteFile = RemoteDir + "\\" + s;
 
                 // 取递交版本号 
                 // 20111207012-委托管理-高虎-20120116-V13.rar --> 20111207012-委托管理-高虎-20120116-V13 -> 13
                 s = s.Substring(0, s.LastIndexOf('.'));
                 SCMLastVer = int.Parse(s.Substring(s.LastIndexOf('V') + 1));
-                SCMLastSrcRar = SCMLastAmendDir + "\\" + "集成-src-V" + SCMLastVer.ToString() + ".rar";
+                SCMLastLocalSrcRar = SCMLastAmendDir + "\\" + "集成-src-V" + SCMLastVer.ToString() + ".rar";
+                ScmLastRemoteSrcRar = RemoteDir + "\\" + "集成-src-V" + SCMLastVer.ToString() + ".rar";
             }
             else
             {
                 SCMLastVer = 0;
+            }
+
+            if (ScmSrc.Count > 0)
+            {
+                ScmSrc.Sort();
+                s = ScmSrc[ScmSrc.Count - 1].ToString();
+                SCMLastLocalSrcRar = SCMLastAmendDir + "\\" + s;
+                ScmLastRemoteSrcRar = RemoteDir + "\\" +s;
+            }
+
+            // 决定是新集成还是修复集成还是重新集成
+            if (ScmVer == 0 || (ScmVer == 1 && SubmitVer == 1))  // 第一次集成
+            {
+                scmtype = ScmType.NewScm;
+            }
+            else if (SCMLastVer <= SubmitVer) // 重新集成也当成修复集成
+            {
+                scmtype = ScmType.BugScm;  // 修复集成
             }
             #endregion
 
@@ -535,7 +542,7 @@ namespace MakeAuto
         public int SCMLastVer { get; private set; }
         public string SCMLastAmendDir { get; private set; }
         public string SCMLastLocalFile { get; private set; }
-        public string SCMLastSrcRar { get; private set; }
+        public string SCMLastLocalSrcRar { get; private set; }
 
         // 修改单递交组件，以字符串对象和对象两种形态体现，调整字符串对象为私有（主要是使用不方便）
         public string ComString {get; private set;}
@@ -566,5 +573,12 @@ namespace MakeAuto
 
         public string DiffDir { get; private set; }
         private OperLog log;
+
+        public ArrayList SubmitL;
+        public ArrayList ScmL;
+        public ArrayList ScmSrc;
+
+        public string ScmLastRemoteFile;
+        public string ScmLastRemoteSrcRar;
     }
 }

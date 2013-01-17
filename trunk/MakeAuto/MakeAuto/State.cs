@@ -195,26 +195,25 @@ namespace MakeAuto
                 return false;
             }
 
-            // 集成包不需要下载，使用本地文件夹处理
-            /*
-            string scmfile, scmremote, scmdir;
-            foreach (string s in ap.ScmL)
+            // 集成包应该不需要下载，本地文件夹中应该已经存在；这里为了我自己模拟，下载上次的集成包
+            if (ap.scmtype == ScmType.BugScm && !File.Exists(ap.SCMLastLocalFile) && ftp.Exists(ap.ScmLastRemoteFile))
             {
-                scmfile = ap.LocalDir + "\\" + s;
-                scmremote = ap.RemoteDir + "\\" + s;
-                if (!File.Exists(scmfile))
+                // 下载递交包
+                if (!Directory.Exists(ap.SCMLastAmendDir))
                 {
-                    ftp.DownloadFile(scmfile, scmremote);
+                    Directory.CreateDirectory(ap.SCMLastAmendDir);
                 }
 
-                // 如果没有对应的文件夹，那么需要解压缩文件夹
-                scmdir = ap.LocalDir + "\\" + Path.GetFileNameWithoutExtension(scmfile);
-                if (!Directory.Exists(scmdir))
+                ftp.DownloadFile(ap.SCMLastLocalFile, ap.ScmLastRemoteFile); 
+                UnRar(ap.SCMLastLocalFile, ap.SCMLastAmendDir);
+
+                if (ap.scmtype == ScmType.BugScm && !File.Exists(ap.SCMLastLocalSrcRar) && ftp.Exists(ap.ScmLastRemoteSrcRar))
                 {
-                    UnRar(scmfile, scmdir);
+                    ftp.DownloadFile(ap.SCMLastLocalSrcRar, ap.ScmLastRemoteSrcRar);
+                    UnRar(ap.SCMLastLocalSrcRar, ap.SCMLastAmendDir);
                 }
             }
-             * */
+
             return true;
         }
         
@@ -486,6 +485,7 @@ namespace MakeAuto
                 return true;
             }
 
+            bool deleteCom = false, havechange = false;
             // 读取readme，重新集成，由于小球上查询的数据库记录的信息可能不对，需要根据readme的作准
             try
             {
@@ -506,6 +506,8 @@ namespace MakeAuto
                     // 处理递交的组件
                     while ((line = sr.ReadLine()) != null && line.IndexOf("集成注意：") < 0)
                     {
+                        c = null;
+
                         // 跳过空行
                         if (line.Trim() == string.Empty)
                             continue;
@@ -523,22 +525,23 @@ namespace MakeAuto
                         version = line.Substring(index + 1, index1 - index - 1);
                         des = line.Substring(index1 + 1).Trim();
 
-                        // 这里如果返回了两个或者没找到，那就是有异常
-                        c = ap.ComComms[name];
-                        if (c == null)
-                        {
-                            log.WriteErrorLog("ProcessMods未能找到组件");
-                            ap.scmstatus = ScmStatus.Error;
-                            return false;
-                        }
-
+                        // ProcessComms 生成的组件不包含已删除的组件，这里需要跳过此类文件
                         if (des.IndexOf("本次取消") >= 0)
                         {
-                            c.cstatus = ComStatus.Delete;
+                            deleteCom = true;
+                            continue;
                         }
                         else
                         {
-                            c.cstatus = ComStatus.Modify;
+                            c = ap.ComComms[name];
+                            if (c == null)
+                            {
+                                log.WriteErrorLog("ProcessMods未能找到组件 " + name);
+                                ap.scmstatus = ScmStatus.Error;
+                                return false;
+                            }
+                            c.cstatus = ComStatus.Modify;  // 新增和修改都作为修改处理
+                            havechange = true;
                         }
                     }
                 }
@@ -546,6 +549,14 @@ namespace MakeAuto
             catch (Exception ex)
             {
                 log.WriteErrorLog("ProcessMods异常 ReadMe:" + ap.Readme + " " + ex.Message);
+                return false;
+            }
+
+            // 检查是否有变更，对于Bug集成，如果没有任何修改，无法集成
+            if (ap.scmtype == ScmType.BugScm && havechange == false && deleteCom == false)
+            {
+                log.WriteErrorLog("木有修改，也木有删除，还是个 V" + ap.ScmVer.ToString() + "你让人家咋集成 ?");
+                ap.scmstatus = ScmStatus.Error;
                 return false;
             }
 
@@ -599,7 +610,7 @@ namespace MakeAuto
                     f.UriPath = ap.svn.Server + "/"+ temp.Replace('\\', '/') + c.path.Replace('\\', '/');
 
                 }
-                else if (c.ctype == ComType.Patch || c.ctype == ComType.Ini)
+                else if (c.ctype == ComType.Patch || c.ctype == ComType.Ini || c.ctype == ComType.MenuPatch)
                 {
                     if (c.path[0] != '\\')
                         c.path = "\\" + c.path;
@@ -633,19 +644,8 @@ namespace MakeAuto
                     + "状态：" + Enum.GetName(typeof(ComStatus), c.cstatus) + " "
                     + "版本：" + c.cver + " "
                     + "路径：" + c.path);
-                /*
-                if (c.sawfile == null)
-                {
-                    log.WriteInfoLog("本地路径：test__");
-                    log.WriteInfoLog("SAW路径：test__");
-                }
-                else
-                {
-                    log.WriteInfoLog("本地路径：" + c.sawfile.LocalPath);
-                    log.WriteInfoLog("SAW路径：" + c.sawfile.SAWPath);
-                }
-                 * */
             }
+
             log.WriteInfoLog("[配置库文件]");
             foreach (SAWFile s in ap.SAWFiles)
             {
@@ -788,10 +788,10 @@ namespace MakeAuto
                                 st += s;
                                 st += " ";
                             }
-                            log.WriteInfoLog("解压缩源文件，源文件夹：" + ap.SCMLastSrcRar + "， "
+                            log.WriteInfoLog("解压缩源文件，源文件夹：" + ap.SCMLastLocalSrcRar + "， "
                                 + "文件：" + st + "， "
                                 + "目标文件夹：" + ap.SCMAmendDir);
-                            UnRar(ap.SCMLastSrcRar, ap.SCMAmendDir, st);
+                            UnRar(ap.SCMLastLocalSrcRar, ap.SCMAmendDir, st);
                         }
                     }
                     // 如果是删除的，那么删除文件（对于so，需要删除src文件），
@@ -842,7 +842,8 @@ namespace MakeAuto
 
         public override bool DoWork(AmendPack ap)
         {
-            
+            // 如果递交包里没有任何变动记录，而且不是第一次集成，修改单退回
+
             return true;
         }
 
@@ -1298,7 +1299,7 @@ namespace MakeAuto
     {
         public override string StateName
         {
-            get { return "转移源文件，生成So"; }
+            get { return "转移源文件，生成中间件"; }
         }
 
         public override bool DoWork(AmendPack ap)

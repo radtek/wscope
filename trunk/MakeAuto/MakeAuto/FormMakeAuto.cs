@@ -481,5 +481,18 @@ namespace MakeAuto
             }
         }
 
+        private void txbAmenNo_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                btnReadInfo_Click(sender, e);
+
+                if (btnFlow.Enabled == true)
+                {
+                    btnFlow.Focus();
+                }
+            }
+        }
+
     }
 }
