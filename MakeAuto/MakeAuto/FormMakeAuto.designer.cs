@@ -390,7 +390,8 @@
             this.txbAmenNo.Name = "txbAmenNo";
             this.txbAmenNo.Size = new System.Drawing.Size(121, 21);
             this.txbAmenNo.TabIndex = 12;
-            this.txbAmenNo.Text = "20130104096";
+            this.txbAmenNo.Text = "20130108039";
+            this.txbAmenNo.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txbAmenNo_KeyDown);
             // 
             // btnReadInfo
             // 
@@ -676,6 +677,7 @@
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "frmMakeAuto";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "MakeAuto";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.frmMakeAuto_FormClosed);
             this.Load += new System.EventHandler(this.frmMakeAuto_Load);
