@@ -25,6 +25,7 @@ namespace MakeAuto
         Ini,
         Xml,
         MenuPatch, // 增值Menu
+        FuncXml,
     }
 
     enum ComStatus
@@ -77,7 +78,7 @@ namespace MakeAuto
         // 版本
         public string cver;
         // 类型
-        public ComType ctype {get; private set;}
+        public ComType ctype {get; set;}
         
         // 对应 源代码路径，这个就是小球里的源代码路径
         public string path;
@@ -93,7 +94,7 @@ namespace MakeAuto
             cname = name;
             cver = version;
             cstatus = status;
-            path = "";
+            path = string.Empty;
 
             if (cname.IndexOf("libs") > -1)
                 ctype = ComType.SO;
@@ -114,7 +115,9 @@ namespace MakeAuto
             else if (cname.IndexOf("ini") > -1)
                 ctype = ComType.Ini;
             else if (cname.IndexOf("xml") > -1)
+            {
                 ctype = ComType.Xml;
+            }
         }
     }
 

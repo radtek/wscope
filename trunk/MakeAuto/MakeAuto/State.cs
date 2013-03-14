@@ -362,7 +362,7 @@ namespace MakeAuto
             // 如果集成注意不为空，那么提示用户先处理集成注意
             if (notice.Count > 0)
             {
-                string s = "Readme中有如下集成注意，请在处理完成后点击确定继续：";
+                string s = "Readme中有如下集成注意，请在处理完成后点击确定继续\n【注意：如果刷新了详细设计说明书文件，请退出程序重启！】：";
                 foreach(string t in notice)
                 {
                     s += "\r\n" + t;
@@ -427,6 +427,11 @@ namespace MakeAuto
                         else
                         {
                             c.path = "";
+                        }
+
+                        if ( c.ctype == ComType.Xml && (Path.GetExtension(c.path) == ".xls"))
+                        {
+                            c.ctype = ComType.FuncXml;
                         }
 
                         if (c.ctype == ComType.SO)
@@ -603,12 +608,11 @@ namespace MakeAuto
                     f.LocalPath = ap.svn.Workspace + "\\" + temp;
                     f.UriPath = ap.svn.Server + "/" + temp.Replace('\\', '/');
                 }
-                else if (c.ctype == ComType.SO || c.ctype == ComType.Sql || c.ctype == ComType.Xml) // 
+                else if (c.ctype == ComType.SO || c.ctype == ComType.Sql || c.ctype == ComType.Xml || c.ctype == ComType.FuncXml) // 
                 {
                     string temp = @"HSTRADES11\trunk\Documents\D2.Designs\详细设计\后端\";
                     f.LocalPath = ap.svn.Workspace + "\\" + temp + c.path;
                     f.UriPath = ap.svn.Server + "/"+ temp.Replace('\\', '/') + c.path.Replace('\\', '/');
-
                 }
                 else if (c.ctype == ComType.Patch || c.ctype == ComType.Ini || c.ctype == ComType.MenuPatch)
                 {
@@ -616,8 +620,14 @@ namespace MakeAuto
                         c.path = "\\" + c.path;
                     if (c.path[c.path.Length - 1] != '\\')
                         c.path = c.path + "\\";
-                    f.LocalPath = ap.svn.Workspace + @"\HSTRADES11\trunk" + c.path + c.cname;
-                    f.UriPath = ap.svn.Server + @"/HSTRADES11/trunk" + c.path.Replace('\\', '/') + c.cname.Replace('\\', '/');
+                    
+                    // 对于PATCH，INI 文件，制定路径名称为主键，否则出现两个递交在 \\证券下的PATCH，就认为是同一个了
+                    c.path = c.path + c.cname;
+                    f.Path = c.path;
+                    
+                    f.LocalPath = ap.svn.Workspace + @"\HSTRADES11\trunk" + c.path;
+                    f.UriPath = ap.svn.Server + @"/HSTRADES11/trunk" + c.path.Replace('\\', '/');
+
                 }
                 else
                 {
@@ -886,6 +896,7 @@ namespace MakeAuto
                     break;
                 }
                 s.fstatus = FileStatus.New;
+                s.LastModTime = svn.pathinfo.LastChangeTime;
             }
 
             return Result;
@@ -916,6 +927,7 @@ namespace MakeAuto
             bool Result = true;
             foreach (CommitCom c in ap.ComComms)
             {
+                log.WriteLog("处理：" + c.cname);
                 // 小包直接跳过
                 if (c.ctype == ComType.Ssql)
                 {
@@ -931,7 +943,8 @@ namespace MakeAuto
                     continue;
 
                 // Patch 和 Ini 刷下来，拷贝过去就可以
-                else if (c.ctype == ComType.Patch || c.ctype == ComType.Ini)
+                else if (c.ctype == ComType.Patch || c.ctype == ComType.Ini || c.ctype == ComType.Xml 
+                    || c.ctype == ComType.MenuPatch)
                 {
                     // 去除文件只读属性，否则复制时不能覆盖
                     FileAttributes attributes = File.GetAttributes(Path.Combine(ap.SCMAmendDir, c.cname));
@@ -972,6 +985,19 @@ namespace MakeAuto
                 {
                     // 这里不能并发执行，有可能锁住Excel，可能只能等待执行
                     Result = CompileExcel(c.ctype, c.cname, ap.DiffDir);
+                    if (Result == false)
+                        break;
+                }
+                else if (c.ctype == ComType.FuncXml)
+                {
+                    // 这里不能并发执行，有可能锁住Excel，可能只能等待执行
+                    Result = CompileExcel(c.ctype, c.cname, ap.SCMAmendDir);
+                    // 删除掉生成的Files.txt文件
+                    if (File.Exists(Path.Combine(ap.SCMAmendDir, "Files.txt")))
+                    {
+                        File.Delete(Path.Combine(ap.SCMAmendDir, "Files.txt"));
+                    }
+
                     if (Result == false)
                         break;
                 }
@@ -1055,6 +1081,11 @@ namespace MakeAuto
                 m = MacroType.SQL;
                 d = MAConf.instance.Dls.FindBySql(cname);
             }
+            else if (ctype == ComType.FuncXml)
+            {
+                m = MacroType.FuncXml;
+                d = MAConf.instance.Dls.FindByXml(cname);
+            }
             else
             {
                 return true;
@@ -1062,7 +1093,7 @@ namespace MakeAuto
 
             if (d == null)
             {
-                log.WriteErrorLog("查找不对对应的详细设计说明书模块！");
+                log.WriteErrorLog("查找不到对应的详细设计说明书模块！");
                 return false;
             }
 
@@ -1075,6 +1106,41 @@ namespace MakeAuto
             {
                 File.Delete(Path.Combine(dir, "CError.txt"));
             }
+
+            // 编译Excel 最耗时，对Excel检查是否需要编译，比较PC文件
+            bool bNew = false;
+            string tpath = Path.Combine(
+                Path.GetDirectoryName(MAConf.instance.DetailFile), "后端",
+                d.File);
+            DateTime t2 = File.GetLastWriteTime(tpath);
+            DateTime t1 = t2.AddSeconds(-1);
+            if (ctype == ComType.SO)
+            {
+                foreach (string s in d.ProcFiles)
+                {
+                    t1 = File.GetLastWriteTime(Path.Combine(dir, s));
+                    if (DateTime.Compare(t1, t2) > 0)
+                    {
+                        bNew = true;
+                        break;
+                    }
+                }
+            }
+            else if (ctype == ComType.Sql)
+            {
+                t1 = File.GetLastWriteTime(Path.Combine(dir, d.SqlFile));
+                if (DateTime.Compare(t1, t2) > 0)
+                {
+                    bNew = true;
+                }
+            }
+
+            if (bNew)
+            {
+                log.WriteLog("本地输出物时间晚于文件时间，不需集成处理！" + t2);
+                return true;
+            }
+
 
             Result = ExcelMacroHelper.instance.ScmRunExcelMacro(m, index, dir);
 

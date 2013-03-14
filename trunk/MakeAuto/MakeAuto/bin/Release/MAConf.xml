@@ -7,18 +7,19 @@
     <!-- 修改单递交基本目录，自动生成递交的修改单在此目录下 -->
 	<Amend BaseDir="E:\Work\xgd"  Author="高虎" ModuleList="module.xml"/>
     <Conns>
-      <Conn name="centos" host="192.168.56.101" port="22" user="handsome" pass="handsome">
-        <FBASE compile="true" restartas="false" />
-      </Conn>
-      <Conn name="rzgh" host="192.168.187.60" port="22" user="handsome" pass="handsome">
+      <!-- 直接取集成节点，以下节点无效 -->
+	  <Conn name="centos" host="192.168.56.101" port="22" user="handsome" pass="handsome">
         <FBASE compile="false" restartas="false" />
       </Conn>
-      <Conn name="dev" host="192.168.87.244" port="22" user="gftrade" pass="handsome">
+      <Conn name="rzgh" host="192.168.185.90" port="22" user="handsome" pass="handsome">
         <FBASE compile="false" restartas="false" />
+      </Conn>
+      <Conn name="dev06" host="192.168.185.89" port="22" user="handsome" pass="handsome">
+        <FBASE compile="true" restartas="true" />
       </Conn>
 	  <!-- 名为 scm 的节点是集成专用，代码会锁定这个名字，如果要支持集成，那么一定要配置这个节点 -->
-	  <Conn name="scm" host="192.168.56.101" port="22" user="handsome" pass="handsome">
-        <FBASE compile="true" restartas="false" />
+	  <Conn name="scm" host="192.168.185.90" port="22" user="gftrade" pass="handsome">
+        <FBASE compile="false" restartas="false" />
       </Conn>
     </Conns>
     <Smallball host="192.168.51.46" port="1021" user="GuangFa" pass="laisha" ServerDir ="/d:/测试代码站点/产品一部" LocalDir="E:\xgd">

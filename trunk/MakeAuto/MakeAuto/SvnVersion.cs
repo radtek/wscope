@@ -24,24 +24,22 @@ namespace MakeAuto
         public Boolean GetAmendCode()
         {
             Boolean Result = false;
-            log.WriteLog("获取修改单代码文件，修改单号:" + AmendNo + "，文件版本：" + Version +
+            log.WriteLog("文件版本：" + Version +
                 " SvnUri：" + Uri + " 本地路径：" + Path);
 
             uritarget = new SvnUriTarget(Uri);
             pathtarget = new SvnPathTarget(Path);
             
             // Get Info
-            log.WriteLog("取服务端信息......");
-            SvnInfoEventArgs uriinfo;
+            //log.WriteLog("取服务端信息......");
+            
             client.GetInfo(uritarget, out uriinfo);
             long endRevision = uriinfo.LastChangeRevision; // Revision代表整个版本库的当前版本，LastChangeRevision 表示这个文件最后的版本
 
-            log.WriteLog("取本地文件信息......");
+            //log.WriteLog("取本地文件信息......");
             long startRevision = 0;
             try
             {
-
-                SvnInfoEventArgs pathinfo;
                 client.GetInfo(pathtarget, out pathinfo);
                 startRevision = pathinfo.LastChangeRevision;
             }
@@ -53,7 +51,7 @@ namespace MakeAuto
             // 本地文件版本已经最新，不重新获取服务器版本
             if (startRevision >= endRevision)
             {
-                log.WriteLog("本地文件与服务器版本一致，不检查Svn服务器版本。Revision = " + startRevision.ToString());
+                log.WriteLog("本地文件与服务器版本一致，不检查Svn服务器版本。Revision = " + startRevision.ToString() + Environment.NewLine);
                 return true;
             }
 
@@ -65,17 +63,16 @@ namespace MakeAuto
             //arg.Range = new SvnRevisionRange(new SvnRevision(DateTime.Now.AddDays(-10)), new SvnRevision(DateTime.Now.AddDays(-20)));
             arg.Range = new SvnRevisionRange(endRevision, startRevision);
 
-            log.WriteLog("取历史......");
+            //log.WriteLog("取历史......");
             client.GetLog(uritarget.Uri, arg, out logs);
 
             SvnLogEventArgs l = null;
-            string mend, logmsg;
+
             foreach (SvnLogEventArgs g in logs)
             {
-                logmsg = g.LogMessage.Trim();
-                mend = logmsg.Substring(0, logmsg.IndexOf('-'));
                 // 20111215020-V6.1.4.10-V1，考虑多个修改单递交，文件的修改单号可能不是主修改单号，从修改单列表中检索
-                if (logmsg.IndexOf(Version) >= 0 && AmendList.IndexOf(mend) >= 0)
+                // 考虑融资融券和证券公用的修改单资源，按修改单号检查可能会有问题，按照版本直接检查
+                if (g.LogMessage.IndexOf(Version) >= 0)
                 {
                     l = g;
                     break;
@@ -85,7 +82,7 @@ namespace MakeAuto
             if (l == null)
             {
                 log.WriteLog("[无法确认Svn版本信息]，endRevision = " + endRevision.ToString()
-                    + "，startRevision " + startRevision.ToString() + "\r\n");
+                    + "，startRevision " + startRevision.ToString() + Environment.NewLine);
 
                 return false;
             }
@@ -97,16 +94,26 @@ namespace MakeAuto
             else
             {
                 log.WriteLog("[版本信息]" + l.LogMessage.Trim() + "，时间：" + l.Time.ToString()
-                   + "，版本：" + l.Revision + "\r\n");
+                   + "，版本：" + l.Revision);
             }
 
             // Svn Update
-            log.WriteLog("更新文件......");
+            //log.WriteLog("更新文件......");
             SvnUpdateArgs uarg = new SvnUpdateArgs();
             uarg.UpdateParents = true;
             uarg.Revision = l.Revision;
 
             Result = client.Update(pathtarget.FullPath, uarg);
+            /*
+            if (Result)
+            {
+                log.WriteLog("更新文件成功！");
+            }
+            else
+            {
+                log.WriteLog("更新文件失败！");
+            }
+             * */
 
             return Result;
         }
@@ -121,6 +128,10 @@ namespace MakeAuto
         public string Server { get; set; }
         public string Workspace { get; set; }
         public OperLog log;
+
+        public SvnInfoEventArgs uriinfo;
+        public SvnInfoEventArgs pathinfo;
+
 
         private SvnClient client;
         private SvnUriTarget uritarget;
