@@ -44,6 +44,7 @@ namespace MakeAuto
         public string Version;
         //public string LocalVersion;
         public FileStatus fstatus;
+        public DateTime LastModTime;
     }
 
     class SAWFileList : ArrayList

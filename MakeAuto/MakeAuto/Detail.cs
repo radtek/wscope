@@ -154,5 +154,19 @@ namespace MakeAuto
 
             return null;
         }
+
+        public Detail FindByXml(string name)
+        {
+            string name_1 = System.IO.Path.GetFileNameWithoutExtension(name);
+            foreach (Detail d in this)
+            {
+                if (name_1.Equals(d.Pas, System.StringComparison.Ordinal))
+                {
+                    return d;
+                }
+            }
+
+            return null;
+        }
     }
 }

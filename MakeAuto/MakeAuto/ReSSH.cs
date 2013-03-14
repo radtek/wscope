@@ -145,6 +145,7 @@ namespace MakeAuto
             string path;
 
             // 处理 .pc, .h, .cpp, .gc 文件
+            //log.WriteLog("SSH: " + host);
             foreach (string f in dl.ProcFiles)
             {
                 log.WriteLog("上传文件 " + f, LogLevel.Info);
@@ -204,7 +205,7 @@ namespace MakeAuto
 
             //  开启命令，发送编译指令
             string Make = MakeCmd(dl);
-            log.WriteLog("发送编译命令： " + Make, LogLevel.Info);
+            log.WriteLog("发送编译命令：" + Make, LogLevel.Info);
 
             var cmd = ssh.RunCommand(Make);
             //  获取输出

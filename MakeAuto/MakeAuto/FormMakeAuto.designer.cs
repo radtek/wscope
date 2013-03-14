@@ -390,7 +390,7 @@
             this.txbAmenNo.Name = "txbAmenNo";
             this.txbAmenNo.Size = new System.Drawing.Size(121, 21);
             this.txbAmenNo.TabIndex = 12;
-            this.txbAmenNo.Text = "20130108039";
+            this.txbAmenNo.Text = "20130204025";
             this.txbAmenNo.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txbAmenNo_KeyDown);
             // 
             // btnReadInfo
