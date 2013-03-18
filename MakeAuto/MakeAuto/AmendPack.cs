@@ -434,6 +434,33 @@ namespace MakeAuto
                 SubmitVer = 0;
             }
 
+            // 生成一些上次集成的变量，需要把上次的覆盖到本次来
+            if (ScmL.Count > 1)  // 重复集成
+            {
+                ScmL.Sort();
+                s = ScmL[ScmL.Count - 1].ToString();
+                // 取递交版本号 
+                // 20111207012-委托管理-高虎-20120116-V13.rar --> 20111207012-委托管理-高虎-20120116-V13 -> 13
+                s = s.Substring(0, s.LastIndexOf('.'));
+                ScmVer = int.Parse(s.Substring(s.LastIndexOf('V') + 1));
+                // 如果存在对应的src文件夹，一并删除掉
+                if (ScmVer == SubmitVer)
+                {
+                    ScmL.RemoveAt(ScmL.Count -1 );
+                    
+                    if (ScmSrc.Count > 1)
+                    {
+                        ScmSrc.Sort();
+                        if (ScmSrc.IndexOf("集成-src-V" + ScmVer+".rar") >= 0 || 
+                            ScmSrc.IndexOf("集成-Src-V" + ScmVer+".rar") >= 0)
+                        {
+                            ScmSrc.RemoveAt(ScmSrc.Count - 1);
+                        }
+                    }
+                }
+            }
+
+
             string dir = Path.GetFileNameWithoutExtension(currVerFile);
 
             //AmendDir = LocalDir + "\\" + dir;
@@ -449,8 +476,8 @@ namespace MakeAuto
             SrcRar = SCMAmendDir + "\\" + "src-V" + ScmVer.ToString() + ".rar";
             SCMSrcRar = SCMAmendDir + "\\" + "集成-src-V" + ScmVer.ToString() + ".rar";
 
-            // 生成一些上次集成的变量，需要把上次的覆盖到本次来
-            if (ScmL.Count > 1)
+
+            if (ScmL.Count > 0)
             {
                 ScmL.Sort();
                 s = ScmL[ScmL.Count - 1].ToString();

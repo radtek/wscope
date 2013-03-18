@@ -99,29 +99,27 @@ namespace MakeAuto
                 // 如果没有指定解压某一个文件，则解压缩全部文件
                 if (file == "")
                 {
-                    file = " ";
+                    file = "*.*";
                 }
 
-                p.StartInfo.Arguments = " E -y " + rarfile + " " + file + " " + dir;   // 设置执行参数  
+                p.StartInfo.Arguments = " E -o+ -- " + rarfile + " " + file + " " + dir;   // 设置执行参数 
                 p.StartInfo.UseShellExecute = false;        // 关闭Shell的使用  
-                p.StartInfo.RedirectStandardInput = true; // 重定向标准输入
-                p.StartInfo.RedirectStandardOutput = true;  //重定向标准出  
-                p.StartInfo.RedirectStandardError = true; //重定向错误输出  
+                p.StartInfo.RedirectStandardInput = false; // 不重定向标准输入，不知道为啥，重定向好像会一直等待
+                p.StartInfo.RedirectStandardOutput = false;  //重定向标准出  
+                p.StartInfo.RedirectStandardError = false; //重定向错误输出  
                 p.StartInfo.CreateNoWindow = true;             // 不显示窗口
 
                 MAConf.instance.WriteLog(p.StartInfo.FileName + " " + p.StartInfo.Arguments, LogLevel.FileLog);
 
                 p.Start();    // 启动
+                p.WaitForExit();
 
-                //strOutput = p.StandardOutput.ReadToEnd();        // 从输出流取得命令执行结果
-                string strOutput = p.StandardError.ReadToEnd();
-                if (strOutput != string.Empty)
+                if (p.HasExited && p.ExitCode != 0)
                 {
                     result = false;
-                    log.WriteErrorLog(strOutput);
+                    log.WriteErrorLog("解压缩失败，退出码：" + p.ExitCode.ToString());
                 }
 
-                p.WaitForExit();
                 p.Close();
             }
             catch (Exception ex)
@@ -196,20 +194,28 @@ namespace MakeAuto
             }
 
             // 集成包应该不需要下载，本地文件夹中应该已经存在；这里为了我自己模拟，下载上次的集成包
-            if (ap.scmtype == ScmType.BugScm && !File.Exists(ap.SCMLastLocalFile) && ftp.Exists(ap.ScmLastRemoteFile))
+            if (ap.scmtype == ScmType.BugScm && ftp.Exists(ap.ScmLastRemoteFile))
             {
-                // 下载递交包
-                if (!Directory.Exists(ap.SCMLastAmendDir))
+                if (!File.Exists(ap.SCMLastLocalFile)) // 如果不存在，下载集成包
                 {
-                    Directory.CreateDirectory(ap.SCMLastAmendDir);
+                    // 下载递交包
+                    if (!Directory.Exists(ap.SCMLastAmendDir))
+                    {
+                        Directory.CreateDirectory(ap.SCMLastAmendDir);
+                    }
+
+                    ftp.DownloadFile(ap.SCMLastLocalFile, ap.ScmLastRemoteFile); 
                 }
 
-                ftp.DownloadFile(ap.SCMLastLocalFile, ap.ScmLastRemoteFile); 
                 UnRar(ap.SCMLastLocalFile, ap.SCMLastAmendDir);
 
-                if (ap.scmtype == ScmType.BugScm && !File.Exists(ap.SCMLastLocalSrcRar) && ftp.Exists(ap.ScmLastRemoteSrcRar))
+                if (ap.scmtype == ScmType.BugScm && ftp.Exists(ap.ScmLastRemoteSrcRar))
                 {
-                    ftp.DownloadFile(ap.SCMLastLocalSrcRar, ap.ScmLastRemoteSrcRar);
+                    if (!File.Exists(ap.SCMLastLocalSrcRar))
+                    {
+                        ftp.DownloadFile(ap.SCMLastLocalSrcRar, ap.ScmLastRemoteSrcRar);
+                    }
+
                     UnRar(ap.SCMLastLocalSrcRar, ap.SCMLastAmendDir);
                 }
             }
@@ -792,12 +798,7 @@ namespace MakeAuto
                                 return false;
                             }
 
-                            string st = string.Empty;
-                            foreach(string s in d.ProcFiles)
-                            {
-                                st += s;
-                                st += " ";
-                            }
+                            string st = d.GetProcStr(true);
                             log.WriteInfoLog("解压缩源文件，源文件夹：" + ap.SCMLastLocalSrcRar + "， "
                                 + "文件：" + st + "， "
                                 + "目标文件夹：" + ap.SCMAmendDir);
@@ -927,7 +928,6 @@ namespace MakeAuto
             bool Result = true;
             foreach (CommitCom c in ap.ComComms)
             {
-                log.WriteLog("处理：" + c.cname);
                 // 小包直接跳过
                 if (c.ctype == ComType.Ssql)
                 {
@@ -942,8 +942,10 @@ namespace MakeAuto
                 if (c.cstatus == ComStatus.Normal)
                     continue;
 
+                log.WriteLog("处理：" + c.cname);
+
                 // Patch 和 Ini 刷下来，拷贝过去就可以
-                else if (c.ctype == ComType.Patch || c.ctype == ComType.Ini || c.ctype == ComType.Xml 
+                if (c.ctype == ComType.Patch || c.ctype == ComType.Ini || c.ctype == ComType.Xml 
                     || c.ctype == ComType.MenuPatch)
                 {
                     // 去除文件只读属性，否则复制时不能覆盖
@@ -1137,10 +1139,9 @@ namespace MakeAuto
 
             if (bNew)
             {
-                log.WriteLog("本地输出物时间晚于文件时间，不需集成处理！" + t2);
+                log.WriteLog("本地输出物时间晚于文件时间，不需集成处理！"+ cname);
                 return true;
             }
-
 
             Result = ExcelMacroHelper.instance.ScmRunExcelMacro(m, index, dir);
 
@@ -1336,7 +1337,7 @@ namespace MakeAuto
             }
             catch (Exception ex)
             {
-                log.WriteErrorLog("执行rar失败" + ex.Message);
+                log.WriteErrorLog("执行diff失败" + ex.Message);
             }
 
             // 处理执行结果
@@ -1463,7 +1464,6 @@ namespace MakeAuto
                 }
             }
 
-            string strOutput = string.Empty;
             // 暂无实现需要
             // 开启进程执行 rar解压缩
             // 获取 Winrar 的路径（通过注册表或者是配置，这里直接根据xml来处理）
@@ -1474,9 +1474,9 @@ namespace MakeAuto
                 p.StartInfo.FileName = MAConf.instance.rar;           // rar程序名
 
                 p.StartInfo.UseShellExecute = false;        // 关闭Shell的使用  
-                p.StartInfo.RedirectStandardInput = true; // 重定向标准输入
-                p.StartInfo.RedirectStandardOutput = true;  //重定向标准出  
-                p.StartInfo.RedirectStandardError = true; //重定向错误输出  
+                p.StartInfo.RedirectStandardInput = false; // 重定向标准输入
+                p.StartInfo.RedirectStandardOutput = false;  //重定向标准出  
+                p.StartInfo.RedirectStandardError = false; //重定向错误输出  
                 p.StartInfo.CreateNoWindow = true;             // 不显示窗口
 
                 if (SrcFlag == true)
@@ -1489,20 +1489,20 @@ namespace MakeAuto
                     log.WriteFileLog(p.StartInfo.FileName + " " + p.StartInfo.Arguments);
 
                     p.Start();    // 启动
+                    p.WaitForExit();
 
-                    //strOutput = p.StandardOutput.ReadToEnd();        // 从输出流取得命令执行结果
-                    strOutput = p.StandardError.ReadToEnd();
-                    if (strOutput != string.Empty)
+                    if (p.HasExited && p.ExitCode != 0)
                     {
                         result = false;
-                        log.WriteErrorLog(strOutput);
+                        log.WriteErrorLog("压缩失败，退出码：" + p.ExitCode.ToString());
                     }
-
-                    p.WaitForExit();
+                    p.Close();
                 }
 
                 if (result == false)
+                {
                     return result;
+                }
 
                 // 打包Pack，替换 压缩.bat 的 a -ep 为 m -ep
                 p.StartInfo.Arguments = " a -ep " + ap.SCMLocalFile + " "
@@ -1511,22 +1511,19 @@ namespace MakeAuto
                 log.WriteFileLog(p.StartInfo.FileName + " " + p.StartInfo.Arguments);
                 
                 p.Start();    // 启动
+                p.WaitForExit();
 
-                //strOutput = p.StandardOutput.ReadToEnd();        // 从输出流取得命令执行结果
-                strOutput = p.StandardError.ReadToEnd();
-                if (strOutput != string.Empty)
+                if (p.HasExited && p.ExitCode != 0)
                 {
                     result = false;
-                    log.WriteErrorLog(strOutput);
+                    log.WriteErrorLog("压缩失败，退出码：" + p.ExitCode.ToString());
                 }
-
-                p.WaitForExit();
 
                 p.Close();
             }
             catch (Exception ex)
             {
-                log.WriteErrorLog("执行rar失败" + ex.Message);
+                log.WriteErrorLog("执行rar失败 " + ex.Message);
             }
 
             return result;

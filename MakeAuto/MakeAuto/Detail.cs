@@ -35,6 +35,22 @@ namespace MakeAuto
             Show = true;
         }
 
+        public string GetProcStr(bool quotes = true)
+        {
+            string t = string.Empty;
+            foreach(string s in ProcFiles)
+            {
+                if (quotes)
+                    t += "\"";
+                t += s;
+                if (quotes)
+                    t += "\"";
+                t += " ";
+            }
+
+            return t;
+        }
+
         // Pro*C中间件文件
         public ArrayList ProcFiles;
 

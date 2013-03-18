@@ -396,7 +396,7 @@ namespace MakeAuto
             txbMainNo.Text = ap.MainNo;
             txbCommitPath.Text = ap.CommitPath;
             txtSubmitVer.Text = ap.SubmitVer.ToString();
-            txtScmVer.Text = ap.SCMLastVer.ToString();
+            txtScmVer.Text = ap.ScmVer.ToString();
 
             secuflow = new AmendFlow(ap);
             btnFlow.Enabled = true;

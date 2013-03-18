@@ -146,16 +146,17 @@ namespace MakeAuto
 
             // 处理 .pc, .h, .cpp, .gc 文件
             //log.WriteLog("SSH: " + host);
+            log.WriteLog("上传文件 " + dl.GetProcStr(false), LogLevel.Info);
             foreach (string f in dl.ProcFiles)
             {
-                log.WriteLog("上传文件 " + f, LogLevel.Info);
+                
                 path = Path.Combine(localdir, f);
                 fs = new FileStream(path, FileMode.Open, FileAccess.Read);
                 sftp.UploadFile(fs, remotedir + f);
                 fs.Close();
             }
 
-            log.WriteLog("文件上传成功！");
+            //log.WriteLog("文件上传成功！");
             return true;
         }
 
@@ -209,16 +210,16 @@ namespace MakeAuto
 
             var cmd = ssh.RunCommand(Make);
             //  获取输出
-            log.WriteLog(cmd.Result);
+            log.WriteInfoLog(cmd.Result);
             if (cmd.ExitStatus != 0)
             {
                 log.WriteLog(cmd.Error, LogLevel.Error);
-                log.WriteLog("编译so报错，请参考输出日志！", LogLevel.Error);
+                log.WriteLog("编译so报错，请参考输出日志！ " + dl.SO, LogLevel.Error);
                 return false; 
             }
             else
             {
-                log.WriteLog("编译so完成！", LogLevel.Info);
+                log.WriteLog("编译so完成！ "+ dl.SO, LogLevel.Info);
             }
 
             return true;
