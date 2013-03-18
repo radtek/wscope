@@ -24,8 +24,7 @@ namespace MakeAuto
         public Boolean GetAmendCode()
         {
             Boolean Result = false;
-            log.WriteLog("文件版本：" + Version +
-                " SvnUri：" + Uri + " 本地路径：" + Path);
+            //log.WriteLog("文件版本：" + Version + " SvnUri：" + Uri + " 本地路径：" + Path);
 
             uritarget = new SvnUriTarget(Uri);
             pathtarget = new SvnPathTarget(Path);
@@ -49,9 +48,12 @@ namespace MakeAuto
             }
 
             // 本地文件版本已经最新，不重新获取服务器版本
+            
             if (startRevision >= endRevision)
             {
-                log.WriteLog("本地文件与服务器版本一致，不检查Svn服务器版本。Revision = " + startRevision.ToString() + Environment.NewLine);
+                log.WriteLog(pathtarget.FileName + 
+                    "，本地文件与服务器版本一致，不检查Svn服务器版本。" + 
+                    "Revision = " + startRevision.ToString());
                 return true;
             }
 

@@ -62,7 +62,15 @@ namespace MakeAuto
         {
             log.WriteFileLog("加载配置文件");
             XmlDocument xmldoc = new XmlDocument();
-            xmldoc.Load(conf);
+            try
+            {
+                xmldoc.Load(conf);
+            }
+            catch(System.IO.FileNotFoundException)
+            {
+                MessageBox.Show("配置文件不存在，程序退出！");
+                Application.Exit();
+            }
 
             XmlElement root = xmldoc.DocumentElement;
 
