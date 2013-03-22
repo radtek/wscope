@@ -154,6 +154,7 @@ namespace OraZip
         public string name { get; private set; }
         public string pass { get; private set; }
         public string note { get; private set; }
+        public string file;
 
         public static AesManaged myAes = new AesManaged();
         const string G_KEY = "12345678xyze133ttyyfahdfajyeafjaldjzdvjldjfdlajafljdfnvladnnvnswdehhe329789oweuw";
@@ -229,6 +230,7 @@ namespace OraZip
                         xx.Attributes["pass"].InnerText,
                         xx.Attributes["note"].InnerText);
 
+                    u.file = xx.Attributes["file"].InnerText;
                     d.Users.Add(u);
 
                     

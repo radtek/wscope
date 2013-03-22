@@ -1139,7 +1139,7 @@ namespace MakeAuto
 
             if (bNew)
             {
-                log.WriteLog("本地输出物时间晚于文件时间，不需集成处理！"+ cname);
+                log.WriteLog("本地源代码时间晚于Excel文件时间，不需集成处理！"+ cname);
                 return true;
             }
 

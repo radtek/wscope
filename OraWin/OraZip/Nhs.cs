@@ -17,27 +17,37 @@ namespace OraZip
     /// </summary>
     class Nhs
     {
-        public Nhs(string nhsfile)
+        public Nhs()
         {
             oplog = OperLog.instance;
             sb = new StringBuilder();
             dbconf = OraConf.instance.DBs[0];
-            file = nhsfile;
+            //file = nhsfile;
         }
 
-        /* 处理的几步， 1-去注释 2-压缩
-         * 
-         * 
-         * */
+        /// <summary>
+        /// 处理SQL，得到Nhs文件；处理的几步， 1-去注释 2-压缩
+        /// </summary>
+        /// <param name="cvs"></param>
+        /// <param name="user"></param>
+        /// <param name="sqlfile"></param>
+        /// <returns></returns>
         public Boolean ProcessSql(CVSArg cvs, string user, string sqlfile)
         {
             this.cv = cvs;
             this.user = user;
-            this.file = Path.Combine(Path.GetDirectoryName(sqlfile),
-                Path.GetFileNameWithoutExtension(sqlfile) + ".nhs"); // 确定路径的名字
+            //this.file = sqlfile.Replace(""); // 确定路径的名字
             sb.Clear();
-            return RemoveComment(sqlfile) && Compress(sqlfile);
+            bool result = RemoveComment(sqlfile) && Compress(sqlfile);
+
+            if (result)
+                RaiseEvent(sqlfile + "处理完成");
+            else
+                RaiseEvent(sqlfile + "处理失败");
+
+            return result;
         }
+
 
         /// <summary>
         /// 预处理sql脚本第一步，把脚本的注释全部处理掉，输出为字符串，可以保存为文件
@@ -55,7 +65,7 @@ namespace OraZip
             {
                 // Create an instance of StreamReader to read from a file.
                 // The using statement also closes the StreamReader.
-                using (StreamReader sr = new StreamReader(file,
+                using (StreamReader sr = new StreamReader(sqlfile,
                     Encoding.GetEncoding("gb2312")))
                 {
                     // 读取一行，处理掉注释行
@@ -190,7 +200,7 @@ namespace OraZip
         private Boolean Extract(string nhsfile)
         {
             // 用输入文件获取要解压缩的文件名
-            string sfile = Path.GetFileNameWithoutExtension(nhsfile) + ".sql";
+            string sfile = file.Replace(".nhs", ".sql");
 
             ReadOptions op = new ReadOptions();
             op.Encoding = Encoding.GetEncoding("gb2312");
@@ -291,6 +301,7 @@ namespace OraZip
                         }
                     }
 
+                    RaiseEvent("执行！"+ file + "完成！");
                     return true;
                 }
             }
@@ -321,6 +332,7 @@ namespace OraZip
             try
             {
                 int rowsUpdated = cmd.ExecuteNonQuery();
+                //RaiseEvent("执行！");
                 return true;
             }
             catch (OracleException e)
@@ -407,6 +419,42 @@ namespace OraZip
             return "";
 
         }
+
+        private string GetSqlByNhs()
+        {
+            return file.Replace(".nhs", ".sql");
+        }
+
+        //定义事件参数类
+        public class TestEventArgs : EventArgs
+        {
+            public readonly string info;
+            public TestEventArgs(string Info)
+            {
+                info = Info;
+            }
+        }
+
+        //定义delegate
+        public delegate void TestEventHandler(object sender, TestEventArgs e);
+        //用event 关键字声明事件对象
+        public event TestEventHandler TestEvent;
+
+        //事件触发方法
+        protected virtual void OnTestEvent(TestEventArgs e)
+        {
+            if (TestEvent != null)
+                TestEvent(this, e);
+        }
+
+        //引发事件
+        public void RaiseEvent(string Info)
+        {
+            TestEventArgs e = new TestEventArgs(Info);
+            OnTestEvent(e);
+        }
+
+
         const string G_PASS = "best12deal3"; //默认的加密密码值
         const EncryptionAlgorithm G_ENCRYPT = EncryptionAlgorithm.None;
         const String G_POFIX = ".nhs";
@@ -414,12 +462,8 @@ namespace OraZip
 
         private OperLog oplog;
         private StringBuilder sb;
-        //public string sqlfile {set; get;}
-
+        public string sqlfile { get { return GetSqlByNhs(); } }
         public string file { get; set; }
-        FileStream fs;
-        StreamWriter sw;
-        StreamReader sr;
         MemoryStream ms;
         public CVSArg cv;
         public string user;

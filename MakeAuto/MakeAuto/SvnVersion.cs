@@ -83,19 +83,19 @@ namespace MakeAuto
 
             if (l == null)
             {
-                log.WriteLog("[无法确认Svn版本信息]，endRevision = " + endRevision.ToString()
-                    + "，startRevision " + startRevision.ToString() + Environment.NewLine);
+                log.WriteLog("[无法确认Svn版本信息]，" + pathtarget.FileName + "，endRevision = " + endRevision.ToString()
+                    + "，startRevision " + startRevision.ToString());
 
                 return false;
             }
             else if (l.Revision == startRevision)
             {
-                log.WriteLog("本地文件版本满足，不再检出。Revision = "+ l.Revision.ToString());
+                log.WriteLog("本地文件版本满足，不再检出。Revision = " + l.Revision.ToString());
                 return true;
             }
             else
             {
-                log.WriteLog("[版本信息]" + l.LogMessage.Trim() + "，时间：" + l.Time.ToString()
+                log.WriteLog("[版本信息] " + pathtarget.FileName + "，" + l.LogMessage.Trim() + "，时间：" + l.Time.ToString()
                    + "，版本：" + l.Revision);
             }
 
