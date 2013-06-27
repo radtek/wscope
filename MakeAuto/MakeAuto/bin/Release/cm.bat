@@ -15,29 +15,35 @@ rem cm 6 E:\VSS\HsSettle\Sources\ClientCom\HsSettle\HsSettle.dpr C:\src
 rem 编译HsTools: 
 rem cm 5 E:\VSS\HSTRADES11\Sources\ClientCom\Subsys\TOOLS\HsTools.dpr C:\src
 
-rem 这里指定Control的位置，需要自行调整
-set DCC5=D:\Program Files\Borland\Delphi5\Bin\DCC32.EXE
-set DCC6=D:\Program Files\Borland\Delphi6\Bin\DCC32.EXE
-set HsControls=E:\06trade\HSTRADES11\trunk\Sources\ClientCom\Control;
-set Platform10=E:\06trade\HSTRADES11\trunk\Sources\ClientCom\Control\PLATFORM10;
-set Lzrw1_5=E:\06trade\HSTRADES11\trunk\Sources\ClientCom\Subsys\TOOLS\CONTROL\LZRW1;
-set Lzrw1_6=E:\06trade\HsSettle\trunk\Sources\ClientCom\Control\LZRW1;
-set DOA5=D:\Program Files\Borland\Delphi5\DOA;
-set DOA6=D:\Program Files\Borland\Delphi6\DOA;
+rem 这里指定Control的位置，需要自行调整: D5Home, D6Home, TradeHome SettHome
+set D5Home=D:\Program Files\Borland\Delphi5
+set D6Home=D:\Program Files\Borland\Delphi6
+set TradeHome=E:\06trade\HSTRADES11\trunk
+set SettHome=E:\06trade\HsSettle\trunk\
+
+set HsControls=%TradeHome%\Sources\ClientCom\Control;
+set Platform10=%TradeHome%\Sources\ClientCom\Control\PLATFORM10;
+set Lzrw1_5=%TradeHome%\Sources\ClientCom\Subsys\TOOLS\CONTROL\LZRW1;
+set Lzrw1_6=%SettHome%\Sources\ClientCom\Control\LZRW1;
+
+set DCC5=%D5Home%\Bin\DCC32.EXE
+set DCC6=%D6Home%\Bin\DCC32.EXE
+set D5UPath=%D5Home%\Lib;%D5Home%\Bin;%D5Home%\Imports;%D5Home%\Bpl;%D5Home%\DOA;
+set D6UPath=%D6Home%\Lib;%D6Home%\Bin;%D6Home%\Imports;%D6Home%\Bpl;%D6Home%\DOA;
 
 rem 指定UnitOutPut目录
-set DCUDir=E:\06trade\HSTRADES11\trunk\Sources\ClientCom\Obj
+set DCUDir=%TradeHome%\Sources\ClientCom\Obj
 
 if "%DelphiVer%"=="6" goto D6
 :D5
 set DCC=%DCC5%
-set UPath=%Platform10%%Lzrw1_5%%DOA5%%HsControls%
+set UPath=%D5UPath%%Lzrw1_5%%Platform10%
 set LUPackage=Platform10
 goto Make
 
 :D6
 set DCC=%DCC6%
-set UPath=%HsControls%%Lzrw1_6%%DOA6%
+set UPath=%D6UPath%%Lzrw1_6%%HsControls%
 set LUPackage=HsControls
 goto Make
 
