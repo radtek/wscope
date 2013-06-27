@@ -520,6 +520,37 @@ namespace MakeAuto
 
             return true;
         }
+
+        public Boolean DeletePack(int v)
+        {
+            // 输出递交包，到本地集成环境处理，需要使用ftp连接
+            FTPConnection ftp = MAConf.instance.ftp;
+            FtpConf fc = MAConf.instance.fc;
+
+            // 强制重新连接，防止时间长了就断掉了
+            if (ftp.IsConnected == false)
+            {
+                try
+                {
+                    ftp.Connect();
+                }
+                catch (Exception e)
+                {
+                    log.WriteErrorLog("连接FTP服务器失败，错误信息：" + e.Message);
+                }
+            }
+
+            if (ftp.DirectoryExists(RemoteDir) == false)
+            {
+                System.Windows.Forms.MessageBox.Show("FTP路径" + fc.ServerDir + CommitPath + "不存在！");
+                return false;
+            }
+
+            //ftp.ChangeWorkingDirectory(fc.ServerDir);
+            ftp.DeleteFile(RemoteFile);
+
+            return true;
+        }
         
         // 查询单号
         public string AmendNo {get; set;}

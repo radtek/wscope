@@ -47,6 +47,7 @@
             this.rbLog = new System.Windows.Forms.RichTextBox();
             this.tcSCM = new System.Windows.Forms.TabControl();
             this.tabPage3 = new System.Windows.Forms.TabPage();
+            this.btnDel = new System.Windows.Forms.Button();
             this.btnFlow = new System.Windows.Forms.Button();
             this.button9 = new System.Windows.Forms.Button();
             this.button8 = new System.Windows.Forms.Button();
@@ -218,6 +219,7 @@
             // rbLog
             // 
             this.rbLog.BackColor = System.Drawing.SystemColors.Window;
+            this.rbLog.DetectUrls = false;
             this.rbLog.Dock = System.Windows.Forms.DockStyle.Fill;
             this.rbLog.Location = new System.Drawing.Point(0, 231);
             this.rbLog.Name = "rbLog";
@@ -241,6 +243,7 @@
             // 
             // tabPage3
             // 
+            this.tabPage3.Controls.Add(this.btnDel);
             this.tabPage3.Controls.Add(this.btnFlow);
             this.tabPage3.Controls.Add(this.button9);
             this.tabPage3.Controls.Add(this.button8);
@@ -253,6 +256,17 @@
             this.tabPage3.TabIndex = 2;
             this.tabPage3.Text = "集成打包";
             this.tabPage3.UseVisualStyleBackColor = true;
+            // 
+            // btnDel
+            // 
+            this.btnDel.Enabled = false;
+            this.btnDel.Location = new System.Drawing.Point(360, 77);
+            this.btnDel.Name = "btnDel";
+            this.btnDel.Size = new System.Drawing.Size(75, 23);
+            this.btnDel.TabIndex = 33;
+            this.btnDel.Text = "删除递交";
+            this.btnDel.UseVisualStyleBackColor = true;
+            this.btnDel.Click += new System.EventHandler(this.btnDel_Click);
             // 
             // btnFlow
             // 
@@ -390,7 +404,7 @@
             this.txbAmenNo.Name = "txbAmenNo";
             this.txbAmenNo.Size = new System.Drawing.Size(121, 21);
             this.txbAmenNo.TabIndex = 12;
-            this.txbAmenNo.Text = "20130206005";
+            this.txbAmenNo.Text = "20130325063";
             this.txbAmenNo.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txbAmenNo_KeyDown);
             // 
             // btnReadInfo
@@ -764,6 +778,7 @@
         private System.Windows.Forms.RichTextBox rbLog;
         private System.Windows.Forms.Timer timer1;
         private System.Windows.Forms.Button btnFlow;
+        private System.Windows.Forms.Button btnDel;
     }
 }
 

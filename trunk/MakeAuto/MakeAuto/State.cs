@@ -897,7 +897,7 @@ namespace MakeAuto
                     break;
                 }
                 s.fstatus = FileStatus.New;
-                s.LastModTime = svn.pathinfo.LastChangeTime;
+                s.LastModTime = svn.uriinfo.LastChangeTime;
             }
 
             return Result;

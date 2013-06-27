@@ -34,6 +34,7 @@ namespace MakeAuto
         //Spell sp;
 
         AmendFlow secuflow;
+        AmendPack ap;
 
         public frmMakeAuto()
         {
@@ -389,7 +390,7 @@ namespace MakeAuto
         {
             log.WriteInfoLog("查询递交包路径，修改单编号：" + txbAmenNo.Text + "...");
 
-            AmendPack ap = new AmendPack(txbAmenNo.Text);
+            ap = new AmendPack(txbAmenNo.Text);
             if (ap.scmstatus == ScmStatus.Error)
                 return;
 
@@ -400,6 +401,7 @@ namespace MakeAuto
 
             secuflow = new AmendFlow(ap);
             btnFlow.Enabled = true;
+            btnDel.Enabled = true;
         }
 
         private void button8_Click(object sender, EventArgs e)
@@ -491,6 +493,20 @@ namespace MakeAuto
                 {
                     btnFlow.Focus();
                 }
+            }
+        }
+
+        private void btnDel_Click(object sender, EventArgs e)
+        {
+            //
+            if (ap.SubmitVer == 1)
+            {
+                ap.DeletePack(0);
+                log.WriteLog("删除成功！ " + ap.RemoteFile);
+            }
+            else
+            {
+                log.WriteErrorLog("非首次，手工吧！");
             }
         }
 
