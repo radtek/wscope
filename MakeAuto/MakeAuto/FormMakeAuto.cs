@@ -14,22 +14,10 @@ namespace MakeAuto
     public partial class frmMakeAuto : Form
     {
         // 定义保存 Excel 列表的东东
-        ArrayList alModule = new ArrayList();
+        
 
         // 日志实例
         private OperLog log = OperLog.instance;
-
-        // 配置实例
-        private MAConf mc = MAConf.instance;
-
-        // 宏助手
-        private ExcelMacroHelper eh = ExcelMacroHelper.instance;
-
-        // 当前活动ExcelFile;
-        private Detail currDetail;
-
-        // 当前活动编译服务器
-        private ReSSH currSsh;
 
         //Spell sp;
 
@@ -44,8 +32,6 @@ namespace MakeAuto
             //System.Windows.Forms.MessageBox.Show("注册日志");
             // 注册一个事件处理
             log.OnLogInfo += new LogInfoEventHandler(WriteLog);
-
-            currSsh = (ReSSH)mc.ReConns[0];
         }
 
         private void WriteLog(object sender, LogInfoArgs e)
@@ -63,6 +49,7 @@ namespace MakeAuto
 
         private void btnSO_Click(object sender, EventArgs e)
         {
+            /*
             foreach (Detail dl in MAConf.instance.Dls)
             {
                 if (!dl.Compile)
@@ -81,17 +68,18 @@ namespace MakeAuto
                 // 执行编译
                 currSsh.Compile(dl);
             }
+             * */
         }
 
         private void btnAS_Click(object sender, EventArgs e)
         {
-            currSsh.RestartAS();
+            //currSsh.RestartAS();
         }
         
         private void btnRefresh_Click(object sender, EventArgs e)
         {
-            MAConf.instance.RefreshDetailList();
-            MAConf.instance.LoadDetailList();
+            //MAConf.instance.RefreshDetailList();
+            //MAConf.instance.LoadDetailList();
         }
 
         private void bgwProc_RunWorkerCompleted(object sender, System.ComponentModel.RunWorkerCompletedEventArgs e)
@@ -110,7 +98,7 @@ namespace MakeAuto
         {
             // This method runs on the main thread.
             VBAState c = (VBAState)e.UserState;
-            log.WriteLog("编译进度：" + e.ProgressPercentage.ToString() + "%, 当前模块：" + c.dl.Name
+            log.WriteLog("编译进度：" + e.ProgressPercentage.ToString() + "%, "
                 + ",编译信息：" + c.info, LogLevel.Info);
             
             // 此处以为托盘化是便利的，但是调试期间不见得，所以先不要这样子处理
@@ -144,7 +132,7 @@ namespace MakeAuto
             System.ComponentModel.BackgroundWorker worker;
             worker = (System.ComponentModel.BackgroundWorker)sender;
 
-            eh.RunExcelMacro(worker, e);
+            //eh.RunExcelMacro(worker, e);
         }
 
         private void btnProc_Click(object sender, EventArgs e)
@@ -170,15 +158,6 @@ namespace MakeAuto
             rbLog.ScrollToCaret(); 
         }
 
-        private void frmMakeAuto_SizeChanged(object sender, EventArgs e)
-        {
-            //if (WindowState == FormWindowState.Minimized)
-            //{
-            //    Hide();
-            //    nfnMake.Visible = true;
-            //}
-        }
-
         private void nfnMake_MouseDoubleClick(object sender, MouseEventArgs e)
         {
             // 鼠标双击恢复窗体
@@ -201,10 +180,10 @@ namespace MakeAuto
             this.nfnMake.Dispose();
 
             // 关闭远程连接
-            foreach (ReSSH c in MAConf.instance.ReConns)
+            foreach (BaseConf b in MAConf.instance.Configs)
             {
-                c.CloseSsh();
-                c.CloseSftp();
+                b.Conn.CloseSsh();
+                b.Conn.CloseSftp();
             }
 
             // 执行下文件
@@ -218,6 +197,7 @@ namespace MakeAuto
 
         private void btnModPre_Click(object sender, EventArgs e)
         {
+            /*
             if (txtAmendList.Text.Trim() == String.Empty)
             {
                 MessageBox.Show("请输入修改单号！");
@@ -312,6 +292,7 @@ namespace MakeAuto
 
             // 日志通用记法
             log.WriteLog("修改单递交准备完成，生成目录：" + CurrVer, LogLevel.Info);
+             * */
         }
 
         private void txtAmendList_Validating(object sender, System.ComponentModel.CancelEventArgs e)
@@ -332,12 +313,12 @@ namespace MakeAuto
 
         private void frmMakeAuto_Load(object sender, EventArgs e)
         {
-            MAConf.instance.RefreshDetailList();
-            MAConf.instance.LoadDetailList();
-            foreach(Detail dl in MAConf.instance.Dls)
-            {
-                clbModule.Items.Add(dl.Name);
-            }
+            //MAConf.instance.RefreshDetailList();
+            //MAConf.instance.LoadDetailList();
+            //foreach(Detail dl in MAConf.instance.Dls)
+            //{
+            //    clbModule.Items.Add(dl.Name);
+            //}
 
             //sp = new Spell(MAConf.instance.Dls);
 
@@ -356,6 +337,7 @@ namespace MakeAuto
 
         private void tbModule_TextChanged(object sender, EventArgs e)
         {
+            /*
             clbModule.Items.Clear();
 
             int index;
@@ -373,10 +355,12 @@ namespace MakeAuto
                     }
                 }
             }
+             * */
         }
 
         private void clbModule_ItemCheck(object sender, ItemCheckEventArgs e)
         {
+            /*
             // 根据点击事件更新模块选中状态
             string name = clbModule.Items[e.Index].ToString();
             Detail dl = MAConf.instance.Dls[name];
@@ -384,6 +368,7 @@ namespace MakeAuto
             {
                 dl.Compile = e.NewValue == CheckState.Checked ? true : false;
             }
+             */
         }
 
         private void btnReadInfo_Click(object sender, EventArgs e)
@@ -404,12 +389,6 @@ namespace MakeAuto
             btnDel.Enabled = true;
         }
 
-        private void button8_Click(object sender, EventArgs e)
-        {
-            mc.WriteLog("版本对比...");
-            //ap.ValidateVersion();
-            mc.WriteLog("版本对比...完成");
-        }
 
         private void button9_Click(object sender, EventArgs e)
         {
@@ -463,9 +442,12 @@ namespace MakeAuto
         // edtFTP的心跳包
         private void timer1_Tick(object sender, EventArgs e)
         {
-            if (mc.ftp.IsConnected == true)
+            foreach (BaseConf b in MAConf.instance.Configs)
             {
-                mc.ftp.GetFileInfos(mc.fc.ServerDir);
+                if (b.ftp.IsConnected == true)
+                {
+                    b.ftp.GetFileInfos(b.fc.ServerDir);
+                }
             }
         }
 

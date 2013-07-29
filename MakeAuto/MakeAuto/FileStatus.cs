@@ -30,15 +30,15 @@ namespace MakeAuto
             Version = " ";
 
             // 根据最后带不带后缀分析
-            if (System.IO.Path.GetExtension(Path) == string.Empty)
-            {
-                Type = SAWType.Project;
-            }
-            else Type = SAWType.File;
+            //if (System.IO.Path.GetExtension(Path) == string.Empty)
+            //{
+            //    Type = SAWType.Project;
+            //}
+            //else Type = SAWType.File;
         }
 
         public string Path;  // ReadMe 中的路径，可能是文件，也可能是目录，这个类的主键
-        public SAWType Type;   // Project or File ?? 1 - Project 2-File
+        //public SAWType Type;   // Project or File ?? 1 - Project 2-File
         public string UriPath;
         public string LocalPath;
         public string Version;

@@ -299,7 +299,6 @@
             this.button8.Text = "版本校验";
             this.button8.UseVisualStyleBackColor = true;
             this.button8.Visible = false;
-            this.button8.Click += new System.EventHandler(this.button8_Click);
             // 
             // groupBox4
             // 
@@ -404,7 +403,7 @@
             this.txbAmenNo.Name = "txbAmenNo";
             this.txbAmenNo.Size = new System.Drawing.Size(121, 21);
             this.txbAmenNo.TabIndex = 12;
-            this.txbAmenNo.Text = "20130325063";
+            this.txbAmenNo.Text = "20130327018";
             this.txbAmenNo.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txbAmenNo_KeyDown);
             // 
             // btnReadInfo
@@ -695,7 +694,6 @@
             this.Text = "MakeAuto";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.frmMakeAuto_FormClosed);
             this.Load += new System.EventHandler(this.frmMakeAuto_Load);
-            this.SizeChanged += new System.EventHandler(this.frmMakeAuto_SizeChanged);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.toolStrip1.ResumeLayout(false);

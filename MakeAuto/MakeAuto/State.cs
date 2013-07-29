@@ -16,14 +16,13 @@ namespace MakeAuto
     /// </summary>
     abstract class State
     {
+        public State(AmendPack Amend)
+        {
+            _amend = Amend;
+        }
+
         // 状态模式基础状态
         public abstract bool DoWork(AmendPack ap);
-        
-        public AmendPack Amend
-        {
-            get { return _amend; }
-            set { _amend = value; }
-        }
 
         protected static void DirectoryCopy(string sourceDirName, string destDirName, bool copySubDirs)
         {
@@ -93,7 +92,7 @@ namespace MakeAuto
             Process p = new Process();
             try
             {
-                p.StartInfo.FileName = MAConf.instance.rar;           // rar程序名  
+                p.StartInfo.FileName = MAConf.instance.Configs[_amend.ProductId].Rar;           // rar程序名  
                 // 解压缩的参数
 
                 // 如果没有指定解压某一个文件，则解压缩全部文件
@@ -133,9 +132,6 @@ namespace MakeAuto
         // 日志组件
         protected OperLog log = OperLog.instance;
 
-        // 修改单记录
-        protected AmendPack _amend {get; set;}
-
         //
         public virtual string StateName
         { get { return "test";  } }
@@ -145,6 +141,7 @@ namespace MakeAuto
             get { return _tip; }
         }
 
+        private AmendPack _amend;
         private bool _tip = true;
     }
 
@@ -153,11 +150,16 @@ namespace MakeAuto
     /// </summary>
     class PackerDownload : State
     {
+        public PackerDownload(AmendPack Amend)
+            : base(Amend)
+        {
+        }
+
         public override bool DoWork(AmendPack ap)
         {
             // 输出递交包，到本地集成环境处理，需要使用ftp连接
-            FTPConnection ftp = MAConf.instance.ftp;
-            FtpConf fc = MAConf.instance.fc;
+            FTPConnection ftp = MAConf.instance.Configs[ap.ProductId].ftp;
+            FtpConf fc = MAConf.instance.Configs[ap.ProductId].fc;
 
             if (ftp.IsConnected == false)
             {
@@ -241,6 +243,11 @@ namespace MakeAuto
     /// </summary>
     class PackerReadMe : State
     {
+        public PackerReadMe(AmendPack Amend)
+            : base(Amend)
+        {
+        }
+
         public override string StateName
         {
             get { return "处理ReadMe"; }
@@ -435,7 +442,9 @@ namespace MakeAuto
                             c.path = "";
                         }
 
-                        if ( c.ctype == ComType.Xml && (Path.GetExtension(c.path) == ".xls"))
+                        if (c.ctype == ComType.Xml && (c.path.IndexOf(".xls") >= 0    // Path.GetExtension 对于箭头字符会判断非法，换成 stirng.index
+                            || c.cname.IndexOf("s_ls_") >= 0 || c.cname.IndexOf("s_as_") >= 0  // CRESxml定义
+                            || c.cname.IndexOf("functionlist") >= 0))  // cres 有 funclist.xml 需要特别处理
                         {
                             c.ctype = ComType.FuncXml;
                         }
@@ -578,7 +587,7 @@ namespace MakeAuto
         private bool ProcessSAWPath(AmendPack ap)
         {
             // 确认修改单的配置库
-            ap.svn = MAConf.instance.Svns.GetByAmend(ap.AmendSubject);
+            ap.svn = MAConf.instance.Configs[ap.ProductId].SvnRepo;
             if (ap.svn == null)
             {
                 log.WriteInfoLog("获取对应配置库失败，在配置文件节点无法找到该递交主题的配置库路径");
@@ -599,7 +608,15 @@ namespace MakeAuto
                 {
                     f = new SAWFile(c.path, FileStatus.Old);
                     f.Version = c.cver;
-                    f.fstatus = FileStatus.Old;
+                    // todo 修改判断
+                    if (c.ctype == ComType.FuncXml && c.cname.IndexOf("functionlist") >= 0)
+                    {
+                        f.fstatus = FileStatus.New;
+                    }
+                    else
+                    {
+                        f.fstatus = FileStatus.Old;
+                    }
                     ap.SAWFiles.Add(f);
                 }
                 c.sawfile = f;
@@ -610,40 +627,51 @@ namespace MakeAuto
 
                 if (c.cname == "HsSettle.exe" || c.cname == "HsBkSettle.exe")
                 {
-                    string temp = @"HsSettle\trunk\Sources\ClientCom\" + Path.GetFileNameWithoutExtension(c.cname) + "\\";
-                    f.LocalPath = ap.svn.Workspace + "\\" + temp;
-                    f.UriPath = ap.svn.Server + "/" + temp.Replace('\\', '/');
+                    string temp = @"HsSettle\trunk\Sources\ClientCom\" + Path.GetFileNameWithoutExtension(c.cname);
+                    f.LocalPath = Path.Combine(ap.svn.Workspace, temp).Replace('/', '\\');
+                    f.UriPath = Path.Combine(ap.svn.Server, temp).Replace('\\', '/');
                 }
                 else if (c.ctype == ComType.SO || c.ctype == ComType.Sql || c.ctype == ComType.Xml || c.ctype == ComType.FuncXml) // 
                 {
-                    string temp = @"HSTRADES11\trunk\Documents\D2.Designs\详细设计\后端\";
-                    f.LocalPath = ap.svn.Workspace + "\\" + temp + c.path;
-                    f.UriPath = ap.svn.Server + "/"+ temp.Replace('\\', '/') + c.path.Replace('\\', '/');
+                    if (c.path[0] == '\\' || c.path[0] == '/')
+                        c.path = c.path.Substring(1);
+
+                    string temp = string.Empty;
+                    if (ap.ProductId == "00052")
+                    {
+                        temp = @"Documents\D2.Designs\详细设计\后端";
+                    }
+                    //todo 如何确定FuncXml的路径？ 最好还是为FuncListXml维护一个产品信息，像转融通，多个project，没办法区分的
+                    else if (c.ctype == ComType.FuncXml && c.cname.IndexOf("functionlist") >= 0)
+                    {
+                        c.path = string.Empty;
+                    }
+
+                    f.LocalPath = Path.Combine(ap.svn.Workspace, temp, c.path).Replace('/', '\\');
+                    f.UriPath = Path.Combine(ap.svn.Server, temp, c.path).Replace('\\', '/');
                 }
                 else if (c.ctype == ComType.Patch || c.ctype == ComType.Ini || c.ctype == ComType.MenuPatch)
                 {
-                    if (c.path[0] != '\\')
-                        c.path = "\\" + c.path;
-                    if (c.path[c.path.Length - 1] != '\\')
-                        c.path = c.path + "\\";
-                    
+                    if (c.path[0] == '\\' || c.path[0] == '/')
+                        c.path = c.path.Substring(1);
+
                     // 对于PATCH，INI 文件，制定路径名称为主键，否则出现两个递交在 \\证券下的PATCH，就认为是同一个了
-                    c.path = c.path + c.cname;
+                    if (c.path[c.path.Length - 1] != '\\' && c.path[c.path.Length - 1] != '/')
+                        c.path = c.path + '\\';
+                    c.path = c.path + c.cname; 
                     f.Path = c.path;
                     
-                    f.LocalPath = ap.svn.Workspace + @"\HSTRADES11\trunk" + c.path;
-                    f.UriPath = ap.svn.Server + @"/HSTRADES11/trunk" + c.path.Replace('\\', '/');
-
+                    f.LocalPath = Path.Combine(ap.svn.Workspace, c.path).Replace('/', '\\');
+                    f.UriPath = Path.Combine(ap.svn.Server, c.path).Replace('\\', '/');
                 }
                 else
                 {
-                    // 如果第一个不是路径分隔符号，那么补路径分隔符号
-                    if (c.path[0] != '\\')
-                        c.path = "\\" + c.path;
-                    if (c.path[c.path.Length - 1] != '\\')
-                        c.path = c.path + "\\";
-                    f.LocalPath = ap.svn.Workspace + @"\HSTRADES11\trunk" + c.path;
-                    f.UriPath = ap.svn.Server + @"/HSTRADES11/trunk" + c.path.Replace('\\', '/');
+                    // 如果第一个是路径分隔符号，那么去路径分隔符号，防止被Path.Combine认为绝对路径
+                    if (c.path[0] == '\\' || c.path[0] == '/')
+                        c.path = c.path.Substring(1);
+                    
+                    f.LocalPath = Path.Combine(ap.svn.Workspace, c.path).Replace('/', '\\');
+                    f.UriPath = Path.Combine(ap.svn.Server, c.path).Replace('\\', '/');
                 }
                 #endregion
             }
@@ -756,6 +784,11 @@ namespace MakeAuto
 
     class PackerProcess : State
     {
+        public PackerProcess(AmendPack Amend)
+            : base(Amend)
+        {
+        }
+
         public override string StateName
         {
             get { return "处理压缩包"; }
@@ -765,6 +798,7 @@ namespace MakeAuto
         {
             log.WriteInfoLog("集成类型:" + Enum.GetName(typeof(ScmType), ap.scmtype));
 
+            BaseConf pconf = MAConf.instance.Configs[ap.ProductId];
             // 根据集成类型执行集成操作
             if (ap.scmtype == ScmType.NewScm)
             {
@@ -791,14 +825,7 @@ namespace MakeAuto
                         // 对于 SO，需要把压缩文件从上次递交中解压缩，覆盖掉本次包里的文件
                         if (c.ctype == ComType.SO)
                         {
-                            Detail d= MAConf.instance.Dls.FindBySo(c.cname);
-                            if(d == null)
-                            {
-                                log.WriteErrorLog("无法定位" + c.cname + "的详细设计组件！");
-                                return false;
-                            }
-
-                            string st = d.GetProcStr(true);
+                            string st = pconf.GetDetail(c).GetProcStr();
                             log.WriteInfoLog("解压缩源文件，源文件夹：" + ap.SCMLastLocalSrcRar + "， "
                                 + "文件：" + st + "， "
                                 + "目标文件夹：" + ap.SCMAmendDir);
@@ -814,14 +841,7 @@ namespace MakeAuto
                         // SO删除了，源文件也删除掉
                         if (c.ctype == ComType.SO)
                         {
-                            Detail d = MAConf.instance.Dls.FindBySo(c.cname);
-                            if(d == null)
-                            {
-                                log.WriteErrorLog("无法定位" + c.cname + "的详细设计组件！");
-                                return false;
-                            }
-
-                            foreach (string s in d.ProcFiles)
+                            foreach (string s in pconf.GetDetail(c).ProcFiles)
                             {
                                 log.WriteInfoLog("删除文件：" + Path.Combine(ap.SCMAmendDir, s));
                                 File.Delete(Path.Combine(ap.SCMAmendDir, s));
@@ -846,6 +866,12 @@ namespace MakeAuto
 
     class PackerCheck : State
     {
+        public PackerCheck(AmendPack Amend)
+            : base(Amend)
+        {
+        }
+
+
         public override string StateName
         {
             get { return "递交检查"; }
@@ -866,6 +892,11 @@ namespace MakeAuto
     /// </summary>
     class PackerSvnCode : State
     {
+        public PackerSvnCode(AmendPack Amend)
+            : base(Amend)
+        {
+        }
+
         public override string StateName
         {
             get { return "检出Svn代码"; }
@@ -916,6 +947,11 @@ namespace MakeAuto
     /// </summary>
     class PackerCompile : State
     {
+        public PackerCompile(AmendPack Amend)
+            : base(Amend)
+        {
+        }
+
         public override string StateName
         {
             get { return "编译输出物"; }
@@ -923,6 +959,7 @@ namespace MakeAuto
 
         public override bool DoWork(AmendPack ap)
         {
+            BaseConf pconf = MAConf.instance.Configs[ap.ProductId];
             ap.laststatus = ap.scmstatus;
             ap.scmstatus = ScmStatus.Compile;
             bool Result = true;
@@ -944,36 +981,14 @@ namespace MakeAuto
 
                 log.WriteLog("处理：" + c.cname);
 
-                // Patch 和 Ini 刷下来，拷贝过去就可以
+                // Patch 和 Ini 刷下来，拷贝过去就可以，在后面的Repacker里面拷贝
                 if (c.ctype == ComType.Patch || c.ctype == ComType.Ini || c.ctype == ComType.Xml 
                     || c.ctype == ComType.MenuPatch)
                 {
-                    // 去除文件只读属性，否则复制时不能覆盖
-                    FileAttributes attributes = File.GetAttributes(Path.Combine(ap.SCMAmendDir, c.cname));
-                    FileAttributes attr1 = attributes;
-                    if ((attributes & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
-                    {
-                        // Show the file.
-                        attributes = attributes & ~FileAttributes.ReadOnly;
-                        File.SetAttributes(Path.Combine(ap.SCMAmendDir, c.cname), attributes);
-                    }
-
-                    File.Copy(c.sawfile.LocalPath, Path.Combine(ap.SCMAmendDir, c.cname), true);
-
-                    // 还原只读属性
-                    attributes = attr1;
-                    if ((attributes & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
-                    {
-                        File.SetAttributes(Path.Combine(ap.SCMAmendDir, c.cname), attributes);
-                    }
                 }
                 else if (c.ctype == ComType.Dll || c.ctype == ComType.Exe)
                 {
-                    // 确认Delphi版本
-                    int dVer = GetDelphiVer(c.cname);
-                    // 确定工程名称
-                    string dPro = Path.Combine(c.sawfile.LocalPath, Path.GetFileNameWithoutExtension(c.cname) + ".dpr");
-                    Result = CompileDpr(dVer, dPro, ap.SCMAmendDir);
+                    Result = pconf.CompileFront(c);
                     if (Result == false)
                         break;
                     
@@ -982,180 +997,31 @@ namespace MakeAuto
                     {
                         File.Delete(Path.Combine(ap.SCMAmendDir, Path.GetFileNameWithoutExtension(c.cname) + ".map"));
                     }
-                }
-                else if (c.ctype == ComType.SO || c.ctype == ComType.Sql)
-                {
-                    // 这里不能并发执行，有可能锁住Excel，可能只能等待执行
-                    Result = CompileExcel(c.ctype, c.cname, ap.DiffDir);
-                    if (Result == false)
-                        break;
-                }
-                else if (c.ctype == ComType.FuncXml)
-                {
-                    // 这里不能并发执行，有可能锁住Excel，可能只能等待执行
-                    Result = CompileExcel(c.ctype, c.cname, ap.SCMAmendDir);
-                    // 删除掉生成的Files.txt文件
-                    if (File.Exists(Path.Combine(ap.SCMAmendDir, "Files.txt")))
-                    {
-                        File.Delete(Path.Combine(ap.SCMAmendDir, "Files.txt"));
-                    }
 
+                    // 
+                }
+                else if (c.ctype == ComType.SO || c.ctype == ComType.Sql || c.ctype == ComType.FuncXml)
+                {
+                    // 这里不能并发执行，有可能锁住Excel，可能只能等待执行
+                    Result = pconf.CompileBackEnd(c);
                     if (Result == false)
                         break;
+
+                    // 对于原子AS，生成会同时生成过程，对于这种，编译时可以检查下是否存在，存在同样路径的递交，sql和so可以同时该状态
+                    if (pconf is CresConf)
+                    {
+                        foreach (CommitCom c1 in ap.ComComms)
+                        {
+                            if (c1.path == c.path && c1.ctype != c.ctype && (c1.cstatus == ComStatus.Add || c1.cstatus == ComStatus.Modify))
+                                c1.cstatus = ComStatus.Normal;
+                        }
+                    }
                 }
 
                 c.cstatus = ComStatus.Normal;
             }
 
             return Result; 
-        }
-
-        // 编译Dll或者Exe
-        private bool CompileDpr(int dVer, string dPro, string outdir)
-        {
-            bool Result = true;
-
-            Process p = new Process();
-            p.StartInfo.FileName = "cm.bat";
-            p.StartInfo.Arguments = " " + dVer.ToString() + " " + dPro + " " + outdir;
-            p.StartInfo.UseShellExecute = false;
-            p.StartInfo.RedirectStandardInput = true;
-            p.StartInfo.RedirectStandardOutput = true;
-            p.StartInfo.RedirectStandardError = true;
-            p.StartInfo.CreateNoWindow = true;
-            p.Start();
-
-            string strOutput = p.StandardOutput.ReadToEnd();
-            // 输出最后几行
-            string[] strArr = Regex.Split(strOutput, "\r");
-            log.WriteFileLog("[编译命令] " + p.StartInfo.FileName + p.StartInfo.Arguments);
-            log.WriteFileLog("[编译日志]");
-            if (strOutput.IndexOf("Complile Failed") >= 0)
-            {
-                Result = false;
-                log.WriteErrorLog(strArr[strArr.Length - 3].Replace('\n', ' '));  // 输出最后一行报错信息
-                log.WriteErrorLog(strArr[strArr.Length - 2].Replace('\n', ' '));
-                log.WriteFileLog("编译输出：");
-                log.WriteFileLog(strOutput);
-            }
-            else
-            {
-                log.WriteFileLog(strArr[strArr.Length - 4].Replace('\n', ' '));
-                log.WriteFileLog(strArr[strArr.Length - 3].Replace('\n', ' '));
-                log.WriteFileLog(strArr[strArr.Length - 2].Replace('\n', ' '));
-            }
-          
-            log.WriteFileLog("[编译结束]");
-            p.WaitForExit();
-            p.Close();
-
-            return Result;
-        }
-
-        // 要重写
-        private int GetDelphiVer(string Name)
-        {
-            // 检查是否在配置中
-            int ver;
-            if (MAConf.instance.DelCom.TryGetValue(Name, out ver))
-            {
-            }
-            else  // 否则，默认当做 D6
-            {
-                ver = 6;
-            }
-            return ver;
-        }
-
-        // 编译Excel文件或者后台Sql
-        private bool CompileExcel(ComType ctype, string cname, string dir)
-        {
-            // 确定详细设计说明书文件
-            Detail d;
-            MacroType m;
-            if (ctype == ComType.SO)
-            {
-                m = MacroType.ProC;
-                d = MAConf.instance.Dls.FindBySo(cname);
-            }
-            else if (ctype == ComType.Sql)
-            {
-                m = MacroType.SQL;
-                d = MAConf.instance.Dls.FindBySql(cname);
-            }
-            else if (ctype == ComType.FuncXml)
-            {
-                m = MacroType.FuncXml;
-                d = MAConf.instance.Dls.FindByXml(cname);
-            }
-            else
-            {
-                return true;
-            }
-
-            if (d == null)
-            {
-                log.WriteErrorLog("查找不到对应的详细设计说明书模块！");
-                return false;
-            }
-
-            // 标定index
-            bool Result = true;
-            int index = MAConf.instance.Dls.IndexOf(d) + 1;
-
-            // 先把存在的CError删除，以检测是否发生编译错误
-            if (File.Exists(Path.Combine(dir, "CError.txt")))
-            {
-                File.Delete(Path.Combine(dir, "CError.txt"));
-            }
-
-            // 编译Excel 最耗时，对Excel检查是否需要编译，比较PC文件
-            bool bNew = false;
-            string tpath = Path.Combine(
-                Path.GetDirectoryName(MAConf.instance.DetailFile), "后端",
-                d.File);
-            DateTime t2 = File.GetLastWriteTime(tpath);
-            DateTime t1 = t2.AddSeconds(-1);
-            if (ctype == ComType.SO)
-            {
-                foreach (string s in d.ProcFiles)
-                {
-                    t1 = File.GetLastWriteTime(Path.Combine(dir, s));
-                    if (DateTime.Compare(t1, t2) > 0)
-                    {
-                        bNew = true;
-                        break;
-                    }
-                }
-            }
-            else if (ctype == ComType.Sql)
-            {
-                t1 = File.GetLastWriteTime(Path.Combine(dir, d.SqlFile));
-                if (DateTime.Compare(t1, t2) > 0)
-                {
-                    bNew = true;
-                }
-            }
-
-            if (bNew)
-            {
-                log.WriteLog("本地源代码时间晚于Excel文件时间，不需集成处理！"+ cname);
-                return true;
-            }
-
-            Result = ExcelMacroHelper.instance.ScmRunExcelMacro(m, index, dir);
-
-            if (!Result)
-            {
-                return false;
-            }
-            else if (File.Exists(Path.Combine(dir, "CError.txt")))
-            {
-                Result = false;
-                log.WriteErrorLog("检测到编译错误文件，请确认！");
-            }
-
-            return Result;
         }
 
         public override bool Tip
@@ -1171,6 +1037,12 @@ namespace MakeAuto
     /// </summary>
     class PackerDiffer : State
     {
+        public PackerDiffer(AmendPack Amend)
+            : base(Amend)
+        {
+        }
+
+
         public override string StateName
         {
             get { return "文件对比"; }
@@ -1180,6 +1052,7 @@ namespace MakeAuto
         {
             // 对于相同的，可以不提示用户，对于不同的，需要集成的同学确认，这个还需要想办法来写
             bool Result = true;
+            BaseConf pconf = MAConf.instance.Configs[ap.ProductId];
             foreach (CommitCom c in ap.ComComms)
             {
                 // 小包直接跳过
@@ -1195,14 +1068,7 @@ namespace MakeAuto
                 if (c.ctype == ComType.SO)
                 {
                     // 按照Hash对比，希望是可行的，
-                    Detail d = MAConf.instance.Dls.FindBySo(c.cname);
-                    if (d == null)
-                    {
-                        log.WriteErrorLog("无法确认组件详细设计说明书信息，" + c.cname);
-                        return false;
-                    }
-
-                    foreach(string s in d.ProcFiles)
+                    foreach (string s in pconf.GetDetail(c).ProcFiles)
                     {
                         string file1 = Path.Combine(ap.SCMAmendDir, s);
                         string file2 =  Path.Combine(ap.DiffDir, s);
@@ -1227,14 +1093,6 @@ namespace MakeAuto
                 }
                 else if(c.ctype == ComType.Sql)
                 {
-                    // 按照Hash对比，希望是可行的，
-                    Detail d = MAConf.instance.Dls.FindBySql(c.cname);
-                    if (d == null)
-                    {
-                        log.WriteErrorLog("无法确认组件详细设计说明书信息，" + c.cname);
-                        return false;
-                    }
-
                     string file1 = Path.Combine(ap.SCMAmendDir, c.cname);
                     string file2 = Path.Combine(ap.DiffDir, c.cname);
 
@@ -1312,6 +1170,7 @@ namespace MakeAuto
             }
         }
 
+        /*
         private bool CompareSrc(string filescm, string filesub)
         { 
             // 使用 diff 来作对比
@@ -1350,6 +1209,7 @@ namespace MakeAuto
                 return false;
             }
         }
+         * */
 
         public override bool Tip
         {
@@ -1364,6 +1224,11 @@ namespace MakeAuto
     /// </summary>
     class PackerSO : State
     {
+        public PackerSO(AmendPack Amend)
+            : base(Amend)
+        {
+        }
+
         public override string StateName
         {
             get { return "转移源文件，生成中间件"; }
@@ -1372,6 +1237,7 @@ namespace MakeAuto
         public override bool DoWork(AmendPack ap)
         {
             bool Result = true;
+            BaseConf pconf = MAConf.instance.Configs[ap.ProductId];
             foreach (CommitCom c in ap.ComComms)
             {
                 // 小包直接跳过
@@ -1387,41 +1253,30 @@ namespace MakeAuto
                 // 编译完成后，需要上传到 ssh 服务器上得到 SO，sql不需要处理
                 if (c.ctype == ComType.SO)
                 {
-                    ReSSH s = MAConf.instance.ReConns["scm"];  // 一定要配置这个
+                    ReSSH s = pconf.Conn;  // 一定要配置这个
                     if (s == null)
                     {
                         log.WriteErrorLog("集成ssh配置不存在！");
                         return false;
                     }
-                    s.localdir = ap.SCMAmendDir + "\\";
 
-                    // 把OutDir下的文件移动过来
-                    Detail d = MAConf.instance.Dls.FindBySo(c.cname);
-                    if (d == null)
-                    {
-                        log.WriteErrorLog("无法定位组件" + c.cname + "详细设计说明书位置，编译失败");
-                        return false;
-                    }
-
-                    foreach (string f in d.ProcFiles)
-                    {
-                        File.Copy(Path.Combine(MAConf.instance.OutDir, f),
-                            Path.Combine(ap.SCMAmendDir, f),
-                            true);
-                    }
+                    Detail dl = pconf.GetDetail(c);
 
                     // 上传、编译、下载
-                    Result = s.UploadModule(d) && s.Compile(d) && s.DownloadModule(d);
+                    Result = s.UploadModule(dl);
+                    if(Result)
+                        Result = s.Compile(dl);
+                    if(Result)
+                        Result = s.DownloadModule(dl);
+
+                    if (!Result)
+                    {
+                        log.WriteErrorLog("编译SO失败了！" + dl.Name);
+                    }
                 }
                 else if (c.ctype == ComType.Sql)
                 {
-                    // 送到 Oracle 上执行，暂时没有
-                    //Detail d = MAConf.instance.Dls.FindBySql(c.cname);
-                    
-                    File.Copy(Path.Combine(MAConf.instance.OutDir, c.cname),
-                        Path.Combine(ap.SCMAmendDir, c.cname),
-                        true);
-
+                    //todo 过程送到 Oracle 上执行，暂时没有
                     Result = true;
                 }
 
@@ -1444,13 +1299,72 @@ namespace MakeAuto
     /// </summary>
     class PackerRePack : State
     {
+        public PackerRePack(AmendPack Amend)
+            : base(Amend)
+        {
+        }
+
         public override string StateName
         {
             get { return "重新打包处理"; }
         }
 
+        public bool CopyCommit(AmendPack ap)
+        {
+            bool Result = true;
+            BaseConf pconf = MAConf.instance.Configs[ap.ProductId];
+            foreach (CommitCom c in ap.ComComms)
+            {
+                // 小包直接跳过
+                if (c.ctype == ComType.Ssql || c.cstatus == ComStatus.NoChange)
+                {
+                    continue;
+                }
+
+                log.WriteLog("复制：" + c.cname);
+
+                // 去除文件只读属性，否则复制时不能覆盖
+                FileAttributes attributes = File.GetAttributes(Path.Combine(ap.SCMAmendDir, c.cname));
+                FileAttributes attr1 = attributes;
+                if ((attributes & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
+                {
+                    // Show the file.
+                    attributes = attributes & ~FileAttributes.ReadOnly;
+                    File.SetAttributes(Path.Combine(ap.SCMAmendDir, c.cname), attributes);
+                }
+
+                if (c.ctype == ComType.Patch || c.ctype == ComType.Ini || c.ctype == ComType.Xml || c.ctype == ComType.MenuPatch)
+                {
+                    File.Copy(c.sawfile.LocalPath, Path.Combine(ap.SCMAmendDir, c.cname), true);
+                }
+                else
+                {
+                    File.Copy(Path.Combine(pconf.OutDir, c.cname), Path.Combine(ap.SCMAmendDir, c.cname), true);
+
+                    if (c.ctype == ComType.SO) // so 多复制源代码
+                    {
+                        Detail d = pconf.GetDetail(c);
+                        foreach (string s in d.ProcFiles)
+                        {
+                            File.Copy(Path.Combine(pconf.OutDir, s), Path.Combine(ap.SCMAmendDir, s), true);
+                        }
+                    }
+                }
+
+                // 还原只读属性，似乎不需要还原，没啥用
+                //attributes = attr1;
+                //if ((attributes & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
+                //{
+                //    File.SetAttributes(Path.Combine(ap.SCMAmendDir, c.cname), attributes);
+                //}
+            }
+            return Result;
+        }
+
         public override bool DoWork(AmendPack ap)
         {
+            // 复制递交组件到递交包 
+            CopyCommit(ap);
             // 此时，文件夹的组件已完成，对文件夹压包处理
             // 需要把递交组件和src分别压包，这个与开发递交的组件不同
             // 检查是否存在源代码
@@ -1471,7 +1385,7 @@ namespace MakeAuto
             Process p = new Process();
             try
             {
-                p.StartInfo.FileName = MAConf.instance.rar;           // rar程序名
+                p.StartInfo.FileName = MAConf.instance.Configs[ap.ProductId].Rar;           // rar程序名
 
                 p.StartInfo.UseShellExecute = false;        // 关闭Shell的使用  
                 p.StartInfo.RedirectStandardInput = false; // 重定向标准输入
@@ -1542,6 +1456,11 @@ namespace MakeAuto
     /// </summary>
     class PackerUpload : State
     {
+        public PackerUpload(AmendPack Amend)
+            : base(Amend)
+        {
+        }
+
         public override string StateName
         {
             get { return "压缩包上传"; }
@@ -1549,11 +1468,12 @@ namespace MakeAuto
 
         public override bool DoWork(AmendPack ap)
         {
+            BaseConf pconf = MAConf.instance.Configs[ap.ProductId];
             // 对于重新集成，先删除掉上一次集成的软件包，然后按照新集成处理
             if (ap.scmtype == ScmType.ReScm)
             {
                 // 删除ftp软件包，删除本地软件包
-                FTPConnection ftp = MAConf.instance.ftp;
+                FTPConnection ftp = pconf.ftp;
                 if (ftp.IsConnected == false)
                 {
                     ftp.Connect();
@@ -1581,6 +1501,11 @@ namespace MakeAuto
     /// </summary>
     class PackCleanUp : State
     {
+        public PackCleanUp(AmendPack Amend)
+            : base(Amend)
+        {
+        }
+
         public override string StateName
         {
             get { return "输出清理"; }

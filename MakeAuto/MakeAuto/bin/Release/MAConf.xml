@@ -1,53 +1,32 @@
 <?xml version="1.0" encoding="gb2312"?>
 <!--连接配置-->
 <MakeAuto>
-    <Part showsecu="true" showcrdt="true" showfutu="false" tmpdir="tmp" />
-    <!-- 详细设计说明书的位置，据此上推代码目录，-->
-	<Detail DetailFile="E:\06trade\HSTRADES11\trunk\Documents\D2.Designs\详细设计\金融产品销售系统_详细设计说明书.xls" SrcDir="C:\src" DetailList="detail.xml"/>
-    <!-- 修改单递交基本目录，自动生成递交的修改单在此目录下 -->
-	<Amend BaseDir="E:\Work\xgd"  Author="高虎" ModuleList="module.xml"/>
-    <Conns>
-      <!-- 直接取集成节点，以下节点无效 -->
-	  <Conn name="centos" host="192.168.56.101" port="22" user="handsome" pass="handsome">
-        <FBASE compile="false" restartas="false" />
-      </Conn>
-      <Conn name="rzgh" host="192.168.185.90" port="22" user="handsome" pass="handsome">
-        <FBASE compile="false" restartas="false" />
-      </Conn>
-      <Conn name="dev06" host="192.168.185.89" port="22" user="handsome" pass="handsome">
-        <FBASE compile="true" restartas="true" />
-      </Conn>
-	  <!-- 名为 scm 的节点是集成专用，代码会锁定这个名字，如果要支持集成，那么一定要配置这个节点 -->
-	  <Conn name="scm" host="192.168.185.90" port="22" user="gftrade" pass="handsome">
-        <FBASE compile="false" restartas="false" />
-      </Conn>
-    </Conns>
-    <Smallball host="192.168.51.46" port="1021" user="cp1bscm" pass="scmcp1b" ServerDir ="/d:/测试代码站点/产品一部" LocalDir="E:\xgd">
-        <!-- ftp目录与本地目录对应关系，按照匹配度处理 -->
-		<BaseDir Subject ="广发版技术支持测试" LocalDir="E:\xgd\gfb" />
-		<BaseDir Subject ="融资融券" LocalDir="E:\xgd\rzrq" />
-    </Smallball>
-    <!-- 集成节点，主要是配置库的位置 -->
-	<SCMS OutDir="C:\src">
-        <SCM name="SECU" server="https://60.191.25.170:4000/secu/dep1/06trade" Workspace="E:\06trade" Amend="融资融券|广发版技术支持测试" />
-    </SCMS>
-	<!-- 此处指定要使用不同版本的Delphi编译的组件，默认是6，所以此处只需要写用Delphi 5 的版本就可以了-->
-	<DelCom>
-        <Com name="HsTools.exe" ver="5"/>
-        <Com name="HsCentrTrans.exe" ver="5"/>
-        <Com name="HsCbpTrans.exe" ver="5"/>
-        <Com name="ShangHai.dll" ver="5" />
-        <Com name="ShenZhen2.dll" ver="5" />
-        <Com name="AFOF.dll" ver="5" />
-        <Com name="KXX.dll" ver="5" />
-        <Com name="RZRQXX.dll" ver="5" />
-        <Com name="TRZR.dll" ver="5" />
-        <Com name="HsQutSvr.exe" ver="5" />
-        <Com name="BondRate.dll" ver="5" />
-        <Com name="ETF.dll" ver="5" />
-        <Com name="Warrant.dll" ver="5" />
-	</DelCom>
-	<!-- RAR路径，处理压缩包使用 -->
-	<RAR Path="C:\Program Files\WinRAR\Rar.exe" />
-	<Diff pro="diff.exe" arg="-I &quot;ppv->iVersion = &quot; -I &quot;/* 源程序名称: .* */&quot;"/>
+	<Products>
+		<Product type="cres" product_id="00100" enable="true" name="UF2.0" funclist="funclist_ref.xml">
+			<Repository repo="https://60.191.25.170:4000/secu/dep1/hstrade20/trunk" workspace="E:\hstrade20\trunk"/>
+			<Develop devtool="D:\HDT\eclipsec.exe" outdir="C:\gen" rar="C:\Program Files\WinRAR\Rar.exe"/>
+			<SSHConn name="scm" host="192.168.185.90" port="22" user="gftrade" pass="handsome" restartas="false"/>
+			<Smallball host="192.168.51.46" port="1021" user="cp1bscm" pass="scmcp1b" remotedir="/d:/测试代码站点/产品一部" localdir="E:\xgd"/>
+			<!-- 此处指定要使用不同版本的Delphi编译的组件，默认是6，所以此处只需要写用Delphi 5 的版本就可以了，后面可能还会有C++编译接口-->
+			<SpecialCom/>
+		</Product>
+		<Product type="cres" product_id="00109" enable="true" name="证券公司转融通系统" funclist="funclist_ref.xml">
+			<Repository repo="https://192.168.57.30/secu/dep1/HSRef10/trunk" workspace="E:\HSRef10"/>
+			<Develop devtool="D:\HDT\eclipsec.exe" outdir="C:\gen" rar="C:\Program Files\WinRAR\Rar.exe"/>
+			<SSHConn name="scm" host="192.168.185.90" port="22" user="gftrade" pass="handsome" restartas="false"/>
+			<Smallball host="192.168.51.46" port="1021" user="cp1bscm" pass="scmcp1b" remotedir="/d:/测试代码站点/产品一部" localdir="E:\refxg"/>
+			<!-- 此处指定要使用不同版本的Delphi编译的组件，默认是6，所以此处只需要写用Delphi 5 的版本就可以了，后面可能还会有C++编译接口-->
+			<SpecialCom/>
+		</Product>
+		<Product type="febs" product_id="00052" enable="true" name="06版集中交易系统" funclist="funclist.xml">
+			<Repository repo="https://60.191.25.170:4000/secu/dep1/06trade/HSTRADES11/trunk" workspace="E:\06trade\HSTRADES11\trunk"/>
+			<Develop devtool="E:\06trade\HSTRADES11\trunk\Documents\D2.Designs\详细设计\金融产品销售系统_详细设计说明书.xls" outdir="C:\src" rar="C:\Program Files\WinRAR\Rar.exe"/>
+			<SSHConn name="scm" host="192.168.185.90" port="22" user="gftrade" pass="handsome" restartas="false"/>
+			<Smallball host="192.168.51.46" port="1021" user="cp1bscm" pass="scmcp1b" remotedir="/d:/测试代码站点/产品一部" localdir="E:\gfxgd"/>
+			<!-- 此处指定要使用不同版本的Delphi编译的组件，默认是6，所以此处只需要写用Delphi 5 的版本就可以了，后面可能还会有C++编译接口-->
+			<SpecialCom>
+				<Com lang="delphi" ver="5" coms="HsTools.exe;HsCentrTrans.exe;HsCbpTrans.exe;ShangHai.dll;ShenZhen2.dll;AFOF.dll;KXX.dll;RZRQXX.dll;TRZR.dll;HsQutSvr.exe;BondRate.dll;ETF.dll;Warrant.dll"/>
+			</SpecialCom>
+		</Product>
+	</Products>
 </MakeAuto>

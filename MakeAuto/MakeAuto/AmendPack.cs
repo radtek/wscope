@@ -68,8 +68,6 @@ namespace MakeAuto
         Error,
     }
 
-    //string[] D5Pro = {"HsTools.exe", "HsCentrTrans.exe", "HsCbpTrans.exe", ""}
-
     // 递交程序项
     class CommitCom
     {
@@ -159,24 +157,6 @@ namespace MakeAuto
 
             log = OperLog.instance;
 
-            DiffDir = MAConf.instance.OutDir;
-
-            if (DiffDir[DiffDir.Length - 1] != '\\')
-                DiffDir += "\\";
-
-            if (!Directory.Exists(DiffDir))
-            {
-                try
-                {
-                    Directory.CreateDirectory(DiffDir);
-                }
-                catch (Exception e)
-                {
-                    log.WriteErrorLog("创建编译目录失败，请调整配置文件 OutDir 节点位置，或者手工创建。" + e.Message);
-                    //return;
-                }
-            }
-
             // 查询修改单信息
             if (QueryAmendInfo() == true)
             {
@@ -210,9 +190,9 @@ namespace MakeAuto
                     sqlconn.Open();
                 }
 
-                // 指定查询项 a.reference_stuff as 递交程序项, a.program_path_a as 递交路径
+                // 指定查询项 a.reference_stuff as 递交程序项, a.program_path_a as 递交路径, product_id as 产品
                 sqlcomm.CommandText = ""
-                  + " select a.reference_stuff, a.program_path_a "
+                  + " select a.reference_stuff, a.program_path_a, a.product_id "
                   + " from manage.dbo.programreworking2 a "
                   + " where reworking_id = '" + AmendNo + "' ";
                 //为指定的command对象执行DataReader;
@@ -224,6 +204,7 @@ namespace MakeAuto
                     // 获取数据
                     ComString = sqldr["reference_stuff"].ToString();  // 不 Trim() 以保留最后一个换行给 SetComs 判断用
                     CommitPath = sqldr["program_path_a"].ToString();
+                    ProductId = sqldr["product_id"].ToString();
                 }
                   
                 // 从CommitPath中分解递交项和主单号 /融资融券/20111123054-国金短信，分解得到 20111123054
@@ -237,17 +218,8 @@ namespace MakeAuto
                 Readme = "Readme-" + CommitDir + ".txt";
 
                 // 标定路径
-                RemoteDir = MAConf.instance.fc.ServerDir + CommitPath;
-
-                string val;
-                if (MAConf.instance.fc.PathCorr.TryGetValue(AmendSubject, out val))
-                {
-                    LocalDir = val;
-                }
-                else
-                {
-                    LocalDir = MAConf.instance.fc.LocalDir;
-                }
+                RemoteDir = MAConf.instance.Configs[ProductId].fc.ServerDir + CommitPath;
+                LocalDir = MAConf.instance.Configs[ProductId].fc.LocalDir;
 
                 result = true;
             }
@@ -366,8 +338,8 @@ namespace MakeAuto
         {
             log.WriteInfoLog("查询FTP目录信息...");
             // 输出递交包，到本地集成环境处理，需要使用ftp连接
-            FTPConnection ftp = MAConf.instance.ftp;
-            FtpConf fc = MAConf.instance.fc;
+            FTPConnection ftp = MAConf.instance.Configs[ProductId].ftp;
+            FtpConf fc = MAConf.instance.Configs[ProductId].fc;
             string s;
 
             // 强制重新连接，防止时间长了就断掉了
@@ -524,8 +496,8 @@ namespace MakeAuto
         public Boolean DeletePack(int v)
         {
             // 输出递交包，到本地集成环境处理，需要使用ftp连接
-            FTPConnection ftp = MAConf.instance.ftp;
-            FtpConf fc = MAConf.instance.fc;
+            FTPConnection ftp = MAConf.instance.Configs[ProductId].ftp;
+            FtpConf fc = MAConf.instance.Configs[ProductId].fc;
 
             // 强制重新连接，防止时间长了就断掉了
             if (ftp.IsConnected == false)
@@ -564,6 +536,8 @@ namespace MakeAuto
         // 修改单列表,可以递交N多修改单
         //public int[] Amends {get; set;}
 
+        public string ProductId { get; private set; }  // 00052-确定股东
+        
         // 存放路径
         public string CommitPath {get; private set; } // /广发版技术支持测试/20111223029-深圳大宗
 
