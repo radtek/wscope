@@ -23,16 +23,16 @@ namespace MakeAuto
             // 下载递交包-从ftp 上获取压缩包
             // 预处理递交包，包括解压缩，检查
             _aflow = new ArrayList();
-            _aflow.Add(new PackerDownload());
-            _aflow.Add(new PackerReadMe());
-            _aflow.Add(new PackerProcess());
+            _aflow.Add(new PackerDownload(amend));
+            _aflow.Add(new PackerReadMe(amend));
+            _aflow.Add(new PackerProcess(amend));
             //_aflow.Add(new PackerCheck());
             //_aflow.Add(new PackerVSSCode());
-            _aflow.Add(new PackerSvnCode());
-            _aflow.Add(new PackerCompile());
+            _aflow.Add(new PackerSvnCode(amend));
+            _aflow.Add(new PackerCompile(amend));
             //_aflow.Add(new PackerDiffer());
-            _aflow.Add(new PackerSO());
-            _aflow.Add(new PackerRePack());
+            _aflow.Add(new PackerSO(amend));
+            _aflow.Add(new PackerRePack(amend));
             //_aflow.Add(new PackerUpload());
             //_aflow.Add(new PackCleanUp());
 

@@ -5,8 +5,36 @@ namespace MakeAuto
     /// <summary>
     /// 详细设计说明书信息
     /// </summary>
-    public class Detail
+    class Detail
     {
+        public Detail(CommitCom c)
+        {
+            this.Name = c.cname;
+            Pas = c.cname.Replace("libs_", "").Replace("flow.10.so", "");
+            ProcFiles = new ArrayList();
+            MiddFiles = new ArrayList();
+            Gcc = "s_" + Pas + "flow.gcc";
+            ProcFiles.Add(Gcc);
+            ProcFiles.Add("s_" + Pas + "flow.cpp");
+            ProcFiles.Add("s_" + Pas + "func.h");
+
+            if (c.cname.IndexOf("s_ls_") >= 0)
+            {
+                ProcFiles.Add("s_" + Pas + "func.cpp"); // 与原子与逻辑不同
+            }
+            else if (c.cname.IndexOf("s_as_") >= 0)
+            {                
+                ProcFiles.Add("s_" + Pas + "func.pc");
+                MiddFiles.Add("s_" + Pas + "func.cpp");
+            }
+
+            MiddFiles.Add("s_" + Pas + "flow.o");
+            MiddFiles.Add("s_" + Pas + "func.o");
+
+            Compile = false;
+            Show = true;
+        }
+
         /// <summary>
         /// 详细设计说明书类构造函数，保存模块的相关信息
         /// </summary>
@@ -23,12 +51,17 @@ namespace MakeAuto
             
             // 保存Proc文件列表
             ProcFiles = new ArrayList();
+            MiddFiles = new ArrayList();
             if (Pas != string.Empty)
             {
+                Gcc = "s_" + Pas + "flow.gcc";
                 ProcFiles.Add(Gcc);
-                ProcFiles.Add(Pc);
-                ProcFiles.Add(Header);
-                ProcFiles.Add(Cpp);
+                ProcFiles.Add("s_" + Pas + "flow.cpp");
+                ProcFiles.Add("s_" + Pas + "func.h");
+                ProcFiles.Add("s_" + Pas + "func.pc");
+                MiddFiles.Add("s_" + Pas + "func.cpp");
+                MiddFiles.Add("s_" + Pas + "flow.o");
+                MiddFiles.Add("s_" + Pas + "func.o");
             }
 
             Compile = false;
@@ -51,8 +84,25 @@ namespace MakeAuto
             return t;
         }
 
+        public string GetMiddStr(bool quotes = true)
+        {
+            string t = string.Empty;
+            foreach (string s in MiddFiles)
+            {
+                if (quotes)
+                    t += "\"";
+                t += s;
+                if (quotes)
+                    t += "\"";
+                t += " ";
+            }
+            return t;
+        }
+
+
         // Pro*C中间件文件
         public ArrayList ProcFiles;
+        public ArrayList MiddFiles;
 
         // 是否勾选了编译，在勾选时变为true；否则变为 false
         public bool Compile { get; set; }
@@ -64,42 +114,9 @@ namespace MakeAuto
         public string Name { get; private set; }
         public string File {get; private set;}
         public string Pas {get; private set;}
-        public string Sql;
+        public string Sql { get; private set; }
 
-        public string Gcc
-        {
-            get { return "s_" + Pas + "flow.gcc"; }
-        }
-
-        public string Pc
-        {
-            get { return "s_" + Pas + "func.pc"; }
-        }
-
-        public string Cpp
-        {
-            get { return "s_" + Pas + "flow.cpp"; }
-        }
-
-        public string Header
-        {
-            get { return "s_" + Pas + "func.h"; }
-        }
-
-        public string FCPP
-        {
-            get { return "s_" + Pas + "func.cpp"; }
-        }
-
-        public string OFlow
-        {
-            get { return "s_" + Pas + "flow.o"; }
-        }
-
-        public string OFunc
-        {
-            get { return "s_" + Pas + "func.o"; }
-        }
+        public string Gcc { get; private set; }
 
         public string SO
         {
@@ -146,7 +163,27 @@ namespace MakeAuto
             }
         }
 
-        public Detail FindBySo(string name)
+        public Detail FindByName(CommitCom c)
+        {
+            if (c.ctype == ComType.SO)
+            {
+                return FindBySo(c.cname);
+            }
+            else if (c.ctype == ComType.Sql)
+            {
+                return FindBySql(c.cname);
+            }
+            else if (c.ctype == ComType.Xml)
+            {
+                return FindByXml(c.cname);
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        private Detail FindBySo(string name)
         {
             foreach (Detail d in this)
             {
@@ -158,7 +195,7 @@ namespace MakeAuto
             return null;
         }
 
-        public Detail FindBySql(string name)
+        private Detail FindBySql(string name)
         {
             foreach (Detail d in this)
             {
@@ -171,7 +208,7 @@ namespace MakeAuto
             return null;
         }
 
-        public Detail FindByXml(string name)
+        private Detail FindByXml(string name)
         {
             string name_1 = System.IO.Path.GetFileNameWithoutExtension(name);
             foreach (Detail d in this)
