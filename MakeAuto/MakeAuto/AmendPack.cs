@@ -26,6 +26,7 @@ namespace MakeAuto
         Xml,
         MenuPatch, // 增值Menu
         FuncXml,
+        Excel,
     }
 
     enum ComStatus
@@ -94,28 +95,29 @@ namespace MakeAuto
             cstatus = status;
             path = string.Empty;
 
-            if (cname.IndexOf("libs") > -1)
+            if (cname.IndexOf("libs") >= 0)
                 ctype = ComType.SO;
-            else if (cname.IndexOf("sql") > -1)
+            else if (cname.IndexOf("sql") >= 0)
             {
-                if (cname.IndexOf("Patch") > -1)
+                if (cname.IndexOf("Patch") >= 0)
                     ctype = ComType.Patch;
-                else if (cname.IndexOf("user_") >= 0 && cname.IndexOf("菜单功能") > 0)
+                else if (cname.IndexOf("user_") >= 0 && cname.IndexOf("菜单功能") >= 0)
                     ctype = ComType.MenuPatch;
-                else if (cname.IndexOf("小包") > -1 || cname.IndexOf("临时") > -1)// 希望能识别出临时修改单，有时会失效
+                else if (cname.IndexOf("小包") >= 0 || cname.IndexOf("临时") >= 0)// 希望能识别出临时修改单，有时会失效
                     ctype = ComType.Ssql;
                 else ctype = ComType.Sql;
             }
-            else if (cname.IndexOf("exe") > -1)
+            else if (cname.IndexOf("exe") >= 0)
                 ctype = ComType.Exe;
-            else if (cname.IndexOf("dll") > -1)
+            else if (cname.IndexOf("dll") >= 0)
                 ctype = ComType.Dll;
-            else if (cname.IndexOf("ini") > -1)
+            else if (cname.IndexOf("ini") >= 0)
                 ctype = ComType.Ini;
-            else if (cname.IndexOf("xml") > -1)
-            {
+            else if (cname.IndexOf("xml") >= 0)
                 ctype = ComType.Xml;
-            }
+            else if (cname.IndexOf("xls") >= 0)
+                ctype = ComType.Excel;
+            else ctype = ComType.Nothing;
         }
     }
 
@@ -298,7 +300,7 @@ namespace MakeAuto
                         break;
                 }
 
-                if (ret1 == false)
+                if (ret1 == false) // 先校验完所有的，如果有一个不同，则返回版本不对
                     ret = ret1;
             }
 
@@ -603,7 +605,7 @@ namespace MakeAuto
         public ScmStatus laststatus;
         public ScmStatus scmstatus;
 
-        public SvnVersion svn;
+        public SvnPort svn;
         //public SAWV sv;
 
         public string DiffDir { get; private set; }

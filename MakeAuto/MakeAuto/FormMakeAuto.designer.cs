@@ -52,6 +52,7 @@
             this.button9 = new System.Windows.Forms.Button();
             this.button8 = new System.Windows.Forms.Button();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
+            this.label9 = new System.Windows.Forms.Label();
             this.label8 = new System.Windows.Forms.Label();
             this.txtScmVer = new System.Windows.Forms.TextBox();
             this.label7 = new System.Windows.Forms.Label();
@@ -111,7 +112,7 @@
             this.mniAbout});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(857, 25);
+            this.menuStrip1.Size = new System.Drawing.Size(976, 25);
             this.menuStrip1.TabIndex = 2;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -159,9 +160,9 @@
             // 
             // statusStrip1
             // 
-            this.statusStrip1.Location = new System.Drawing.Point(0, 492);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 582);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(857, 22);
+            this.statusStrip1.Size = new System.Drawing.Size(976, 22);
             this.statusStrip1.TabIndex = 3;
             this.statusStrip1.Text = "statusStrip1";
             // 
@@ -171,7 +172,7 @@
             this.toolStripButton1});
             this.toolStrip1.Location = new System.Drawing.Point(0, 25);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(857, 25);
+            this.toolStrip1.Size = new System.Drawing.Size(976, 25);
             this.toolStrip1.TabIndex = 4;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -203,7 +204,7 @@
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel1.Location = new System.Drawing.Point(0, 50);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(857, 442);
+            this.panel1.Size = new System.Drawing.Size(976, 532);
             this.panel1.TabIndex = 21;
             // 
             // panel2
@@ -213,7 +214,7 @@
             this.panel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel2.Location = new System.Drawing.Point(0, 0);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(857, 442);
+            this.panel2.Size = new System.Drawing.Size(976, 532);
             this.panel2.TabIndex = 23;
             // 
             // rbLog
@@ -221,10 +222,10 @@
             this.rbLog.BackColor = System.Drawing.SystemColors.Window;
             this.rbLog.DetectUrls = false;
             this.rbLog.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.rbLog.Location = new System.Drawing.Point(0, 231);
+            this.rbLog.Location = new System.Drawing.Point(0, 191);
             this.rbLog.Name = "rbLog";
             this.rbLog.ReadOnly = true;
-            this.rbLog.Size = new System.Drawing.Size(857, 211);
+            this.rbLog.Size = new System.Drawing.Size(976, 341);
             this.rbLog.TabIndex = 24;
             this.rbLog.Text = "";
             this.rbLog.TextChanged += new System.EventHandler(this.rbLog_TextChanged);
@@ -238,7 +239,7 @@
             this.tcSCM.Location = new System.Drawing.Point(0, 0);
             this.tcSCM.Name = "tcSCM";
             this.tcSCM.SelectedIndex = 0;
-            this.tcSCM.Size = new System.Drawing.Size(857, 231);
+            this.tcSCM.Size = new System.Drawing.Size(976, 191);
             this.tcSCM.TabIndex = 22;
             // 
             // tabPage3
@@ -252,7 +253,7 @@
             this.tabPage3.Location = new System.Drawing.Point(4, 22);
             this.tabPage3.Name = "tabPage3";
             this.tabPage3.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage3.Size = new System.Drawing.Size(849, 205);
+            this.tabPage3.Size = new System.Drawing.Size(968, 165);
             this.tabPage3.TabIndex = 2;
             this.tabPage3.Text = "集成打包";
             this.tabPage3.UseVisualStyleBackColor = true;
@@ -281,7 +282,7 @@
             // 
             // button9
             // 
-            this.button9.Location = new System.Drawing.Point(572, 177);
+            this.button9.Location = new System.Drawing.Point(587, 77);
             this.button9.Name = "button9";
             this.button9.Size = new System.Drawing.Size(75, 23);
             this.button9.TabIndex = 31;
@@ -292,7 +293,7 @@
             // 
             // button8
             // 
-            this.button8.Location = new System.Drawing.Point(491, 176);
+            this.button8.Location = new System.Drawing.Point(506, 76);
             this.button8.Name = "button8";
             this.button8.Size = new System.Drawing.Size(75, 23);
             this.button8.TabIndex = 30;
@@ -302,6 +303,7 @@
             // 
             // groupBox4
             // 
+            this.groupBox4.Controls.Add(this.label9);
             this.groupBox4.Controls.Add(this.label8);
             this.groupBox4.Controls.Add(this.txtScmVer);
             this.groupBox4.Controls.Add(this.label7);
@@ -314,10 +316,19 @@
             this.groupBox4.Controls.Add(this.txbAmenNo);
             this.groupBox4.Location = new System.Drawing.Point(8, 6);
             this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Size = new System.Drawing.Size(332, 194);
+            this.groupBox4.Size = new System.Drawing.Size(332, 151);
             this.groupBox4.TabIndex = 27;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "修改单";
+            // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.Location = new System.Drawing.Point(214, 51);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(41, 12);
+            this.label9.TabIndex = 27;
+            this.label9.Text = "label9";
             // 
             // label8
             // 
@@ -403,7 +414,7 @@
             this.txbAmenNo.Name = "txbAmenNo";
             this.txbAmenNo.Size = new System.Drawing.Size(121, 21);
             this.txbAmenNo.TabIndex = 12;
-            this.txbAmenNo.Text = "20130327018";
+            this.txbAmenNo.Text = "20130314054";
             this.txbAmenNo.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txbAmenNo_KeyDown);
             // 
             // btnReadInfo
@@ -424,7 +435,7 @@
             this.tabPage1.Location = new System.Drawing.Point(4, 22);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(849, 205);
+            this.tabPage1.Size = new System.Drawing.Size(968, 165);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "编译集成";
             this.tabPage1.UseVisualStyleBackColor = true;
@@ -531,7 +542,7 @@
             this.tabPage2.Location = new System.Drawing.Point(4, 22);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(849, 205);
+            this.tabPage2.Size = new System.Drawing.Size(968, 165);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "修改递交";
             this.tabPage2.UseVisualStyleBackColor = true;
@@ -682,7 +693,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(857, 514);
+            this.ClientSize = new System.Drawing.Size(976, 604);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.toolStrip1);
             this.Controls.Add(this.statusStrip1);
@@ -777,6 +788,7 @@
         private System.Windows.Forms.Timer timer1;
         private System.Windows.Forms.Button btnFlow;
         private System.Windows.Forms.Button btnDel;
+        private System.Windows.Forms.Label label9;
     }
 }
 

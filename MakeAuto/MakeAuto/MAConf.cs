@@ -73,7 +73,7 @@ namespace MakeAuto
                 xn = root.SelectSingleNode("Repository");
                 Repository = xn.Attributes["repo"].InnerText;
                 WorkSpace = xn.Attributes["workspace"].InnerText;
-                SvnRepo = new SvnVersion(name, Repository);
+                SvnRepo = new SvnPort(name, Repository);
                 SvnRepo.Workspace = WorkSpace;
 
                 // 读取修改单配置明细
@@ -82,6 +82,12 @@ namespace MakeAuto
                 DevTool = xn.Attributes["devtool"].InnerText;
                 Rar = xn.Attributes["rar"].InnerText;
                 OutDir = xn.Attributes["outdir"].InnerText;
+                // OutDir 如果以 \ 结尾，会导致编译前台Drp时，批处理里会出现 "C:\src\"， \"会被认为是转义，就报错了，
+                // 这里如果，结尾是\,去掉
+                if (OutDir[OutDir.Length - 1] == '\\')
+                {
+                    OutDir = OutDir.Substring(0, OutDir.Length - 1);
+                }
 
                 // 读取Ssh连接配置
                 log.WriteFileLog("读取Ssh连接配置");
@@ -96,7 +102,7 @@ namespace MakeAuto
 
                 // 读取小球FTP路径递交配置
                 log.WriteFileLog("读取小球FTP路径递交配置");
-                xn = root.SelectSingleNode("Smallball");
+                xn = root.SelectSingleNode("CommitFtp");
                 fc = new FtpConf();
                 fc.host = xn.Attributes["host"].InnerText;
                 fc.port = int.Parse(xn.Attributes["port"].InnerText);
@@ -139,7 +145,6 @@ namespace MakeAuto
             detail = null;
         }
         
-        //todo:此处尚未实现，需要根据不同基础件处理，同时Detail的定义也需要调整
         public virtual Detail GetDetail(CommitCom c)
         {
             return null;
@@ -168,9 +173,9 @@ namespace MakeAuto
             
             // 确定工程名称
             string dPro = Path.Combine(c.sawfile.LocalPath, Path.GetFileNameWithoutExtension(c.cname) + ".dpr");
-            CompileDpr(Ver, dPro, OutDir);
+            bool Result = CompileDpr(Ver, dPro, OutDir);
 
-            return true;
+            return Result;
         }
 
         public virtual bool CompileBackEnd(CommitCom c)
@@ -198,23 +203,12 @@ namespace MakeAuto
             p.Start();
 
             string strOutput = p.StandardOutput.ReadToEnd();
-            // 输出最后几行
-            string[] strArr = Regex.Split(strOutput, "\r");
-            log.WriteFileLog("[编译命令] " + p.StartInfo.FileName + p.StartInfo.Arguments);
-            log.WriteFileLog("[编译日志]");
+            log.WriteLog("[编译命令] " + p.StartInfo.FileName + p.StartInfo.Arguments);
+            log.WriteLog("[编译输出]");
+            log.WriteLog(strOutput);
             if (strOutput.IndexOf("Complile Failed") >= 0)
             {
                 Result = false;
-                log.WriteErrorLog(strArr[strArr.Length - 3].Replace('\n', ' '));  // 输出最后一行报错信息
-                log.WriteErrorLog(strArr[strArr.Length - 2].Replace('\n', ' '));
-                log.WriteFileLog("编译输出：");
-                log.WriteFileLog(strOutput);
-            }
-            else
-            {
-                log.WriteFileLog(strArr[strArr.Length - 4].Replace('\n', ' '));
-                log.WriteFileLog(strArr[strArr.Length - 3].Replace('\n', ' '));
-                log.WriteFileLog(strArr[strArr.Length - 2].Replace('\n', ' '));
             }
 
             log.WriteFileLog("[编译结束]");
@@ -238,7 +232,7 @@ namespace MakeAuto
         public ReSSH Conn { get; private set; }
         public FtpConf fc {get; private set;}
         public FTPConnection ftp {get; private set;}
-        public SvnVersion SvnRepo { get; private set; }
+        public SvnPort SvnRepo { get; private set; }
         public ArrayList SpeComs;
         public string OutDir { get; set; }
         protected Detail detail ;
@@ -420,8 +414,6 @@ namespace MakeAuto
             #endregion
         }
 
-
-        //todo:此处尚未实现，需要根据不同基础件处理，同时Detail的定义也需要调整
         public override Detail GetDetail(CommitCom c)
         {
             return Dls.FindByName(c);
@@ -445,7 +437,6 @@ namespace MakeAuto
         // 编译Excel文件或者后台Sql
         private bool CompileExcel(CommitCom c)
         {
-            
             // 确定详细设计说明书文件
             MacroType m;
             Detail d = Dls.FindByName(c);

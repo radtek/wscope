@@ -14,17 +14,21 @@ namespace MakeAuto
             ProcFiles = new ArrayList();
             MiddFiles = new ArrayList();
             Gcc = "s_" + Pas + "flow.gcc";
+            SO = "libs_" + Pas + "flow.10.so"; 
             ProcFiles.Add(Gcc);
-            ProcFiles.Add("s_" + Pas + "flow.cpp");
+            
             ProcFiles.Add("s_" + Pas + "func.h");
 
             if (c.cname.IndexOf("s_ls_") >= 0)
             {
+                ProcFiles.Add("s_" + Pas + "flow.cpp");
                 ProcFiles.Add("s_" + Pas + "func.cpp"); // 与原子与逻辑不同
             }
             else if (c.cname.IndexOf("s_as_") >= 0)
-            {                
+            {
+                ProcFiles.Add("s_" + Pas + "flow.pc");
                 ProcFiles.Add("s_" + Pas + "func.pc");
+                
                 MiddFiles.Add("s_" + Pas + "func.cpp");
             }
 
@@ -44,11 +48,11 @@ namespace MakeAuto
         /// <param name="Pas">PAS文件名</param>
         public Detail(string Name, string File, string Sql, string Pas)
         {
-            this.Name= Name;
+            this.Name = Name;
             this.File = File;
             this.Pas = Pas;
-            this.Sql = Sql;
-            
+            this.XmlFile = Pas + ".xml";
+ 
             // 保存Proc文件列表
             ProcFiles = new ArrayList();
             MiddFiles = new ArrayList();
@@ -62,7 +66,22 @@ namespace MakeAuto
                 MiddFiles.Add("s_" + Pas + "func.cpp");
                 MiddFiles.Add("s_" + Pas + "flow.o");
                 MiddFiles.Add("s_" + Pas + "func.o");
+
+                if (Pas.Trim() == "public")
+                {
+                    SO = "libs_" + Pas + "func.10.so";
+                }
+                else
+                {
+                    SO = "libs_" + Pas + "flow.10.so";
+                }
             }
+
+            if (Sql != string.Empty)
+            {
+                SqlFile = Sql + "_or.sql";
+            }
+
 
             Compile = false;
             Show = true;
@@ -99,7 +118,6 @@ namespace MakeAuto
             return t;
         }
 
-
         // Pro*C中间件文件
         public ArrayList ProcFiles;
         public ArrayList MiddFiles;
@@ -110,39 +128,13 @@ namespace MakeAuto
         // 是否显示
         public bool Show { get; set; }
 
-        #region 一些属性，用来保存模块编号及相关的文件名
+        public string Pas { get; private set; }
         public string Name { get; private set; }
-        public string File {get; private set;}
-        public string Pas {get; private set;}
-        public string Sql { get; private set; }
-
+        public string File { get; private set; }
+        public string SqlFile { get; private set; }
+        public string XmlFile { get; private set; }
         public string Gcc { get; private set; }
-
-        public string SO
-        {
-            get 
-            { 
-                if(Pas.Trim() == string.Empty)
-                {
-                    return string.Empty;
-                }
-                else if(Pas.Trim() == "public")
-                {
-                    return "libs_" + Pas + "func.10.so";
-                }
-                else
-                {
-                    return "libs_" + Pas + "flow.10.so"; 
-                }
-            }
-        }
-
-        public string SqlFile
-        {
-            get { return Sql + "_or.sql";  }
-        }
-
-        #endregion
+        public string SO { get; private set; }
     }
 
     class Details : ArrayList
@@ -210,10 +202,9 @@ namespace MakeAuto
 
         private Detail FindByXml(string name)
         {
-            string name_1 = System.IO.Path.GetFileNameWithoutExtension(name);
             foreach (Detail d in this)
             {
-                if (name_1.Equals(d.Pas, System.StringComparison.Ordinal))
+                if (name.Equals(d.XmlFile, System.StringComparison.Ordinal))
                 {
                     return d;
                 }

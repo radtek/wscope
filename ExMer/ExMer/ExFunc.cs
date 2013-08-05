@@ -400,6 +400,7 @@ namespace ExMer
                     r = ds.Tables["Func"].Rows[++i];
                 }
 
+
                 // 获取修改记录
                 while (!r.ItemArray[1].ToString().Equals("对象号"))
                 {
@@ -411,7 +412,13 @@ namespace ExMer
 
                     f.ModiRecord.AppendLine(s);
 
-                    r = ds.Tables["Func"].Rows[++i];
+                    ++i;
+                    if (i >= ds.Tables["Func"].Rows.Count)
+                    {
+                        break;
+                    }
+
+                    r = ds.Tables["Func"].Rows[i];                    
                 }
 
                 //f.BusinFlow = f.BusinFlow.Replace("\r\n", "\n");

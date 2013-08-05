@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Text.RegularExpressions;
 using System.Security.Cryptography;
 using System.Web;
+using System.Windows.Forms;
 
 namespace MakeAuto
 {
@@ -185,9 +186,29 @@ namespace MakeAuto
                 System.Windows.Forms.MessageBox.Show("FTP文件 " + ap.RemoteFile + " 不存在！");
                 return false;
             }
+            
             try
             {
-                ftp.DownloadFile(ap.LocalFile, ap.RemoteFile);
+                // 如果本地已经存在，提示是否覆盖
+                bool Res = true;
+                if (File.Exists(ap.LocalFile))
+                {
+                    log.WriteLog("本地文件已存在！" + ap.LocalFile);
+                    string message = "本地已存在 " + ap.LocalFile + " 是否覆盖？";
+                    string caption = "测试";
+
+                    System.Windows.Forms.DialogResult result = MessageBox.Show(message, caption, MessageBoxButtons.YesNo);
+                    if (result == System.Windows.Forms.DialogResult.No)
+                    {
+                        log.WriteLog("选择保留本地文件！" + ap.LocalFile);
+                        Res = false;
+                    }
+                }
+
+                if (Res)
+                {
+                    ftp.DownloadFile(ap.LocalFile, ap.RemoteFile);
+                }
             }
             catch (IOException)
             {
@@ -290,6 +311,7 @@ namespace MakeAuto
                 File.Delete(ap.SrcRar);  // 删除掉递交的src，不需要留着了
             }
 
+            // 20130802 
             // 如果Readme不存在，之后的的操作不用执行
             if(!File.Exists(Path.Combine(ap.SCMAmendDir, ap.Readme)))
             {
@@ -375,7 +397,7 @@ namespace MakeAuto
             // 如果集成注意不为空，那么提示用户先处理集成注意
             if (notice.Count > 0)
             {
-                string s = "Readme中有如下集成注意，请在处理完成后点击确定继续\n【注意：如果刷新了详细设计说明书文件，请退出程序重启！】：";
+                string s = "Readme中有如下集成注意，请在处理完成后点击确定继续\n【注意：06版集成注意如果详细设计说明书文件新增了模块，请退出程序重启！】：";
                 foreach(string t in notice)
                 {
                     s += "\r\n" + t;
@@ -427,7 +449,7 @@ namespace MakeAuto
                         // 生成组件信息
                         CommitCom c = new CommitCom(name, version);
 
-                        if (line.IndexOf("小包-") < 0)
+                        if (c.ctype != ComType.Ssql)
                         {
                             line = sr.ReadLine().Trim();
                             if (line == string.Empty)
@@ -449,14 +471,13 @@ namespace MakeAuto
                             c.ctype = ComType.FuncXml;
                         }
 
-                        if (c.ctype == ComType.SO)
+                        if (c.ctype == ComType.Nothing)
                         {
-                            AddToComs(ap, c);
+                            log.WriteErrorLog("无法确定的递交组件类型！" + c.cname);
+                            return false;
                         }
-                        else
-                        {
-                            ap.ComComms.Add(c);
-                        }
+                        
+                        ap.ComComms.Add(c);
                     }
                 }
             }
@@ -467,20 +488,13 @@ namespace MakeAuto
             }
 
             // 输出下处理结果
-            /*
-            log.WriteInfoLog("ProcessComs...");
+            //log.WriteInfoLog("ProcessComs...");
             log.WriteInfoLog(System.Reflection.MethodBase.GetCurrentMethod().Name);
             foreach (CommitCom c in ap.ComComms)
             {
-                log.WriteInfoLog(c.cname);
-                Debug.Indent();
-                log.WriteInfoLog(Enum.GetName(typeof(ComStatus), c.cstatus));
-                log.WriteInfoLog(c.cver);
-                log.WriteInfoLog(c.path);
-                Debug.Unindent();
+                log.WriteInfoLog(c.cname + " " + Enum.GetName(typeof(ComStatus), c.cstatus) 
+                    + " " + Enum.GetName(typeof(ComType), c.ctype) + " " + c.cver + " " + c.path);
             }
-             * */
-
             return true;
         }
 
@@ -631,13 +645,13 @@ namespace MakeAuto
                     f.LocalPath = Path.Combine(ap.svn.Workspace, temp).Replace('/', '\\');
                     f.UriPath = Path.Combine(ap.svn.Server, temp).Replace('\\', '/');
                 }
-                else if (c.ctype == ComType.SO || c.ctype == ComType.Sql || c.ctype == ComType.Xml || c.ctype == ComType.FuncXml) // 
+                else if (c.ctype == ComType.SO || c.ctype == ComType.Sql || c.ctype == ComType.FuncXml) // 
                 {
                     if (c.path[0] == '\\' || c.path[0] == '/')
                         c.path = c.path.Substring(1);
 
                     string temp = string.Empty;
-                    if (ap.ProductId == "00052")
+                    if (ap.ProductId == "00052" && (c.ctype == ComType.SO || c.ctype == ComType.Sql))
                     {
                         temp = @"Documents\D2.Designs\详细设计\后端";
                     }
@@ -650,12 +664,13 @@ namespace MakeAuto
                     f.LocalPath = Path.Combine(ap.svn.Workspace, temp, c.path).Replace('/', '\\');
                     f.UriPath = Path.Combine(ap.svn.Server, temp, c.path).Replace('\\', '/');
                 }
-                else if (c.ctype == ComType.Patch || c.ctype == ComType.Ini || c.ctype == ComType.MenuPatch)
+                else if (c.ctype == ComType.Patch || c.ctype == ComType.Ini || c.ctype == ComType.MenuPatch
+                    || c.ctype == ComType.Xml || c.ctype == ComType.Excel)
                 {
                     if (c.path[0] == '\\' || c.path[0] == '/')
                         c.path = c.path.Substring(1);
 
-                    // 对于PATCH，INI 文件，制定路径名称为主键，否则出现两个递交在 \\证券下的PATCH，就认为是同一个了
+                    // 对于PATCH，INI 文件，指定路径名称为主键，否则出现两个递交在 \\证券下的PATCH，就认为是同一个了
                     if (c.path[c.path.Length - 1] != '\\' && c.path[c.path.Length - 1] != '/')
                         c.path = c.path + '\\';
                     c.path = c.path + c.cname; 
@@ -698,49 +713,6 @@ namespace MakeAuto
                     + "SvnUri：" + s.UriPath + " "
                     + "文件状态：" + Enum.GetName(typeof(FileStatus), s.fstatus));
             }
-        }
-
-        private bool AddToComs(AmendPack ap, CommitCom c)
-        {
-            
-            // 标定该组件在 Order中的顺序
-            //int t = MAConf.instance.Order.IndexOf(c.cname);
-            //int t1, t2;
-             int t = -1;
-            if (t == -1)
-            {
-                ap.ComComms.Add(c);
-                return true;
-            }
-
-            /*
-            // 检索已经存在的组件库中，第一个当前组件的索引靠后的，处理掉
-            foreach (CommitCom m in ap.ComComms)
-            {
-                if (m.ctype != ComType.SO)
-                    continue;
-
-                // 标定当前组件的索引值
-                t2 = ap.ComComms.IndexOf(m);
-
-                // 标定当前组件的编译顺序
-                t1 = MAConf.instance.Order.IndexOf(m.cname);
-
-                // 如果没有指定编译该操作的顺序
-                if (t1 == -1 || t1 > t)
-                {
-                    ap.ComComms.Insert(t2, c);
-                    break;
-                }
-                else
-                {
-                    ap.ComComms.Add(c);
-                    break;
-                }
-            }
-             * */
-
-            return true;
         }
 
         /// <summary>
@@ -908,7 +880,7 @@ namespace MakeAuto
             // 这个地方由于没有历史性刷出的办法，对于DLL，可能需要两遍代码刷出，第一遍，先刷出最新版，第二遍，根据递交的版本历史，
             // 把在这个版本之后修改的刷回去
             // 需要注意的是ReadMe中的路径是不全的，这个很恶心
-            SvnVersion svn = new SvnVersion("0", "1");
+            SvnPort svn = new SvnPort("0", "1");
             foreach (SAWFile s in ap.SAWFiles)
             {
                 if (s.fstatus == FileStatus.New)
@@ -983,7 +955,7 @@ namespace MakeAuto
 
                 // Patch 和 Ini 刷下来，拷贝过去就可以，在后面的Repacker里面拷贝
                 if (c.ctype == ComType.Patch || c.ctype == ComType.Ini || c.ctype == ComType.Xml 
-                    || c.ctype == ComType.MenuPatch)
+                    || c.ctype == ComType.Excel || c.ctype == ComType.MenuPatch)
                 {
                 }
                 else if (c.ctype == ComType.Dll || c.ctype == ComType.Exe)
@@ -1238,6 +1210,19 @@ namespace MakeAuto
         {
             bool Result = true;
             BaseConf pconf = MAConf.instance.Configs[ap.ProductId];
+            if (pconf == null)
+            {
+                log.WriteErrorLog("产品配置失败不存在！" + ap.ProductId);
+                return false;
+            }
+
+            ReSSH s = pconf.Conn;  // 一定要配置这个
+            if (s == null)
+            {
+                log.WriteErrorLog("集成ssh配置不存在！");
+                return false;
+            }
+
             foreach (CommitCom c in ap.ComComms)
             {
                 // 小包直接跳过
@@ -1253,34 +1238,53 @@ namespace MakeAuto
                 // 编译完成后，需要上传到 ssh 服务器上得到 SO，sql不需要处理
                 if (c.ctype == ComType.SO)
                 {
-                    ReSSH s = pconf.Conn;  // 一定要配置这个
-                    if (s == null)
-                    {
-                        log.WriteErrorLog("集成ssh配置不存在！");
-                        return false;
-                    }
-
                     Detail dl = pconf.GetDetail(c);
-
-                    // 上传、编译、下载
+                    // 上传、编译、下载；先把所有的代码上传，防止有新增的函数依赖，导致编译报错
                     Result = s.UploadModule(dl);
-                    if(Result)
-                        Result = s.Compile(dl);
-                    if(Result)
-                        Result = s.DownloadModule(dl);
-
                     if (!Result)
                     {
-                        log.WriteErrorLog("编译SO失败了！" + dl.Name);
+                        log.WriteErrorLog("上传源代码失败了！ " + dl.Name);
+                        break;
                     }
                 }
                 else if (c.ctype == ComType.Sql)
                 {
+                    c.cstatus = ComStatus.Normal;
                     //todo 过程送到 Oracle 上执行，暂时没有
                     Result = true;
                 }
+            }
 
-                c.cstatus = ComStatus.Normal;
+            // 上传成功，就编译、下载
+            if (Result)
+            {
+                foreach (CommitCom c in ap.ComComms)
+                {
+                    // 小包直接跳过
+                    if (c.ctype == ComType.Ssql)
+                    {
+                        c.cstatus = ComStatus.Normal;
+                        continue;
+                    }
+
+                    if (c.cstatus == ComStatus.NoChange)
+                        continue;
+
+                    // 编译完成后，需要上传到 ssh 服务器上得到 SO，sql不需要处理
+                    if (c.ctype == ComType.SO)
+                    {
+                        Detail dl = pconf.GetDetail(c);
+
+                        // 编译、下载
+                        Result = s.Compile(dl) && s.DownloadModule(dl);
+                        if (!Result)
+                        {
+                            log.WriteErrorLog("编译SO失败了！" + dl.Name);
+                            break;
+                        }
+                        c.cstatus = ComStatus.Normal;
+                    }
+                }
             }
 
             return Result;
@@ -1333,7 +1337,8 @@ namespace MakeAuto
                     File.SetAttributes(Path.Combine(ap.SCMAmendDir, c.cname), attributes);
                 }
 
-                if (c.ctype == ComType.Patch || c.ctype == ComType.Ini || c.ctype == ComType.Xml || c.ctype == ComType.MenuPatch)
+                if (c.ctype == ComType.Patch || c.ctype == ComType.Ini || c.ctype == ComType.Xml 
+                    || c.ctype == ComType.Excel || c.ctype == ComType.MenuPatch)
                 {
                     File.Copy(c.sawfile.LocalPath, Path.Combine(ap.SCMAmendDir, c.cname), true);
                 }
