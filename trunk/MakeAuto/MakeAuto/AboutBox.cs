@@ -8,9 +8,9 @@ using System.Windows.Forms;
 
 namespace MakeAuto
 {
-    partial class AboutBoxMakeAuto : Form
+    partial class AboutBox : Form
     {
-        public AboutBoxMakeAuto()
+        public AboutBox()
         {
             InitializeComponent();
             this.Text = String.Format("关于 {0}", AssemblyTitle);
@@ -104,7 +104,6 @@ namespace MakeAuto
         private void okButton_Click(object sender, EventArgs e)
         {
             Close();
-            Dispose();
         }
     }
 }

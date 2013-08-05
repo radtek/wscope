@@ -10,9 +10,9 @@ namespace MakeAuto
     /// <summary>
     /// 对应 SVN 的一些接口操作，参照 SAWV 完成
     /// </summary>
-    class SvnVersion
+    class SvnPort
     {
-        public SvnVersion(string name, string server)
+        public SvnPort(string name, string server)
         {
             Name = name;
             Server = server;
@@ -28,12 +28,20 @@ namespace MakeAuto
 
             uritarget = new SvnUriTarget(Uri);
             pathtarget = new SvnPathTarget(Path);
-            
+
             // Get Info
             //log.WriteLog("取服务端信息......");
-            
-            client.GetInfo(uritarget, out uriinfo);
-            long endRevision = uriinfo.LastChangeRevision; // Revision代表整个版本库的当前版本，LastChangeRevision 表示这个文件最后的版本
+            long endRevision = 0;
+            try
+            {
+                client.GetInfo(uritarget, out uriinfo);
+                endRevision = uriinfo.LastChangeRevision; // Revision代表整个版本库的当前版本，LastChangeRevision 表示这个文件最后的版本
+            }
+            catch (Exception e)
+            {
+                log.WriteLog("取版本库信息异常: " + uritarget.Uri + " 错误信息：" + e.Message, LogLevel.Error);
+                return false;
+            }
 
             //log.WriteLog("取本地文件信息......");
             long startRevision = 0;
@@ -42,17 +50,17 @@ namespace MakeAuto
                 client.GetInfo(pathtarget, out pathinfo);
                 startRevision = pathinfo.LastChangeRevision;
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                startRevision = 0;
+                log.WriteLog("，取本地版本库信息异常:" + pathtarget.FileName + " 错误信息：" + e.Message, LogLevel.Error);
+                return false;
             }
 
             // 本地文件版本已经最新，不重新获取服务器版本
-            
             if (startRevision >= endRevision)
             {
-                log.WriteLog(pathtarget.FileName + 
-                    "，本地文件与服务器版本一致，不检查Svn服务器版本。" + 
+                log.WriteLog(pathtarget.FileName +
+                    "，本地文件与服务器版本一致，不检查Svn服务器版本。" +
                     "Revision = " + startRevision.ToString());
                 return true;
             }
@@ -102,7 +110,8 @@ namespace MakeAuto
             // Svn Update
             //log.WriteLog("更新文件......");
             SvnUpdateArgs uarg = new SvnUpdateArgs();
-            uarg.UpdateParents = true;
+            // svn 1.7 使用 uarg.UpdateParents = true;
+            uarg.Depth = SvnDepth.Infinity;
             uarg.Revision = l.Revision;
 
             Result = client.Update(pathtarget.FullPath, uarg);
@@ -134,37 +143,8 @@ namespace MakeAuto
         public SvnInfoEventArgs uriinfo;
         public SvnInfoEventArgs pathinfo;
 
-
         private SvnClient client;
         private SvnUriTarget uritarget;
         private SvnPathTarget pathtarget;
-    }
-
-    class SvnList : ArrayList
-    {
-        public SvnVersion this[string name]
-        {
-            get
-            {
-                foreach (SvnVersion s in this)
-                {
-                    if (s.Name == name)
-                        return s;
-                }
-                return null;
-            }
-        }
-
-        // 根据递交特征来决定连接到哪个库，比如小球的目录， 顶级的是 广发版技术支持测试，
-        // 那就匹配到了 “广发版技术支持测试|融资融券” 上
-        public SvnVersion GetByAmend(string AmendSub)
-        {
-            foreach (SvnVersion s in this)
-            {
-                if (s.Amend.IndexOf(AmendSub) >= 0)
-                    return s;
-            }
-            return null;
-        }
     }
 }

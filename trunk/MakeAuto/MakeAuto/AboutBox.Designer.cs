@@ -1,6 +1,6 @@
 ﻿namespace MakeAuto
 {
-    partial class AboutBoxMakeAuto
+    partial class AboutBox
     {
         /// <summary>
         /// 必需的设计器变量。
@@ -27,7 +27,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(AboutBoxMakeAuto));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(AboutBox));
             this.tableLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
             this.logoPictureBox = new System.Windows.Forms.PictureBox();
             this.labelProductName = new System.Windows.Forms.Label();
@@ -150,7 +150,7 @@
             this.okButton.Text = "确定(&O)";
             this.okButton.Click += new System.EventHandler(this.okButton_Click);
             // 
-            // AboutBoxMakeAuto
+            // AboutBox
             // 
             this.AcceptButton = this.okButton;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -160,12 +160,12 @@
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.Name = "AboutBoxMakeAuto";
+            this.Name = "AboutBox";
             this.Padding = new System.Windows.Forms.Padding(9, 8, 9, 8);
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "AboutBox1";
+            this.Text = "AboutBox";
             this.tableLayoutPanel.ResumeLayout(false);
             this.tableLayoutPanel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.logoPictureBox)).EndInit();

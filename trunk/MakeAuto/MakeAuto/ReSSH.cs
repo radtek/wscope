@@ -132,6 +132,7 @@ namespace MakeAuto
 
         public bool UploadModule(Detail dl)
         {
+            bool Result = true;
             if (sftp.IsConnected == false)
             {
                 if (InitSftp() == false)
@@ -147,17 +148,25 @@ namespace MakeAuto
             // 处理 .pc, .h, .cpp, .gc 文件
             log.WriteLog("SSH: " + host);
             log.WriteLog("上传文件 " + dl.GetProcStr(false), LogLevel.Info);
+
             foreach (string f in dl.ProcFiles)
             {
-                
+
                 path = Path.Combine(localdir, f);
+                if (!File.Exists(path))
+                {
+                    log.WriteErrorLog("文件不存在！ " + path);
+                    Result = false;
+                    break;
+                }
+
                 fs = new FileStream(path, FileMode.Open, FileAccess.Read);
                 sftp.UploadFile(fs, remotedir + f);
                 fs.Close();
             }
 
             log.WriteLog("文件上传成功！");
-            return true;
+            return Result;
         }
 
         public bool DownloadModule(Detail dl)
@@ -167,7 +176,6 @@ namespace MakeAuto
                 InitSftp();
             }
 
-            //todo 文件不存在，会生成一个空文件，判断下是FileStream创建的还是下载产生的，需要做下处理。实在不行，判断下大小是不是 0K fileinfo.length
             bool Result = true;
             MAConf.instance.WriteLog("下载文件 " + dl.SO, LogLevel.Info);
             FileStream fs = new FileStream(Path.Combine(localdir, dl.SO), FileMode.Create);
@@ -187,9 +195,9 @@ namespace MakeAuto
 
         private string MakeCmd(Detail dl)
         {
-            // bug? 这里如果不读下 bash_profile，就读不出bash_profile的环境变量 
+            // bug? 这里如果不读下 bash_profile，就读不出bash_profile的环境变量
             string s = " cd ~/src; source ~/.bash_profile; " +
-                "rm " + dl.GetMiddStr(false) +" " + "../appcom/" + dl.SO + " > /dev/null 2>&1;";
+                "rm " + dl.GetMiddStr(false) +" " + "../appcom/" + dl.SO + " tp* *.lis *.o > /dev/null 2>&1;";
             string make = " make -f ";
             string m_g;
             string m_p = " ORA_VER=10";
