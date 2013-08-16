@@ -1,31 +1,29 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using EnterpriseDT.Net.Ftp;
+using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Diagnostics;
 using System.IO;
 using System.Text.RegularExpressions;
-using System.Diagnostics;
-using EnterpriseDT.Net.Ftp;
 
 namespace MakeAuto
 {
     enum ComType
     {
         Nothing = 0,
-        SO = 1,
+        TablePatch = 1,
+        Patch,
+        Ssql, // 小包SQL
+        MenuPatch, // 增值Menu
         Sql,
+        FuncXml,
+        SO,
         Exe,
         Dll,
-        Patch,
-        // 小包SQL
-        Ssql,
         Ini,
         Xml,
-        MenuPatch, // 增值Menu
-        FuncXml,
         Excel,
     }
 
@@ -88,6 +86,10 @@ namespace MakeAuto
         // 组件状态
         public ComStatus cstatus { get; set; }
 
+        // Sql文件执行用户
+        private const string U_PREFIX = "hs_";
+        public List<string> users { get; private set; }
+
         public CommitCom(string name, string version, ComStatus status = ComStatus.NoChange)
         {
             cname = name;
@@ -99,13 +101,48 @@ namespace MakeAuto
                 ctype = ComType.SO;
             else if (cname.IndexOf("sql") >= 0)
             {
-                if (cname.IndexOf("Patch") >= 0)
+                users = new List<string>();
+
+                if (cname.IndexOf("TablePatch") >= 0)
+                {
+                    ctype = ComType.TablePatch;
+                    users.Add(U_PREFIX + cname.Substring(0, cname.IndexOf('_')));
+                }
+                else if (cname.IndexOf("Patch") >= 0)
+                {
                     ctype = ComType.Patch;
+                    users.Add(U_PREFIX + cname.Substring(0, cname.IndexOf('_'))); 
+                }
                 else if (cname.IndexOf("user_") >= 0 && cname.IndexOf("菜单功能") >= 0)
+                {
                     ctype = ComType.MenuPatch;
+                    users.Add(U_PREFIX + cname.Substring(0, cname.IndexOf('_')));
+                }
                 else if (cname.IndexOf("小包") >= 0 || cname.IndexOf("临时") >= 0)// 希望能识别出临时修改单，有时会失效
+                {
                     ctype = ComType.Ssql;
-                else ctype = ComType.Sql;
+                }
+                else
+                {
+                    ctype = ComType.Sql;
+                    try
+                    {
+                        // 处理sql脚本用户 secu secusz busin or.sql 去除最后两项
+                        int i = 0;
+                        string u = cname.Substring(0, cname.LastIndexOf('_'));
+                        u = u.Substring(0, u.LastIndexOf('_'));
+                        while ((i = u.IndexOf('_')) >= 0)
+                        {
+                            users.Add(U_PREFIX + u.Substring(i + 1));
+                            u = u.Substring(0, i);
+                        }
+                        users.Add(U_PREFIX + u);
+                    }
+                    catch (Exception ex)
+                    {
+                        OperLog.instance.WriteErrorLog("无法确认文件的用户：" + cname + ", Ex_Msg:" + ex.Message);
+                    }
+                }
             }
             else if (cname.IndexOf("exe") >= 0)
                 ctype = ComType.Exe;
@@ -145,6 +182,8 @@ namespace MakeAuto
         {
             this.AmendNo = AmendNo;
 
+            log = OperLog.instance;
+
             ComComms = new ComList();
             // 创建连接
             sqlconn = new SqlConnection(ConnString);
@@ -157,7 +196,27 @@ namespace MakeAuto
             ScmL = new ArrayList();
             ScmSrc = new ArrayList();
 
-            log = OperLog.instance;
+            StatusDict = new Dictionary<string, string>();
+            StatusDict.Add("512", "递交集成");
+            StatusDict.Add("504", "改完交审核"); 
+            StatusDict.Add("505", "递交测试"); 
+            StatusDict.Add("506", "分配测试");
+            StatusDict.Add("507", "测试开始");
+            StatusDict.Add("508", "测试通过");
+            StatusDict.Add("509", "测试不通过");
+            StatusDict.Add("510", "验收通过");
+
+            ReworkList = new Dictionary<string, string>();
+            ReworkStatus = new List<string>();
+            ReworkStatus.Add("512"); // 递交集成
+            //todo 发布时去除504
+            ReworkStatus.Add("504"); // 递交测试
+            ReworkStatus.Add("505"); // 递交测试
+            ReworkStatus.Add("506"); // 分配测试
+            ReworkStatus.Add("507"); // 测试开始
+            ReworkStatus.Add("508"); // 测试通过
+            ReworkStatus.Add("509"); // 测试不通过
+            ReworkStatus.Add("510"); // 
 
             // 查询修改单信息
             if (QueryAmendInfo() == true)
@@ -176,6 +235,28 @@ namespace MakeAuto
             {
                 scmstatus = ScmStatus.Error;
                 log.WriteErrorLog("查询FTP目录信息错误。");
+                return;
+            }
+
+            if (CheckAmendStatus() == false)
+            {
+                scmstatus = ScmStatus.Error;
+                foreach (KeyValuePair<string, string> kvp in ReworkList)
+                {
+                    if (!ReworkStatus.Contains(kvp.Value))
+                    {
+                        string sta;
+                        if (!StatusDict.TryGetValue(kvp.Value, out sta))
+                        {
+                            sta = "未知状态";
+                        }
+
+                        log.WriteLog("修改单号：" + kvp.Key + "，修改单状态：" + 
+                            kvp.Value + "-"  + sta, 
+                            LogLevel.Warning);
+                        break;
+                    }
+                }
                 return;
             }
         }
@@ -246,6 +327,62 @@ namespace MakeAuto
             return result;
         }
 
+        private Boolean CheckAmendStatus()
+        {
+            Boolean result = true;
+            // 打开连接
+            try
+            {
+                if (sqlconn.State == ConnectionState.Closed)
+                {
+                    sqlconn.Open();
+                }
+
+                // 指定查询项 a.reference_stuff as 递交程序项, a.program_path_a as 递交路径, product_id as 产品
+                sqlcomm.CommandText = ""
+                  + " select a.reworking_id, a.reworking_status "
+                  + " from manage.dbo.programreworking2 a "
+                  + " where a.program_path_a = '" + CommitPath + "' ";
+                //为指定的command对象执行DataReader;
+                sqldr = sqlcomm.ExecuteReader();
+
+                // 如果有数据，读取数据
+                while (sqldr.Read())
+                {
+                    // 获取数据  修改单号， 修改单状态
+                    ReworkList.Add(sqldr["reworking_id"].ToString(), sqldr["reworking_status"].ToString());
+                }
+
+                foreach (KeyValuePair<string, string> kvp in ReworkList)
+                {
+                    if (!ReworkStatus.Contains(kvp.Value)) 
+                    {
+                        result = false;
+                        break;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                result = false;
+                log.WriteLog("查询修改单递交路径失败，" + e.Message, LogLevel.Error);
+            }
+            finally
+            {
+                if (sqldr != null)
+                {
+                    sqldr.Close();
+                }
+
+                if (sqlconn != null)
+                {
+                    sqlconn.Close();
+                }
+            }
+
+            return result;
+        }
+
         // 设置递交组件
         private void SetComs()
         {
@@ -290,6 +427,7 @@ namespace MakeAuto
                         break;
                     case ComType.SO:  // SO 文件只有一个版本信息
                     case ComType.Ini: // Ini 文件有多个版本信息
+                    case ComType.TablePatch: // Patch 文件有多行版本信息
                     case ComType.Patch: // Patch 文件有多行版本信息
                     case ComType.Sql:
                         ret1 = ValidateSO(c);
@@ -438,17 +576,17 @@ namespace MakeAuto
             string dir = Path.GetFileNameWithoutExtension(currVerFile);
 
             //AmendDir = LocalDir + "\\" + dir;
-            SCMAmendDir = LocalDir + "\\" + "集成-" + dir;
+            SCMAmendDir = Path.Combine(LocalDir, "集成-" + dir);
 
             ScmVer = SubmitVer;
-            LocalFile = LocalDir + "\\" + currVerFile;
-            RemoteFile = RemoteDir + "\\" + currVerFile;
+            LocalFile = Path.Combine(LocalDir, currVerFile);
+            RemoteFile = Path.Combine(RemoteDir, currVerFile);
 
-            SCMLocalFile = SCMAmendDir + "\\" + "集成-" + currVerFile;
-            SCMRemoteFile = RemoteDir + "\\" + "集成-" +currVerFile;
+            SCMLocalFile = Path.Combine(SCMAmendDir, "集成-" + currVerFile);
+            SCMRemoteFile = Path.Combine(RemoteDir, "集成-" +currVerFile);
 
-            SrcRar = SCMAmendDir + "\\" + "src-V" + ScmVer.ToString() + ".rar";
-            SCMSrcRar = SCMAmendDir + "\\" + "集成-src-V" + ScmVer.ToString() + ".rar";
+            SrcRar = Path.Combine(SCMAmendDir, "src-V" + ScmVer.ToString() + ".rar");
+            SCMSrcRar = Path.Combine(SCMAmendDir,"集成-src-V" + ScmVer.ToString() + ".rar");
 
 
             if (ScmL.Count > 0)
@@ -457,16 +595,16 @@ namespace MakeAuto
                 s = ScmL[ScmL.Count - 1].ToString();
                 dir = Path.GetFileNameWithoutExtension(s);
                 // 上次数据
-                SCMLastAmendDir = LocalDir + "\\" + dir;
-                SCMLastLocalFile = SCMLastAmendDir + "\\" + s;
-                ScmLastRemoteFile = RemoteDir + "\\" + s;
+                SCMLastAmendDir = Path.Combine(LocalDir, dir);
+                SCMLastLocalFile = Path.Combine(SCMLastAmendDir, s);
+                ScmLastRemoteFile = Path.Combine(RemoteDir, s);
 
                 // 取递交版本号 
                 // 20111207012-委托管理-高虎-20120116-V13.rar --> 20111207012-委托管理-高虎-20120116-V13 -> 13
                 s = s.Substring(0, s.LastIndexOf('.'));
                 SCMLastVer = int.Parse(s.Substring(s.LastIndexOf('V') + 1));
-                SCMLastLocalSrcRar = SCMLastAmendDir + "\\" + "集成-src-V" + SCMLastVer.ToString() + ".rar";
-                ScmLastRemoteSrcRar = RemoteDir + "\\" + "集成-src-V" + SCMLastVer.ToString() + ".rar";
+                SCMLastLocalSrcRar = Path.Combine(SCMLastAmendDir, "集成-src-V" + SCMLastVer.ToString() + ".rar");
+                ScmLastRemoteSrcRar = Path.Combine(RemoteDir, "集成-src-V" + SCMLastVer.ToString() + ".rar");
             }
             else
             {
@@ -477,8 +615,8 @@ namespace MakeAuto
             {
                 ScmSrc.Sort();
                 s = ScmSrc[ScmSrc.Count - 1].ToString();
-                SCMLastLocalSrcRar = SCMLastAmendDir + "\\" + s;
-                ScmLastRemoteSrcRar = RemoteDir + "\\" +s;
+                SCMLastLocalSrcRar = Path.Combine(SCMLastAmendDir, s);
+                ScmLastRemoteSrcRar = Path.Combine(RemoteDir, s);
             }
 
             // 决定是新集成还是修复集成还是重新集成
@@ -595,6 +733,7 @@ namespace MakeAuto
         private SqlCommand sqlcomm;
         private SqlDataReader sqldr;
 
+        public bool TempModiFlag;
         public int SubmitVer {get; set;}
         public int ScmVer { get; set; }
 
@@ -606,7 +745,6 @@ namespace MakeAuto
         public ScmStatus scmstatus;
 
         public SvnPort svn;
-        //public SAWV sv;
 
         public string DiffDir { get; private set; }
         private OperLog log;
@@ -617,5 +755,9 @@ namespace MakeAuto
 
         public string ScmLastRemoteFile;
         public string ScmLastRemoteSrcRar;
+
+        public Dictionary<string, string> ReworkList { get; private set; }
+        public Dictionary<string, string> StatusDict { get; private set; }
+        public List<string> ReworkStatus { get; private set; }
     }
 }

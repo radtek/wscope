@@ -11,6 +11,7 @@ using System.Diagnostics;
 using System.Security;
 using System.Collections;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 
 namespace MakeAuto
 {
@@ -46,11 +47,161 @@ namespace MakeAuto
         public string Coms { get; set; }
     }
 
+    public class DBUser
+    {
+        public DBUser(string name, string pass, string note)
+        {
+            this.name = name;
+            this.pass = pass;
+            this.note = note;
+        }
+
+        public static bool test(string pass)
+        {
+            return true;
+
+        }
+
+        private static byte[] key;
+        private static byte[] iv;
+
+        private static void InitKey()
+        {
+            if (key == null || iv == null)
+            {
+                byte[] key_t = Encoding.UTF8.GetBytes(G_KEY);
+                // 做一下MD5哈希，作为 key，实际可以直接使用，HASH的值太小了
+                SHA512Managed provider_SHA = new SHA512Managed();
+                byte[] byte_pwdSHA = provider_SHA.ComputeHash(key_t);
+
+                key = new byte[32];
+                Array.Copy(byte_pwdSHA, key, 32);
+                iv = new byte[16];
+                Array.Copy(Encoding.UTF8.GetBytes(G_IV), key, 16);
+                myAes.Key = key;
+                myAes.IV = iv;
+            }
+        }
+
+        public static string DecPass(string encpass)
+        {
+            InitKey();
+            string plainText = DecryptStringFromBytes_Aes(Convert.FromBase64String(encpass), myAes.Key, myAes.IV);
+            return plainText;
+
+        }
+
+        public static string EncPass(string original)
+        {
+            InitKey();
+            byte[] cipherText = EncryptStringToBytes_Aes(original, myAes.Key, myAes.IV);
+            return Convert.ToBase64String(cipherText);
+        }
+
+        static byte[] EncryptStringToBytes_Aes(string plainText, byte[] Key, byte[] IV)
+        {
+            // Check arguments.
+            if (plainText == null || plainText.Length <= 0)
+                throw new ArgumentNullException("plainText");
+            if (Key == null || Key.Length <= 0)
+                throw new ArgumentNullException("Key");
+            if (IV == null || IV.Length <= 0)
+                throw new ArgumentNullException("Key");
+            byte[] encrypted;
+            // Create an AesManaged object
+            // with the specified key and IV.
+            using (AesManaged aesAlg = new AesManaged())
+            {
+                aesAlg.Key = Key;
+                aesAlg.IV = IV;
+
+                // Create a decrytor to perform the stream transform.
+                ICryptoTransform encryptor = aesAlg.CreateEncryptor(aesAlg.Key, aesAlg.IV);
+
+                // Create the streams used for encryption.
+                using (MemoryStream msEncrypt = new MemoryStream())
+                {
+                    using (CryptoStream csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write))
+                    {
+                        using (StreamWriter swEncrypt = new StreamWriter(csEncrypt))
+                        {
+
+                            //Write all data to the stream.
+                            swEncrypt.Write(plainText);
+                        }
+                        encrypted = msEncrypt.ToArray();
+                    }
+                }
+            }
+
+
+            // Return the encrypted bytes from the memory stream.
+            return encrypted;
+
+        }
+
+        static string DecryptStringFromBytes_Aes(byte[] cipherText, byte[] Key, byte[] IV)
+        {
+            // Check arguments.
+            if (cipherText == null || cipherText.Length <= 0)
+                throw new ArgumentNullException("cipherText");
+            if (Key == null || Key.Length <= 0)
+                throw new ArgumentNullException("Key");
+            if (IV == null || IV.Length <= 0)
+                throw new ArgumentNullException("Key");
+
+            // Declare the string used to hold
+            // the decrypted text.
+            string plaintext = null;
+
+            // Create an AesManaged object
+            // with the specified key and IV.
+            using (AesManaged aesAlg = new AesManaged())
+            {
+                aesAlg.Key = Key;
+                aesAlg.IV = IV;
+
+                // Create a decrytor to perform the stream transform.
+                ICryptoTransform decryptor = aesAlg.CreateDecryptor(aesAlg.Key, aesAlg.IV);
+
+                // Create the streams used for decryption.
+                using (MemoryStream msDecrypt = new MemoryStream(cipherText))
+                {
+                    using (CryptoStream csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read))
+                    {
+                        using (StreamReader srDecrypt = new StreamReader(csDecrypt))
+                        {
+
+                            // Read the decrypted bytes from the decrypting stream
+                            // and place them in a string.
+                            plaintext = srDecrypt.ReadToEnd();
+                        }
+                    }
+                }
+
+            }
+
+            return plaintext;
+
+        }
+
+        public string name { get; private set; }
+        public string pass { get; private set; }
+        public string note { get; private set; }
+        public string file;
+
+        public static AesManaged myAes = new AesManaged();
+        const string G_KEY = "12345678xyze133ttyyfahdfajyeafjaldjzdvjldjfdlajafljdfnvladnnvnswdehhe329789oweuw";
+        const string G_IV = "87654321xywer123488ewfjaldjf9u238r2fsjfalsfj;al;fjaoewurwhvfadlfhadfjalkfweourw";
+    }
+
+
     class BaseConf
     {
         public BaseConf()
         {
             log = OperLog.instance;
+            Users = new List<DBUser>();
             detail = null;
         }
 
@@ -73,6 +224,12 @@ namespace MakeAuto
                 xn = root.SelectSingleNode("Repository");
                 Repository = xn.Attributes["repo"].InnerText;
                 WorkSpace = xn.Attributes["workspace"].InnerText;
+                // OutDir 如果以 \ 结尾，会导致编译前台Drp时，批处理里会出现 "C:\src\"， \"会被认为是转义，就报错了，
+                // 这里如果，结尾是\,去掉
+                if (WorkSpace[WorkSpace.Length - 1] == '\\')
+                {
+                    WorkSpace = WorkSpace.Substring(0, WorkSpace.Length - 1);
+                }
                 SvnRepo = new SvnPort(name, Repository);
                 SvnRepo.Workspace = WorkSpace;
 
@@ -110,6 +267,10 @@ namespace MakeAuto
                 fc.pass = xn.Attributes["pass"].InnerText;
                 fc.ServerDir = xn.Attributes["remotedir"].Value;
                 fc.LocalDir = xn.Attributes["localdir"].Value;
+                if (fc.LocalDir[fc.LocalDir.Length - 1] == '\\')
+                {
+                    fc.LocalDir = fc.LocalDir.Substring(0, fc.LocalDir.Length - 1);
+                }
 
                 // 初始化 ftp配置
                 ftp = new FTPConnection();
@@ -132,6 +293,18 @@ namespace MakeAuto
                         int.Parse(x.Attributes["ver"].Value),
                         x.Attributes["coms"].Value);
                     SpeComs.Add(com);
+                }
+
+                // 读取数据库连接属性
+                xn = root.SelectSingleNode("DB");
+                dbtns = xn.Attributes["dbtns"].Value;
+                xnl = xn.ChildNodes;
+                foreach (XmlNode x in xnl)
+                {
+                    DBUser u = new DBUser(x.Attributes["name"].InnerText,
+                        x.Attributes["pass"].InnerText,
+                        x.Attributes["note"].InnerText);
+                    Users.Add(u);
                 }
             }
             catch (Exception e)
@@ -165,6 +338,17 @@ namespace MakeAuto
             }
         }
 
+        private string GetConnDesc(string user)
+        {
+            foreach (DBUser u in Users)
+            {
+                if (u.name.Equals(user))
+                    return u.name + "/" + DBUser.DecPass(u.pass) + "@" + dbtns;
+            }
+
+            return string.Empty;
+        }
+
         public virtual bool CompileFront(CommitCom c)
         {
             string Lang;
@@ -181,6 +365,84 @@ namespace MakeAuto
         public virtual bool CompileBackEnd(CommitCom c)
         {
             return true;
+        }
+
+        public virtual Boolean CompileSql(CommitCom c)
+        {
+            bool Result = true;
+            string path = string.Empty;
+            string u = string.Empty;
+            foreach (string user in c.users)
+            {
+                if (c.ctype == ComType.Sql)
+                    path = Path.Combine(OutDir, c.cname);
+                else
+                    path = c.sawfile.LocalPath;
+
+                u = GetConnDesc(user);
+                if (u == string.Empty)
+                {
+                    Result = false;
+                    log.WriteErrorLog("无法确认用户连接。" + c.cname);
+                    break;
+                }
+
+                Result = CompileSqlOne(u, path);
+                if (!Result)
+                    break;
+            }
+            return Result;
+        }
+
+        // todo 实现异步执行的功能
+        protected Boolean CompileSqlOne(string ConnStr, string File)
+        {
+            bool result = true;
+
+            // 开启进程执行 rar解压缩
+            // 获取 Winrar 的路径（通过注册表或者是配置，这里直接根据xml来处理）
+            // 实例化 Process 类，启动执行进程 D:\oracle\product\10.2.0\client_1\BIN\
+            Process p = new Process();
+            try
+            {
+                p.StartInfo.FileName = @"cmd.exe";
+                // 同步模式下，使用 @ 导入会有问题，sqlplus错误输出流会报引擎错误，用 < 没问题。异步好像 < 和 @ 都可以
+                p.StartInfo.Arguments = @"/C sqlplus.exe -S " + ConnStr + " < " + File;
+                
+                p.StartInfo.UseShellExecute = false;        // 关闭Shell的使用  
+                p.StartInfo.RedirectStandardInput = false; // 不重定向标准输入，因为文件要输入
+                p.StartInfo.RedirectStandardOutput = true;  //重定向标准出  
+                p.StartInfo.RedirectStandardError = true; //重定向错误输出  
+                p.StartInfo.CreateNoWindow = true;             // 不显示窗口
+
+                p.Start();    // 启动
+
+                string strOutput = p.StandardOutput.ReadToEnd();
+                string strOutput1 = p.StandardError.ReadToEnd();
+                p.WaitForExit(); // 开启此处，会导致主线程阻塞，不能相应rbLog输出，要换用订阅退出事件的模式。
+                p.Close();
+
+                log.WriteLog("[执行Sql文件]" + p.StartInfo.FileName + " " + p.StartInfo.Arguments);
+                log.WriteLog(strOutput.Replace("\r\n\r\n", "\r\n").Replace("\r\n\r\n", "\r\n"), LogLevel.Info);
+                if (!string.IsNullOrEmpty(strOutput1.Trim()))
+                {
+                    log.WriteLog("[错误流输出]");
+                    log.WriteLog(strOutput1, LogLevel.Error);
+                }
+
+                if (!string.IsNullOrEmpty(strOutput1.Trim()) || strOutput.IndexOf("错误") >= 0 || strOutput.IndexOf("errors") >= 0)
+                {
+                    log.WriteLog("编译过程可能有错误，请检查日志文件确认！", LogLevel.Error);
+                    //log.WriteLog(p.StartInfo.FileName + " " + p.StartInfo.Arguments, LogLevel.Error);
+                    result = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                OperLog.instance.WriteLog("执行Sql脚本失败" + ex.Message, LogLevel.Error);
+            }
+
+            return result;
         }
 
         protected virtual string GetDprName()
@@ -235,7 +497,9 @@ namespace MakeAuto
         public SvnPort SvnRepo { get; private set; }
         public ArrayList SpeComs;
         public string OutDir { get; set; }
-        protected Detail detail ;
+        protected Detail detail;
+        public List<DBUser> Users { get; private set; }
+        public string dbtns { get; private set; }
 
         public OperLog log;
     }
@@ -598,8 +862,6 @@ namespace MakeAuto
             p.Start();
 
             string strOutput = p.StandardOutput.ReadToEnd();
-            // 输出最后几行
-            string[] strArr = Regex.Split(strOutput, "\r");
             log.WriteFileLog("[编译命令] " + p.StartInfo.FileName + p.StartInfo.Arguments);
             log.WriteFileLog("[编译日志]");
             log.WriteFileLog("编译输出：");

@@ -476,8 +476,8 @@ namespace MakeAuto
                             log.WriteErrorLog("无法确定的递交组件类型！" + c.cname);
                             return false;
                         }
-                        
-                        ap.ComComms.Add(c);
+
+                        InsertCom(ap, c);
                     }
                 }
             }
@@ -489,15 +489,36 @@ namespace MakeAuto
 
             // 输出下处理结果
             //log.WriteInfoLog("ProcessComs...");
+            /*
             log.WriteInfoLog(System.Reflection.MethodBase.GetCurrentMethod().Name);
             foreach (CommitCom c in ap.ComComms)
             {
                 log.WriteInfoLog(c.cname + " " + Enum.GetName(typeof(ComStatus), c.cstatus) 
                     + " " + Enum.GetName(typeof(ComType), c.ctype) + " " + c.cver + " " + c.path);
             }
+             * */
             return true;
         }
 
+        /// <summary>
+        /// 编译顺序为：表结构、存储过程、公用原子、其他原子、周边原子、外围原子、公用业务逻辑、同步业务逻辑、其他业务逻辑、周边业务逻辑、外围业务逻辑、
+        /// 适配器业务逻辑（有些产品因为模块依赖关系，顺序需要调整，如消费支付的消费支付通知要在公用之后，其他之前编译）、DLL；
+        /// 此处，编译SO前要比对SRC
+        /// </summary>
+        /// <param name="ap"></param>
+        /// <returns></returns>
+        private bool InsertCom(AmendPack ap, CommitCom c)
+        {
+            // 只要TablePatch在Patch和过程之前就可以了 根据 ComType的枚举顺序确定
+            int i = 0;
+            while (i < ap.ComComms.Count && (ap.ComComms[i] as CommitCom).ctype <= c.ctype)
+            {
+                i++;
+            }
+            ap.ComComms.Insert(i, c);
+
+            return true;
+        }
         private bool ProcessMods(AmendPack ap)
         {
             ap.SAWFiles.Clear();
@@ -664,8 +685,8 @@ namespace MakeAuto
                     f.LocalPath = Path.Combine(ap.svn.Workspace, temp, c.path).Replace('/', '\\');
                     f.UriPath = Path.Combine(ap.svn.Server, temp, c.path).Replace('\\', '/');
                 }
-                else if (c.ctype == ComType.Patch || c.ctype == ComType.Ini || c.ctype == ComType.MenuPatch
-                    || c.ctype == ComType.Xml || c.ctype == ComType.Excel)
+                else if (c.ctype == ComType.Patch || c.ctype == ComType.TablePatch || c.ctype == ComType.Ini 
+                    || c.ctype == ComType.MenuPatch || c.ctype == ComType.Xml || c.ctype == ComType.Excel)
                 {
                     if (c.path[0] == '\\' || c.path[0] == '/')
                         c.path = c.path.Substring(1);
@@ -954,8 +975,8 @@ namespace MakeAuto
                 log.WriteLog("处理：" + c.cname);
 
                 // Patch 和 Ini 刷下来，拷贝过去就可以，在后面的Repacker里面拷贝
-                if (c.ctype == ComType.Patch || c.ctype == ComType.Ini || c.ctype == ComType.Xml 
-                    || c.ctype == ComType.Excel || c.ctype == ComType.MenuPatch)
+                if (c.ctype == ComType.Patch || c.ctype == ComType.TablePatch || c.ctype == ComType.Ini ||
+                   c.ctype == ComType.Xml|| c.ctype == ComType.Excel || c.ctype == ComType.MenuPatch)
                 {
                 }
                 else if (c.ctype == ComType.Dll || c.ctype == ComType.Exe)
@@ -963,14 +984,13 @@ namespace MakeAuto
                     Result = pconf.CompileFront(c);
                     if (Result == false)
                         break;
-                    
+
+                    c.cstatus = ComStatus.Normal;
                     // 对于delphi 5 编译输出，可能会生成MAP文件，删除掉生成的MAP文件
                     if (File.Exists(Path.Combine(ap.SCMAmendDir, Path.GetFileNameWithoutExtension(c.cname) + ".map")))
                     {
                         File.Delete(Path.Combine(ap.SCMAmendDir, Path.GetFileNameWithoutExtension(c.cname) + ".map"));
                     }
-
-                    // 
                 }
                 else if (c.ctype == ComType.SO || c.ctype == ComType.Sql || c.ctype == ComType.FuncXml)
                 {
@@ -979,7 +999,7 @@ namespace MakeAuto
                     if (Result == false)
                         break;
 
-                    // 对于原子AS，生成会同时生成过程，对于这种，编译时可以检查下是否存在，存在同样路径的递交，sql和so可以同时该状态
+                    // 对于原子AS，生成会同时生成过程，对于这种，编译时可以检查下是否存在，存在同样路径的递交，sql和so可以同时改状态
                     if (pconf is CresConf)
                     {
                         foreach (CommitCom c1 in ap.ComComms)
@@ -988,9 +1008,10 @@ namespace MakeAuto
                                 c1.cstatus = ComStatus.Normal;
                         }
                     }
+                    c.cstatus = ComStatus.Normal;
                 }
 
-                c.cstatus = ComStatus.Normal;
+                
             }
 
             return Result; 
@@ -1192,7 +1213,7 @@ namespace MakeAuto
     }
 
     /// <summary>
-    /// 对比完成后，生成SO
+    /// 送到后台编译
     /// </summary>
     class PackerSO : State
     {
@@ -1243,15 +1264,19 @@ namespace MakeAuto
                     Result = s.UploadModule(dl);
                     if (!Result)
                     {
-                        log.WriteErrorLog("上传源代码失败了！ " + dl.Name);
+                        log.WriteErrorLog("上传源代码失败了！ " + c.cname);
                         break;
                     }
                 }
-                else if (c.ctype == ComType.Sql)
+                else if (c.ctype == ComType.Sql || c.ctype == ComType.TablePatch)
                 {
+                    Result = pconf.CompileSql(c);
+                    if (!Result)
+                    {
+                        log.WriteErrorLog("编译Sql脚本失败了！" + c.cname);
+                        break;
+                    }
                     c.cstatus = ComStatus.Normal;
-                    //todo 过程送到 Oracle 上执行，暂时没有
-                    Result = true;
                 }
             }
 
@@ -1337,8 +1362,8 @@ namespace MakeAuto
                     File.SetAttributes(Path.Combine(ap.SCMAmendDir, c.cname), attributes);
                 }
 
-                if (c.ctype == ComType.Patch || c.ctype == ComType.Ini || c.ctype == ComType.Xml 
-                    || c.ctype == ComType.Excel || c.ctype == ComType.MenuPatch)
+                if (c.ctype == ComType.Patch || c.ctype == ComType.TablePatch || c.ctype == ComType.Ini || 
+                   c.ctype == ComType.Xml || c.ctype == ComType.Excel || c.ctype == ComType.MenuPatch)
                 {
                     File.Copy(c.sawfile.LocalPath, Path.Combine(ap.SCMAmendDir, c.cname), true);
                 }
