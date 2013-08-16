@@ -11,6 +11,7 @@ namespace MakeAuto
         Nothing = 0,
         FileLog,
         FormLog,
+        SqlExe,
         Info,
         Both,
         Warning,
@@ -26,7 +27,9 @@ namespace MakeAuto
         public LogInfoArgs(string info, LogLevel level = LogLevel.Info)
         {
             if (level == LogLevel.Error)
-              this.title = "[ERROR]";
+                this.title = "[ERROR]";
+            else if (level == LogLevel.Warning)
+                this.title = "[Warning]";
             else this.title = "";
 
             this.info = info;
@@ -46,7 +49,7 @@ namespace MakeAuto
         private OperLog()
         {
             LogDir = "Log";
-            LogFile = LogDir + "\\" + "MA" + DateTime.Now.ToString("yyyyMMdd") + ".Log";
+            LogFile = Path.Combine(LogDir, "MA" + DateTime.Now.ToString("yyyyMMdd") + ".Log");
             if (!System.IO.Directory.Exists(LogDir))
             {
                 try

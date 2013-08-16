@@ -53,7 +53,7 @@ namespace MakeAuto
             catch (Exception e)
             {
                 log.WriteLog("，取本地版本库信息异常:" + pathtarget.FileName + " 错误信息：" + e.Message, LogLevel.Error);
-                return false;
+                //return false;
             }
 
             // 本地文件版本已经最新，不重新获取服务器版本
@@ -115,7 +115,8 @@ namespace MakeAuto
             uarg.Revision = l.Revision;
 
             Result = client.Update(pathtarget.FullPath, uarg);
-            /*
+            
+            /* Result 更新不到也是true
             if (Result)
             {
                 log.WriteLog("更新文件成功！");

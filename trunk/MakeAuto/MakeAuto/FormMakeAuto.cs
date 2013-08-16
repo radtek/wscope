@@ -8,6 +8,7 @@ using Renci.SshNet;
 using SharpSvn;
 using System.Collections.Generic;
 using AutoUpdaterDotNET;
+using System.Threading;
 
 namespace MakeAuto
 {
@@ -34,17 +35,38 @@ namespace MakeAuto
             log.OnLogInfo += new LogInfoEventHandler(WriteLog);
         }
 
+        public delegate void AppendTextCallback(object sender, LogInfoArgs e);
+
         private void WriteLog(object sender, LogInfoArgs e)
         {
             if (e.level < LogLevel.FormLog)
                 return;
-
-            if (e.level == LogLevel.Error)
+            
+            if (rbLog.InvokeRequired)
             {
-                rbLog.SelectionColor = System.Drawing.Color.Red;
+                AppendTextCallback d = new AppendTextCallback(WriteLog);
+                rbLog.Invoke(d, new object[]{sender, e});
             }
+            else
+            {
+                if (e.level == LogLevel.Error)
+                {
+                    rbLog.SelectionColor = System.Drawing.Color.Red;
+                }
+                else if (e.level == LogLevel.Warning)
+                {
+                    rbLog.SelectionColor = System.Drawing.Color.IndianRed;
+                }
 
-            rbLog.AppendText(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "  " + e.title + e.info + "\r\n");
+                if (e.level == LogLevel.SqlExe)
+                {
+                    rbLog.AppendText(e.info + Environment.NewLine);
+                }
+                else
+                {
+                    rbLog.AppendText(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "  " + e.title + e.info + Environment.NewLine);
+                }
+             }
         }
 
         private void btnSO_Click(object sender, EventArgs e)
@@ -367,7 +389,6 @@ namespace MakeAuto
             if (ap.scmstatus == ScmStatus.Error)
                 return;
 
-            txbMainNo.Text = ap.MainNo;
             txbCommitPath.Text = ap.CommitPath;
             txtSubmitVer.Text = ap.SubmitVer.ToString();
             txtScmVer.Text = ap.ScmVer.ToString();
@@ -375,51 +396,6 @@ namespace MakeAuto
             secuflow = new AmendFlow(ap);
             btnFlow.Enabled = true;
             btnDel.Enabled = true;
-        }
-
-        private void button9_Click(object sender, EventArgs e)
-        {
-            rbLog.Clear();
-            SvnClient client = new SvnClient();
-            //SvnUriTarget sut = 
-            SvnPathTarget spt = new SvnPathTarget(@"E:\06trade\HSTRADES11\trunk\Sources\特殊程序\国债逆回购");
-            //client.Update(spt.FullPath);
-            // Get Log
-            SvnLogArgs arg = new SvnLogArgs();
-            System.Collections.ObjectModel.Collection<SvnLogEventArgs> logs;
-            List<string> changelog = new List<string>();
-            //long endRevistion = serverInfo.Revision;
-            long Revision = 0;
-
-            // 时间正序，版本历史从小到大；时间反向，版本历史从大到小
-            arg.Range = new SvnRevisionRange(new SvnRevision(DateTime.Now.AddDays(-10)), new SvnRevision(DateTime.Now.AddDays(-20)));
-   
-            client.GetLog(spt.FullPath, arg, out  logs);
-
-            Uri l = null;
-             foreach (SvnLogEventArgs log in logs)
-             {
-                        string loginfo = log.LogMessage.Trim();
-                        if(loginfo != string.Empty)
-                            changelog.Add(loginfo);
-                        l = log.LogOrigin;
-                      Revision = log.Revision;
-                 rbLog.AppendText(log.Author + " " +log.LogMessage + " " +log.Revision + "\r\n");
-
-              }
-             logs = null;
-
-            //
-            SvnUpdateArgs uarg = new SvnUpdateArgs();
-
-            //rbLog.AppendText(urs.Revision.ToString());
-            // svn 1.7 uarg.UpdateParents = true;
-            uarg.Depth = SvnDepth.Infinity;
-            uarg.Revision = Revision;
-
-            //client.Update(spt.FullPath, uarg, out urs);
-            //rbLog.AppendText(urs.Revision.ToString());
-
         }
 
         private void rbLog_TextChanged(object sender, EventArgs e)
@@ -484,6 +460,11 @@ namespace MakeAuto
         {
             AboutBox ab = new AboutBox();
             ab.Show(this);
+        }
+
+        private void button9_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

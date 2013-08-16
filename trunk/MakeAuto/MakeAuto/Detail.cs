@@ -165,9 +165,9 @@ namespace MakeAuto
             {
                 return FindBySql(c.cname);
             }
-            else if (c.ctype == ComType.Xml)
+            else if (c.ctype == ComType.FuncXml)
             {
-                return FindByXml(c.cname);
+                return FindByFuncXml(c.cname);
             }
             else
             {
@@ -200,7 +200,7 @@ namespace MakeAuto
             return null;
         }
 
-        private Detail FindByXml(string name)
+        private Detail FindByFuncXml(string name)
         {
             foreach (Detail d in this)
             {
