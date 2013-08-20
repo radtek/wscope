@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using EnterpriseDT.Net.Ftp;
 using System.IO;
 using System.Diagnostics;
-using System.Text.RegularExpressions;
 using System.Security.Cryptography;
-using System.Web;
 using System.Windows.Forms;
 
 namespace MakeAuto
@@ -17,9 +14,9 @@ namespace MakeAuto
     /// </summary>
     abstract class State
     {
-        public State(AmendPack Amend)
+        public State()
         {
-            _amend = Amend;
+
         }
 
         // 状态模式基础状态
@@ -73,7 +70,7 @@ namespace MakeAuto
         }
 
         // 解压缩
-        protected Boolean UnRar(string rarfile, string dir, string file = "")
+        protected Boolean UnRar(AmendPack ap, string rarfile, string dir, string file = "")
         {
             if (!File.Exists(rarfile))
             {
@@ -93,7 +90,7 @@ namespace MakeAuto
             Process p = new Process();
             try
             {
-                p.StartInfo.FileName = MAConf.instance.Configs[_amend.ProductId].Rar;           // rar程序名  
+                p.StartInfo.FileName = MAConf.instance.Configs[ap.ProductId].Rar;           // rar程序名  
                 // 解压缩的参数
 
                 // 如果没有指定解压某一个文件，则解压缩全部文件
@@ -142,7 +139,6 @@ namespace MakeAuto
             get { return _tip; }
         }
 
-        private AmendPack _amend;
         private bool _tip = true;
     }
 
@@ -151,8 +147,8 @@ namespace MakeAuto
     /// </summary>
     class PackerDownload : State
     {
-        public PackerDownload(AmendPack Amend)
-            : base(Amend)
+        public PackerDownload()
+            : base()
         {
         }
 
@@ -230,7 +226,7 @@ namespace MakeAuto
                     ftp.DownloadFile(ap.SCMLastLocalFile, ap.ScmLastRemoteFile); 
                 }
 
-                UnRar(ap.SCMLastLocalFile, ap.SCMLastAmendDir);
+                UnRar(ap, ap.SCMLastLocalFile, ap.SCMLastAmendDir);
 
                 if (ap.scmtype == ScmType.BugScm && ftp.Exists(ap.ScmLastRemoteSrcRar))
                 {
@@ -239,7 +235,7 @@ namespace MakeAuto
                         ftp.DownloadFile(ap.SCMLastLocalSrcRar, ap.ScmLastRemoteSrcRar);
                     }
 
-                    UnRar(ap.SCMLastLocalSrcRar, ap.SCMLastAmendDir);
+                    UnRar(ap, ap.SCMLastLocalSrcRar, ap.SCMLastAmendDir);
                 }
             }
 
@@ -264,8 +260,8 @@ namespace MakeAuto
     /// </summary>
     class PackerReadMe : State
     {
-        public PackerReadMe(AmendPack Amend)
-            : base(Amend)
+        public PackerReadMe()
+            : base()
         {
         }
 
@@ -302,12 +298,12 @@ namespace MakeAuto
             }
 
             // 下载压缩包之后，解压缩包，得到 集成-[修改单号]-[模块]-[修改人]-[日期]-V* 的一个文件夹
-            UnRar(ap.LocalFile, ap.SCMAmendDir);
+            UnRar(ap, ap.LocalFile, ap.SCMAmendDir);
 
             // 如果存在 src 压缩文件夹，解压缩 src 文件夹
             if (File.Exists(ap.SrcRar))
             {
-                UnRar(ap.SrcRar, ap.SCMAmendDir);  // 解压处理，供对比用
+                UnRar(ap, ap.SrcRar, ap.SCMAmendDir);  // 解压处理，供对比用
                 File.Delete(ap.SrcRar);  // 删除掉递交的src，不需要留着了
             }
 
@@ -775,10 +771,10 @@ namespace MakeAuto
         public bool _tip = false;
     }
 
-    class PackerProcess : State
+    class PackerCopyCom : State
     {
-        public PackerProcess(AmendPack Amend)
-            : base(Amend)
+        public PackerCopyCom()
+            : base()
         {
         }
 
@@ -822,7 +818,7 @@ namespace MakeAuto
                             log.WriteInfoLog("解压缩源文件，源文件夹：" + ap.SCMLastLocalSrcRar + "， "
                                 + "文件：" + st + "， "
                                 + "目标文件夹：" + ap.SCMAmendDir);
-                            UnRar(ap.SCMLastLocalSrcRar, ap.SCMAmendDir, st);
+                            UnRar(ap, ap.SCMLastLocalSrcRar, ap.SCMAmendDir, st);
                         }
                     }
                     // 如果是删除的，那么删除文件（对于so，需要删除src文件），
@@ -859,8 +855,8 @@ namespace MakeAuto
 
     class PackerCheck : State
     {
-        public PackerCheck(AmendPack Amend)
-            : base(Amend)
+        public PackerCheck()
+            : base()
         {
         }
 
@@ -885,8 +881,8 @@ namespace MakeAuto
     /// </summary>
     class PackerSvnCode : State
     {
-        public PackerSvnCode(AmendPack Amend)
-            : base(Amend)
+        public PackerSvnCode()
+            : base()
         {
         }
 
@@ -940,8 +936,8 @@ namespace MakeAuto
     /// </summary>
     class PackerCompile : State
     {
-        public PackerCompile(AmendPack Amend)
-            : base(Amend)
+        public PackerCompile()
+            : base()
         {
         }
 
@@ -1022,7 +1018,7 @@ namespace MakeAuto
             get { return _tip; }
         }
 
-        public bool _tip = true;
+        public bool _tip = false;
     }
 
     /// <summary>
@@ -1030,8 +1026,8 @@ namespace MakeAuto
     /// </summary>
     class PackerDiffer : State
     {
-        public PackerDiffer(AmendPack Amend)
-            : base(Amend)
+        public PackerDiffer()
+            : base()
         {
         }
 
@@ -1217,8 +1213,8 @@ namespace MakeAuto
     /// </summary>
     class PackerSO : State
     {
-        public PackerSO(AmendPack Amend)
-            : base(Amend)
+        public PackerSO()
+            : base()
         {
         }
 
@@ -1328,8 +1324,8 @@ namespace MakeAuto
     /// </summary>
     class PackerRePack : State
     {
-        public PackerRePack(AmendPack Amend)
-            : base(Amend)
+        public PackerRePack()
+            : base()
         {
         }
 
@@ -1486,8 +1482,8 @@ namespace MakeAuto
     /// </summary>
     class PackerUpload : State
     {
-        public PackerUpload(AmendPack Amend)
-            : base(Amend)
+        public PackerUpload()
+            : base()
         {
         }
 
@@ -1531,8 +1527,8 @@ namespace MakeAuto
     /// </summary>
     class PackCleanUp : State
     {
-        public PackCleanUp(AmendPack Amend)
-            : base(Amend)
+        public PackCleanUp()
+            : base()
         {
         }
 
