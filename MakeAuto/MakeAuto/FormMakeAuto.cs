@@ -1,12 +1,6 @@
 ﻿using System;
 using System.Windows.Forms;
-using System.Collections;
-using System.Text;
-using System.IO;
 using System.Diagnostics;
-using Renci.SshNet;
-using SharpSvn;
-using System.Collections.Generic;
 using AutoUpdaterDotNET;
 using System.Threading;
 
@@ -14,29 +8,36 @@ namespace MakeAuto
 {
     public partial class frmMakeAuto : Form
     {
-        // 定义保存 Excel 列表的东东
-        
-
         // 日志实例
         private OperLog log = OperLog.instance;
 
         //Spell sp;
 
-        AmendFlow secuflow;
+        AmendFlow secuflow = new AmendFlow();
         AmendPack ap;
 
         public frmMakeAuto()
         {
-            //System.Windows.Forms.MessageBox.Show("窗体入口");
             InitializeComponent();
-
-            //System.Windows.Forms.MessageBox.Show("注册日志");
-            // 注册一个事件处理
             log.OnLogInfo += new LogInfoEventHandler(WriteLog);
+            secuflow.OnFlowInfo += new FlowInfoEventHandler(FlowInfo);
+        }
+
+        public delegate void InfoCallback(object sender, EventArgs e);
+        private void FlowInfo(object sender, EventArgs e)
+        {
+            if (this.InvokeRequired)
+            {
+                InfoCallback d = new InfoCallback(FlowInfo);
+                this.Invoke(d, new object[] { sender, e });
+            }
+            else
+            {
+                MessageBox.Show("流程结束", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
         }
 
         public delegate void AppendTextCallback(object sender, LogInfoArgs e);
-
         private void WriteLog(object sender, LogInfoArgs e)
         {
             if (e.level < LogLevel.FormLog)
@@ -393,7 +394,6 @@ namespace MakeAuto
             txtSubmitVer.Text = ap.SubmitVer.ToString();
             txtScmVer.Text = ap.ScmVer.ToString();
 
-            secuflow = new AmendFlow(ap);
             btnFlow.Enabled = true;
             btnDel.Enabled = true;
         }
@@ -418,15 +418,8 @@ namespace MakeAuto
         private void button2_Click(object sender, EventArgs e)
         {
             btnFlow.Enabled = false;
-            if (secuflow.Work() == false)
-            {
-                btnFlow.Enabled = true;
-                MessageBox.Show("集成失败。");
-            }
-            else
-            {
-                MessageBox.Show("处理完成。");
-            }
+            secuflow.Amend = ap;
+            secuflow.Work();
         }
 
         private void txbAmenNo_KeyDown(object sender, KeyEventArgs e)
@@ -464,7 +457,110 @@ namespace MakeAuto
 
         private void button9_Click(object sender, EventArgs e)
         {
+            textBox3.Text = DBUser.EncPass(textBox2.Text);
+        }
 
+        private static AutoResetEvent event_1 = new AutoResetEvent(true);
+        private static AutoResetEvent event_2 = new AutoResetEvent(true);
+        bool test = false;
+        
+        private void button2_Click_1(object sender, EventArgs e)
+        {
+            Thread t = new Thread(new ThreadStart(ThreadProc));
+            t.Start();
+
+            OperLog.instance.WriteLog("this wait......" + Environment.NewLine, LogLevel.Error);
+        }
+
+        public void ThreadProc()
+        {
+            string[] sa = new string[] { "secu_secusz_busin_or.sql", "secu_srp_or.sql" };
+            foreach (string s in sa)
+            {
+                //rbLog.AppendText("one sql " + s + Environment.NewLine);
+                Func(s);
+                //Thread.Sleep(1000);
+            }
+        }
+        public void Func(string name)
+        {
+            //timer2.Enabled = true;
+
+            bool result = true;
+
+            // 开启进程执行 rar解压缩
+            // 获取 Winrar 的路径（通过注册表或者是配置，这里直接根据xml来处理）
+            // 实例化 Process 类，启动执行进程 D:\oracle\product\10.2.0\client_1\BIN\
+            Process p = new Process();
+            try
+            {
+                p.StartInfo.FileName = @"cmd.exe";
+                // 同步模式下，使用 @ 导入会有问题，pl sql 引擎错误，用 < 没问题。异步好像 < 和 @ 都可以
+                p.StartInfo.Arguments = @"/C sqlplus.exe -S hs_secu/handsome@dev06 < C:\src\" + name;
+
+                // 解压缩的参数
+                //todo 20130809 gaohu 如果要不回显，最后不卡在 SQL>这种界面，命令提示用 < C:\src\fund_busin_or.sql；但是不行，这里用
+                // @ 才可以，为啥？ shell 输入重定向要关闭
+                p.StartInfo.UseShellExecute = false;        // 关闭Shell的使用 
+                p.StartInfo.RedirectStandardInput = false; // 不重定向标准输入，因为文件要输入
+                p.StartInfo.RedirectStandardOutput = true;  //重定向标准出 
+                p.StartInfo.RedirectStandardError = true; //重定向错误输出 
+                p.StartInfo.CreateNoWindow = true;             // 不显示窗口
+
+                p.OutputDataReceived += new DataReceivedEventHandler(p_OutputDataReceived);
+                p.ErrorDataReceived += new DataReceivedEventHandler(p_ErrorDataReceived);
+                p.EnableRaisingEvents = true;
+                p.Exited += new EventHandler(p_Exited);
+                OperLog.instance.WriteLog("开始", LogLevel.Error);
+                p.Start();    // 启动
+
+                p.BeginOutputReadLine();
+                p.BeginErrorReadLine();
+
+                //string strOutput = p.StandardOutput.ReadToEnd();
+                //string strOutput1 = p.StandardError.ReadToEnd();
+                //p.WaitForExit(); // 开启此处，会导致主线程阻塞，不能相应rbLog输出，要换用订阅退出事件的模式。
+                //p.Close();
+                //OperLog.instance.WriteLog(strOutput + strOutput1, LogLevel.Error);
+            }
+            catch (Exception ex)
+            {
+                OperLog.instance.WriteLog("执行rar失败" + ex.Message, LogLevel.Error);
+            }
+        }
+
+        private void p_OutputDataReceived(object sendingProcess, DataReceivedEventArgs outLine)
+        {
+            if (!String.IsNullOrEmpty(outLine.Data))
+            {
+                OperLog.instance.WriteLog(outLine.Data, LogLevel.SqlExe);
+            }
+        }
+
+        private void p_ErrorDataReceived(object sendingProcess, DataReceivedEventArgs outLine)
+        {
+            if (!String.IsNullOrEmpty(outLine.Data))
+            {
+                OperLog.instance.WriteLog(outLine.Data, LogLevel.SqlExe);
+            }
+        }
+
+        // Handle Exited event and display process information.
+        private void p_Exited(object sender, System.EventArgs e)
+        {
+            //OperLog.instance.WriteLog("over sql " + Environment.NewLine);
+
+            //eventHandled = true;
+            //test = true;
+            OperLog.instance.WriteLog("结束", LogLevel.Error);
+            //UnRar("secu_srp_or.sql");
+            //this.AppendText("Exit time: " + p.ExitCode.ToString() +  " " + elapsedTime.ToString());
+            //Console.WriteLine("Exit time:    {0}\r\n" +
+            //     "Exit code:    {1}\r\nElapsed time: {2}", p.ExitTime, p.ExitCode, elapsedTime);
+        }
+
+        private void button8_Click(object sender, EventArgs e)
+        {
         }
     }
 }

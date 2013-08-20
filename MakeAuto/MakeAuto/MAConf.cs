@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Xml;
 using System.Data.OleDb;
 using System.IO;
@@ -8,7 +7,6 @@ using System.Windows.Forms;
 using System.Data;
 using EnterpriseDT.Net.Ftp;
 using System.Diagnostics;
-using System.Security;
 using System.Collections;
 using System.Collections.Generic;
 using System.Security.Cryptography;
@@ -393,56 +391,80 @@ namespace MakeAuto
             }
             return Result;
         }
+        
+        private StringBuilder sBuilder = new StringBuilder();
+        private StringBuilder sBuilderErr = new StringBuilder();
 
         // todo 实现异步执行的功能
         protected Boolean CompileSqlOne(string ConnStr, string File)
         {
             bool result = true;
+            sBuilder.Clear();
+            sBuilderErr.Clear();
 
-            // 开启进程执行 rar解压缩
-            // 获取 Winrar 的路径（通过注册表或者是配置，这里直接根据xml来处理）
-            // 实例化 Process 类，启动执行进程 D:\oracle\product\10.2.0\client_1\BIN\
             Process p = new Process();
             try
             {
                 p.StartInfo.FileName = @"cmd.exe";
                 // 同步模式下，使用 @ 导入会有问题，sqlplus错误输出流会报引擎错误，用 < 没问题。异步好像 < 和 @ 都可以
                 p.StartInfo.Arguments = @"/C sqlplus.exe -S " + ConnStr + " < " + File;
+                log.WriteLog("[执行Sql文件] " + File);
                 
                 p.StartInfo.UseShellExecute = false;        // 关闭Shell的使用  
                 p.StartInfo.RedirectStandardInput = false; // 不重定向标准输入，因为文件要输入
                 p.StartInfo.RedirectStandardOutput = true;  //重定向标准出  
                 p.StartInfo.RedirectStandardError = true; //重定向错误输出  
                 p.StartInfo.CreateNoWindow = true;             // 不显示窗口
+                
+                p.OutputDataReceived += new DataReceivedEventHandler(p_OutputDataReceived);
+                p.ErrorDataReceived += new DataReceivedEventHandler(p_ErrorDataReceived);
 
                 p.Start();    // 启动
 
-                string strOutput = p.StandardOutput.ReadToEnd();
-                string strOutput1 = p.StandardError.ReadToEnd();
-                p.WaitForExit(); // 开启此处，会导致主线程阻塞，不能相应rbLog输出，要换用订阅退出事件的模式。
+                p.BeginOutputReadLine();
+                p.BeginErrorReadLine();
+                p.WaitForExit();
                 p.Close();
 
-                log.WriteLog("[执行Sql文件]" + p.StartInfo.FileName + " " + p.StartInfo.Arguments);
-                log.WriteLog(strOutput.Replace("\r\n\r\n", "\r\n").Replace("\r\n\r\n", "\r\n"), LogLevel.Info);
-                if (!string.IsNullOrEmpty(strOutput1.Trim()))
+                if (!string.IsNullOrEmpty(sBuilderErr.ToString()))
                 {
                     log.WriteLog("[错误流输出]");
-                    log.WriteLog(strOutput1, LogLevel.Error);
-                }
-
-                if (!string.IsNullOrEmpty(strOutput1.Trim()) || strOutput.IndexOf("错误") >= 0 || strOutput.IndexOf("errors") >= 0)
-                {
-                    log.WriteLog("编译过程可能有错误，请检查日志文件确认！", LogLevel.Error);
-                    //log.WriteLog(p.StartInfo.FileName + " " + p.StartInfo.Arguments, LogLevel.Error);
+                    log.WriteLog(sBuilderErr.ToString(), LogLevel.Error);
                     result = false;
                 }
+                else if (sBuilder.ToString().IndexOf("错误") >= 0 || sBuilder.ToString().IndexOf("errors") >= 0)
+                {
+                    log.WriteLog("编译过程可能有错误，请检查日志文件确认！" + File, LogLevel.Error);
+                    result = false;
+                }
+
+                log.WriteLog("[执行Sql文件结束]" + File);
+                return result;
             }
             catch (Exception ex)
             {
-                OperLog.instance.WriteLog("执行Sql脚本失败" + ex.Message, LogLevel.Error);
+                log.WriteLog("执行Sql脚本失败，文件：" + File + "错误信息，" + ex.Message, LogLevel.Error);
+                result = false;
             }
 
             return result;
+        }
+
+        private void p_OutputDataReceived(object sendingProcess, DataReceivedEventArgs outLine)
+        {
+            if (!String.IsNullOrEmpty(outLine.Data))
+            {
+                sBuilder.AppendLine(outLine.Data);
+                OperLog.instance.WriteLog(outLine.Data, LogLevel.SqlExe);
+            }
+        }
+
+        private void p_ErrorDataReceived(object sendingProcess, DataReceivedEventArgs outLine)
+        {
+            if (!String.IsNullOrEmpty(outLine.Data))
+            {
+                sBuilderErr.AppendLine(outLine.Data);
+            }
         }
 
         protected virtual string GetDprName()
@@ -722,9 +744,7 @@ namespace MakeAuto
 
             // 编译Excel 最耗时，对Excel检查是否需要编译，比较PC文件
             bool bNew = false;
-            string tpath = Path.Combine(
-                WorkSpace, @"Documents\D2.Designs\详细设计\后端", d.File);
-            DateTime t2 = File.GetLastWriteTime(tpath);
+            DateTime t2 = File.GetLastWriteTime(c.sawfile.LocalPath);
             DateTime t1 = t2.AddSeconds(-1);
             if (c.ctype == ComType.SO)
             {
@@ -738,9 +758,17 @@ namespace MakeAuto
                     }
                 }
             }
-            else if (c.ctype == ComType.Sql)
+            else if (c.ctype == ComType.Sql || c.ctype == ComType.FuncXml)
             {
-                t1 = File.GetLastWriteTime(Path.Combine(OutDir, d.SqlFile));
+                if (c.ctype == ComType.Sql)
+                {
+                    t1 = File.GetLastWriteTime(Path.Combine(OutDir, d.SqlFile));
+                }
+                else
+                {
+                    t1 = File.GetLastWriteTime(Path.Combine(OutDir, d.XmlFile));
+                }
+
                 if (DateTime.Compare(t1, t2) > 0)
                 {
                     bNew = true;
@@ -761,7 +789,7 @@ namespace MakeAuto
             {
                 m = MacroType.SQL;
             }
-            else if (c.ctype == ComType.Xml)
+            else if (c.ctype == ComType.FuncXml)
             {
                 m = MacroType.FuncXml;
             }
@@ -779,7 +807,7 @@ namespace MakeAuto
             else if (File.Exists(Path.Combine(OutDir, "CError.txt")))
             {
                 Result = false;
-                log.WriteErrorLog("检测到编译错误文件，请确认！");
+                log.WriteErrorLog("检测到编译错误文件 CError.txt，请确认！");
             }
 
             return Result;

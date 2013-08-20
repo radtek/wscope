@@ -47,7 +47,8 @@
             this.rbLog = new System.Windows.Forms.RichTextBox();
             this.tcSCM = new System.Windows.Forms.TabControl();
             this.tabPage3 = new System.Windows.Forms.TabPage();
-            this.label9 = new System.Windows.Forms.Label();
+            this.textBox3 = new System.Windows.Forms.TextBox();
+            this.textBox2 = new System.Windows.Forms.TextBox();
             this.btnDel = new System.Windows.Forms.Button();
             this.btnFlow = new System.Windows.Forms.Button();
             this.button9 = new System.Windows.Forms.Button();
@@ -87,6 +88,7 @@
             this.txtAmendList = new System.Windows.Forms.TextBox();
             this.cmsNotify = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.timer1 = new System.Windows.Forms.Timer(this.components);
+            this.button2 = new System.Windows.Forms.Button();
             this.menuStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -242,7 +244,9 @@
             // 
             // tabPage3
             // 
-            this.tabPage3.Controls.Add(this.label9);
+            this.tabPage3.Controls.Add(this.button2);
+            this.tabPage3.Controls.Add(this.textBox3);
+            this.tabPage3.Controls.Add(this.textBox2);
             this.tabPage3.Controls.Add(this.btnDel);
             this.tabPage3.Controls.Add(this.btnFlow);
             this.tabPage3.Controls.Add(this.button9);
@@ -257,14 +261,22 @@
             this.tabPage3.Text = "集成打包";
             this.tabPage3.UseVisualStyleBackColor = true;
             // 
-            // label9
+            // textBox3
             // 
-            this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(796, 60);
-            this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(41, 12);
-            this.label9.TabIndex = 27;
-            this.label9.Text = "label9";
+            this.textBox3.Location = new System.Drawing.Point(529, 49);
+            this.textBox3.Name = "textBox3";
+            this.textBox3.Size = new System.Drawing.Size(160, 21);
+            this.textBox3.TabIndex = 35;
+            this.textBox3.Text = "20130725049";
+            // 
+            // textBox2
+            // 
+            this.textBox2.Location = new System.Drawing.Point(529, 22);
+            this.textBox2.Name = "textBox2";
+            this.textBox2.PasswordChar = '*';
+            this.textBox2.Size = new System.Drawing.Size(103, 21);
+            this.textBox2.TabIndex = 34;
+            this.textBox2.Text = "hundsun";
             // 
             // btnDel
             // 
@@ -290,23 +302,23 @@
             // 
             // button9
             // 
-            this.button9.Location = new System.Drawing.Point(682, 55);
+            this.button9.Location = new System.Drawing.Point(638, 20);
             this.button9.Name = "button9";
             this.button9.Size = new System.Drawing.Size(75, 23);
             this.button9.TabIndex = 31;
-            this.button9.Text = "test";
+            this.button9.Text = "生成密码";
             this.button9.UseVisualStyleBackColor = true;
             this.button9.Click += new System.EventHandler(this.button9_Click);
             // 
             // button8
             // 
-            this.button8.Location = new System.Drawing.Point(601, 55);
+            this.button8.Location = new System.Drawing.Point(550, 95);
             this.button8.Name = "button8";
             this.button8.Size = new System.Drawing.Size(75, 23);
             this.button8.TabIndex = 30;
             this.button8.Text = "版本校验";
             this.button8.UseVisualStyleBackColor = true;
-            this.button8.Visible = false;
+            this.button8.Click += new System.EventHandler(this.button8_Click);
             // 
             // groupBox4
             // 
@@ -668,6 +680,16 @@
             this.timer1.Interval = 180000;
             this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
             // 
+            // button2
+            // 
+            this.button2.Location = new System.Drawing.Point(631, 95);
+            this.button2.Name = "button2";
+            this.button2.Size = new System.Drawing.Size(75, 23);
+            this.button2.TabIndex = 36;
+            this.button2.Text = "test";
+            this.button2.UseVisualStyleBackColor = true;
+            this.button2.Click += new System.EventHandler(this.button2_Click_1);
+            // 
             // frmMakeAuto
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -766,7 +788,9 @@
         private System.Windows.Forms.Timer timer1;
         private System.Windows.Forms.Button btnFlow;
         private System.Windows.Forms.Button btnDel;
-        private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.TextBox textBox3;
+        private System.Windows.Forms.TextBox textBox2;
+        private System.Windows.Forms.Button button2;
     }
 }
 
