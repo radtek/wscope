@@ -222,7 +222,7 @@ namespace MakeAuto
             if (QueryAmendInfo() == true)
             {
                 // 生成修改单组件包信息
-                SetComs();
+                //SetComs();
             }
             else
             {
@@ -383,7 +383,9 @@ namespace MakeAuto
             return result;
         }
 
-        // 设置递交组件
+        /// <summary>
+        /// 设置递交组件，作废，由处理ReadMe时读取Coms操作，数据库记录不可靠
+        /// </summary>
         private void SetComs()
         {
             ComComms.Clear();
@@ -746,7 +748,6 @@ namespace MakeAuto
 
         public SvnPort svn;
 
-        public string DiffDir { get; private set; }
         private OperLog log;
 
         public ArrayList SubmitL;

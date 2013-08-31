@@ -434,6 +434,10 @@ namespace MakeAuto
                         if (line.Trim() == string.Empty)
                             continue;
 
+                        // 跳过 src 行
+                        if (line.Trim().IndexOf("src-V") >= 0)
+                            continue;
+
                         // 连续读取两行，一行文件说明和版本，一行存放路径
                         // 读取源代码路径，小包下面没有路径，不用读取
                         index = line.IndexOf("[");
@@ -722,10 +726,10 @@ namespace MakeAuto
                     + "路径：" + c.path);
             }
 
-            log.WriteInfoLog("[配置库文件]");
+            log.WriteFileLog("[配置库文件]");
             foreach (SAWFile s in ap.SAWFiles)
             {
-                log.WriteInfoLog("路径：" + s.Path + " "
+                log.WriteFileLog("路径：" + s.Path + " "
                     + "本地路径：" + s.LocalPath + " "
                     + "SvnUri：" + s.UriPath + " "
                     + "文件状态：" + Enum.GetName(typeof(FileStatus), s.fstatus));
@@ -1040,7 +1044,7 @@ namespace MakeAuto
         public override bool DoWork(AmendPack ap)
         {
             // 对于相同的，可以不提示用户，对于不同的，需要集成的同学确认，这个还需要想办法来写
-            bool Result = true;
+            bool Result = true, CompareSame = true;
             BaseConf pconf = MAConf.instance.Configs[ap.ProductId];
             foreach (CommitCom c in ap.ComComms)
             {
@@ -1060,17 +1064,21 @@ namespace MakeAuto
                     foreach (string s in pconf.GetDetail(c).ProcFiles)
                     {
                         string file1 = Path.Combine(ap.SCMAmendDir, s);
-                        string file2 =  Path.Combine(ap.DiffDir, s);
-                        
-                        if (!File.Exists(file1) || !File.Exists(file2))
+                        string file2 = Path.Combine(pconf.OutDir, s);
+
+                        if (!File.Exists(file1))
                         {
-                            log.WriteErrorLog("对比源文件不存在，请检查是否进行了编译输出。");
+                            log.WriteErrorLog("对比源文件不存在，请检查是否递交了源代码。" + file1);
+                        }
+                        else if (!File.Exists(file2))
+                        {
+                            log.WriteErrorLog("对比源文件不存在，请检查是否存在编译输出。" + file2);
                         }
 
-                        if (!HashCom(file1, file2))
-                        //if (!CompareSrc(file1, file2))
+                        //if (!HashCom(file1, file2))
+                        if (!CompareSrc(file1, file2))
                         {
-                            log.WriteErrorLog("文件对比不同，请手工处理一致后继续。" + s);
+                            log.WriteErrorLog("文件对比不同，请手工处理一致后继续。" + file1 +  " " + file2);
                             if (Result)
                             {
                                 Result = false;
@@ -1083,17 +1091,21 @@ namespace MakeAuto
                 else if(c.ctype == ComType.Sql)
                 {
                     string file1 = Path.Combine(ap.SCMAmendDir, c.cname);
-                    string file2 = Path.Combine(ap.DiffDir, c.cname);
+                    string file2 = Path.Combine(pconf.OutDir, c.cname);
 
-                    if (!File.Exists(file1) || !File.Exists(file2))
+                    if (!File.Exists(file1))
                     {
-                        log.WriteErrorLog("对比源文件不存在，请检查是否进行了编译输出。");
+                        log.WriteErrorLog("对比源文件不存在，请检查是否递交了源代码。" + file1);
+                    }
+                    else if (!File.Exists(file2))
+                    {
+                        log.WriteErrorLog("对比源文件不存在，请检查是否存在编译输出。" + file2);
                     }
 
-                    if (!HashCom(file1, file2))
-                    //if(!CompareSrc(file1, file2))
+                    //if (!HashCom(file1, file2))
+                    if(!CompareSrc(file1, file2))
                     {
-                        log.WriteErrorLog("文件对比不同，请手工处理一致后继续。" + c.cname);
+                        log.WriteErrorLog("文件对比不同，请手工处理一致后继续。" + file1 + " " + file2);
                         if (Result)
                         {
                             Result = false;
@@ -1104,7 +1116,13 @@ namespace MakeAuto
 
                 c.cstatus = ComStatus.Normal;
             }
-            log.WriteInfoLog("源代码对比完成。");
+            //log.WriteInfoLog("源代码对比完成。");
+
+            if (!Result)
+            {
+
+            }
+
             return Result;
         }
 
@@ -1159,7 +1177,6 @@ namespace MakeAuto
             }
         }
 
-        /*
         private bool CompareSrc(string filescm, string filesub)
         { 
             // 使用 diff 来作对比
@@ -1167,20 +1184,16 @@ namespace MakeAuto
             Process p = new Process();
             try
             {
-                p.StartInfo.FileName = MAConf.instance.Diff;           // diff 程序，现在先使用 diff
-
-                p.StartInfo.UseShellExecute = false;        // 关闭Shell的使用  
-                p.StartInfo.RedirectStandardInput = true; // 重定向标准输入
-                p.StartInfo.RedirectStandardOutput = true;  //重定向标准出  
-                p.StartInfo.RedirectStandardError = true; //重定向错误输出  
-                p.StartInfo.CreateNoWindow = true;             // 不显示窗口
-
-                // 打包Pack
-                p.StartInfo.Arguments = MAConf.instance.DiffArg + " " + filescm + " " + filesub;   // 设置执行参数
+                p.StartInfo.FileName = @"D:\Program Files\WinMerge\WinMergeU.exe";
+                p.StartInfo.Arguments = @"/e /s /u /xq /wl /wr /minimize " + filescm + " " + filesub;    
+                p.StartInfo.UseShellExecute = true;        // 关闭Shell的使用  
+                p.StartInfo.RedirectStandardInput = false; // 重定向标准输入
+                p.StartInfo.RedirectStandardOutput = false;  //重定向标准出  
+                p.StartInfo.RedirectStandardError = false; //重定向错误输出  
+                p.StartInfo.CreateNoWindow = false;             // 不显示窗口
                 p.Start();    // 启动
-                strOutput = p.StandardOutput.ReadToEnd();        // 从输出流取得命令执行结果
+                //strOutput = p.StandardOutput.ReadToEnd();        // 从输出流取得命令执行结果
                 p.WaitForExit();
-
                 p.Close();
             }
             catch (Exception ex)
@@ -1198,7 +1211,6 @@ namespace MakeAuto
                 return false;
             }
         }
-         * */
 
         public override bool Tip
         {

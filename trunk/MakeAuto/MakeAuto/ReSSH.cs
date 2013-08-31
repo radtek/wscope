@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using Renci.SshNet;
 using System.IO;
+using System;
 
 namespace MakeAuto
 {
@@ -29,7 +30,6 @@ namespace MakeAuto
             this.pass = pass;
             this.compile = true;
             this.restartAs = restartAs;
-            localdir = @"C:\src\";
             remotedir = @"/home/" + user + "/src/";
 
             // 初始化日志
@@ -49,7 +49,15 @@ namespace MakeAuto
                 return true;
             }
 
-            ssh.Connect();
+            try
+            {
+                ssh.Connect();
+            }
+            catch (Exception e)
+            {
+                log.WriteErrorLog("初始化Ssh异常：" + e.Message);
+                return false;
+            }
 
             return true;
         }
@@ -71,8 +79,15 @@ namespace MakeAuto
                 return true;
             }
 
-            sftp.Connect();
-
+            try
+            {
+                sftp.Connect();
+            }
+            catch (Exception e)
+            {
+                log.WriteErrorLog("初始化SFTP异常：" + e.Message);
+                return false;
+            }
             return true;
         }
 
@@ -132,6 +147,8 @@ namespace MakeAuto
 
         public bool UploadModule(Detail dl)
         {
+            log.WriteLog("上传文件，Host: " + host + "，" + dl.GetProcStr(false), LogLevel.Info);
+                    
             bool Result = true;
             if (sftp.IsConnected == false)
             {
@@ -145,13 +162,8 @@ namespace MakeAuto
             FileStream fs;
             string path;
 
-            // 处理 .pc, .h, .cpp, .gc 文件
-            log.WriteLog("SSH: " + host);
-            log.WriteLog("上传文件 " + dl.GetProcStr(false), LogLevel.Info);
-
             foreach (string f in dl.ProcFiles)
             {
-
                 path = Path.Combine(localdir, f);
                 if (!File.Exists(path))
                 {

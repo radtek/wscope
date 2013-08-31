@@ -381,7 +381,7 @@ namespace MakeAuto
                 if (u == string.Empty)
                 {
                     Result = false;
-                    log.WriteErrorLog("无法确认用户连接。" + c.cname);
+                    log.WriteErrorLog("无法确认用户连接。" + c.cname + " " + user);
                     break;
                 }
 
@@ -432,13 +432,18 @@ namespace MakeAuto
                     log.WriteLog(sBuilderErr.ToString(), LogLevel.Error);
                     result = false;
                 }
-                else if (sBuilder.ToString().IndexOf("错误") >= 0 || sBuilder.ToString().IndexOf("errors") >= 0)
+                else if (sBuilder.ToString().IndexOf("错误") >= 0 || sBuilder.ToString().IndexOf("errors") >= 0
+                    || sBuilder.ToString().IndexOf("ERROR:") >= 0  // 有些过程名字带 ERROR，加个冒号
+                    || sBuilder.ToString().IndexOf("ORA-") >= 0 || sBuilder.ToString().IndexOf("PLS-") >= 0
+                    || sBuilder.ToString().IndexOf("ORACLE") >= 0 || sBuilder.ToString().IndexOf("SQL*Plus") >= 0
+                    )
                 {
                     log.WriteLog("编译过程可能有错误，请检查日志文件确认！" + File, LogLevel.Error);
                     result = false;
                 }
 
-                log.WriteLog("[执行Sql文件结束]" + File);
+                //log.WriteLog("[执行Sql文件结束]" + File);
+                
                 return result;
             }
             catch (Exception ex)
@@ -455,7 +460,7 @@ namespace MakeAuto
             if (!String.IsNullOrEmpty(outLine.Data))
             {
                 sBuilder.AppendLine(outLine.Data);
-                OperLog.instance.WriteLog(outLine.Data, LogLevel.SqlExe);
+                //OperLog.instance.WriteLog(outLine.Data, LogLevel.SqlExe);
             }
         }
 

@@ -5,7 +5,7 @@
 		<Product type="cres" product_id="00100" enable="true" name="UF2.0" funclist="funclist_ref.xml">
 			<Repository repo="https://60.191.25.170:4000/secu/dep1/hstrade20/trunk" workspace="E:\hstrade20\trunk"/>
 			<Develop devtool="D:\HDT\eclipsec.exe" outdir="C:\gen" rar="C:\Program Files\WinRAR\Rar.exe"/>
-			<SSHConn name="scm" host="192.168.185.90" port="22" user="gftrade" pass="handsome" restartas="false"/>
+			<SSHConn name="scm" host="192.168.54.34" port="22" user="gftrade" pass="handsome" restartas="false"/>
 			<CommitFtp host="192.168.51.46" port="1021" user="cp1bscm" pass="scmcp1b" remotedir="/d:/测试代码站点/产品一部" localdir="E:\xgd"/>
 			<SpecialCom/>
 			<DB dbtns="dev06" note="开发数据库">
@@ -40,7 +40,7 @@
 		<Product type="febs" product_id="00052" enable="true" name="06版集中交易系统" funclist="funclist.xml">
 			<Repository repo="https://60.191.25.170:4000/secu/dep1/06trade/HSTRADES11/trunk" workspace="E:\06trade\HSTRADES11\trunk"/>
 			<Develop devtool="E:\06trade\HSTRADES11\trunk\Documents\D2.Designs\详细设计\金融产品销售系统_详细设计说明书.xls" outdir="C:\src" rar="C:\Program Files\WinRAR\Rar.exe"/>
-			<SSHConn name="scm" host="192.168.185.90" port="22" user="gftrade" pass="handsome" restartas="false"/>
+			<SSHConn name="scm" host="192.168.54.34" port="22" user="gftrade" pass="handsome" restartas="false"/>
 			<CommitFtp host="192.168.51.46" port="1021" user="cp1bscm" pass="scmcp1b" remotedir="/d:/测试代码站点/产品一部" localdir="E:\gfxgd"/>
 			<OraTNS tns_admin="D:\oracle\product\10.2.0\client_1\NETWORK\ADMIN" tns_name="dev06"/>
 			<!-- 此处指定要使用不同版本的Delphi编译的组件，默认是6，所以此处只需要写用Delphi 5 的版本就可以了，后面可能还会有C++编译接口-->

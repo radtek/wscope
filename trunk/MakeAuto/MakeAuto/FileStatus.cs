@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Diagnostics;
 
-
 namespace MakeAuto
 {
     enum FileStatus
@@ -12,7 +11,7 @@ namespace MakeAuto
         New = 2,
         Unkown = 3,
     }
-
+    
     enum SAWType
     {
         Nothing = 0,
