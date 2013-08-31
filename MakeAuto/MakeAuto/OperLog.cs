@@ -123,7 +123,7 @@ namespace MakeAuto
             try
             {
                 writer.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "  " + e.title + e.info);
-                writer.Flush(); // 及时写入
+                //writer.Flush(); // 及时写入
             }
             catch (ObjectDisposedException ex)
             {
@@ -143,6 +143,11 @@ namespace MakeAuto
             {
                 OnLogInfo(this, e);
             }
+        }
+
+        public void Flush()
+        {
+            writer.Flush();
         }
 
         private string LogDir;

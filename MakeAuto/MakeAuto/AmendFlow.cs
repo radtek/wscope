@@ -28,19 +28,18 @@ namespace MakeAuto
             //_aflow.Add(new PackerVSSCode());
             _aflow.Add(new PackerSvnCode());
             _aflow.Add(new PackerCompile());
-            //_aflow.Add(new PackerDiffer());
+            _aflow.Add(new PackerDiffer());
             _aflow.Add(new PackerSO());
             _aflow.Add(new PackerRePack());
             //_aflow.Add(new PackerUpload());
             //_aflow.Add(new PackCleanUp());
-
-            _state = (State)_aflow[0];  // 起始步骤
         }
 
         public bool Work()
         {
             //log.WriteLog("启动集成线程....." + Environment.NewLine, LogLevel.Error);
             Thread t = new Thread(new ThreadStart(ThreadProc));
+            t.IsBackground = true;  // 界面关闭时退出线程
             t.Start();
             return true;
         }
@@ -55,12 +54,10 @@ namespace MakeAuto
                 return;
             }
 
-            int i;
             string message, caption;
-            for (i = _aflow.IndexOf(_state); i < _aflow.Count; ++i)
-            {
-                _state = (State)_aflow[i];
 
+            foreach (State _state in _aflow)
+            {
                 if (_state.Tip)  // 如果这步流程比较重要，需要提示，需要调整步骤的提示为 true，对于 true 的要求用户确认
                 {
                     message = "下一步 " + _state.StateName + " 继续 ？";
@@ -80,7 +77,7 @@ namespace MakeAuto
                     }
                 }
 
-                log.WriteLog(_state.StateName + " 开始");
+                log.WriteLog("STEP：" + _state.StateName + " 开始");
 
                 if (!_state.DoWork(Amend))
                 {
@@ -88,7 +85,7 @@ namespace MakeAuto
                     break;
                 }
 
-                log.WriteLog(_state.StateName + " 完成");
+                log.WriteLog("STEP：" + _state.StateName + " 完成");
             }
 
             caption = "处理完成";
@@ -117,7 +114,6 @@ namespace MakeAuto
         }
 
         public AmendPack Amend;
-        private State _state;
         private ArrayList _aflow;
         private OperLog log = OperLog.instance;
     }
