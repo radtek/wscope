@@ -13,7 +13,6 @@ namespace MakeAuto
         FormLog,
         SqlExe,
         Info,
-        Both,
         Warning,
         Error,
     }

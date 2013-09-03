@@ -492,9 +492,9 @@ namespace MakeAuto
             p.Start();
 
             string strOutput = p.StandardOutput.ReadToEnd();
-            log.WriteLog("[编译命令] " + p.StartInfo.FileName + p.StartInfo.Arguments);
-            log.WriteLog("[编译输出]");
-            log.WriteLog(strOutput);
+            log.WriteFileLog("[编译命令] " + p.StartInfo.FileName + p.StartInfo.Arguments);
+            log.WriteFileLog("[编译输出]");
+            log.WriteFileLog(strOutput);
             if (strOutput.IndexOf("Complile Failed") >= 0)
             {
                 Result = false;

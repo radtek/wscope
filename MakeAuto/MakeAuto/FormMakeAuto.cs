@@ -395,7 +395,12 @@ namespace MakeAuto
 
             txbCommitPath.Text = ap.CommitPath;
             txtSubmitVer.Text = ap.ScmVer.ToString();
-            txtScmVer.Text = ap.SCMLastVer.ToString();
+            txtScmVer.Text = ap.ScmedVer.ToString();
+
+            if (ap.ScmVer == ap.ScmedVer)
+                txtScmVer.BackColor = System.Drawing.Color.Red;
+            else
+                txtScmVer.BackColor = System.Drawing.SystemColors.Control;
 
             btnFlow.Enabled = true;
             btnDel.Enabled = true;

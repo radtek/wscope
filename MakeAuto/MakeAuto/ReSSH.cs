@@ -173,11 +173,25 @@ namespace MakeAuto
                 }
 
                 fs = new FileStream(path, FileMode.Open, FileAccess.Read);
-                sftp.UploadFile(fs, remotedir + f);
-                fs.Close();
+                try
+                {
+                    sftp.UploadFile(fs, remotedir + f);
+                }
+                catch (Exception e)
+                {
+                    log.WriteErrorLog("上传文件异常！" + e.Message);
+                    Result = false;
+                }
+                finally
+                {
+                    fs.Close();
+                }
+
+                if (!Result)
+                    break;
             }
 
-            log.WriteLog("文件上传成功！");
+            //log.WriteLog("文件上传成功！");
             return Result;
         }
 
@@ -191,16 +205,26 @@ namespace MakeAuto
             bool Result = true;
             MAConf.instance.WriteLog("下载文件 " + dl.SO, LogLevel.Info);
             FileStream fs = new FileStream(Path.Combine(localdir, dl.SO), FileMode.Create);
-            if (sftp.Exists("/home/" + user + "/appcom/" + dl.SO))
-            {
-                sftp.DownloadFile("/home/" + user + "/appcom/" + dl.SO, fs);
-            }
-            else
+            if (!sftp.Exists("/home/" + user + "/appcom/" + dl.SO))
             {
                 Result = false;
                 MAConf.instance.WriteLog("文件 " + dl.SO + "不存在", LogLevel.Error);
+                return Result;
             }
-            fs.Close();
+
+            try
+            {
+                sftp.DownloadFile("/home/" + user + "/appcom/" + dl.SO, fs);
+            }
+            catch (Exception e)
+            {
+                log.WriteErrorLog("上传文件异常！" + e.Message);
+                Result = false;
+            }
+            finally
+            {
+                fs.Close();
+            }
 
             return Result;
         }
@@ -229,30 +253,45 @@ namespace MakeAuto
 
         public bool Compile(Detail dl)
         {
+            bool Result = true;
+
             if (ssh.IsConnected == false)
             {
-                InitSsh();
+                Result = InitSsh();
             }
-            
+
+            if (!Result)
+                return Result;
+
             //  开启命令，发送编译指令
             string Make = MakeCmd(dl);
-            log.WriteLog("发送编译命令：" + Make, LogLevel.Info);
+            log.WriteInfoLog("编译文件" + dl.SO);
+            log.WriteFileLog("发送编译命令：" + Make);
 
-            var cmd = ssh.RunCommand(Make);
-            //  获取输出
-            log.WriteInfoLog(cmd.Result);
-            if (cmd.ExitStatus != 0)
+            try  // 防止原子AS数据库未开启报错导致应用程序飞掉
             {
-                log.WriteLog(cmd.Error, LogLevel.Error);
-                log.WriteLog("编译so报错，请参考输出日志！ " + dl.SO, LogLevel.Error);
-                return false; 
+                var cmd = ssh.RunCommand(Make);
+
+                //  获取输出
+                log.WriteFileLog(cmd.Result);
+                if (cmd.ExitStatus != 0)
+                {
+                    Result = false;
+                    log.WriteLog(cmd.Error, LogLevel.Error);
+                    log.WriteLog("编译so报错，请参考输出日志！ " + dl.SO, LogLevel.Error);
+                }
+                else
+                {
+                    log.WriteLog("编译so完成！ " + dl.SO, LogLevel.Info);
+                }
             }
-            else
+            catch (Exception e)
             {
-                log.WriteLog("编译so完成！ "+ dl.SO, LogLevel.Info);
+                Result = false;
+                log.WriteErrorLog("编译so异常！ " + e.Message);
             }
 
-            return true;
+            return Result;
         }
 
         public string name { get; private set; }
