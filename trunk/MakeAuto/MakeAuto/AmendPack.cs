@@ -118,29 +118,38 @@ namespace MakeAuto
                     ctype = ComType.MenuPatch;
                     users.Add(U_PREFIX + cname.Substring(0, cname.IndexOf('_')));
                 }
-                else if (cname.IndexOf("小包") >= 0 || cname.IndexOf("临时") >= 0)// 希望能识别出临时修改单，有时会失效
-                {
-                    ctype = ComType.Ssql;
-                }
                 else
                 {
-                    ctype = ComType.Sql;
-                    try
+                    // 用于识别临时脚本
+                    Regex reg = new Regex(@"[\u4e00-\u9fa5]"); // 希望能识别出临时修改单，有时会失效；带有中文的则认为是临时单
+                    if (reg.IsMatch(cname))
                     {
-                        // 处理sql脚本用户 secu secusz busin or.sql 去除最后两项
-                        int i = 0;
-                        string u = cname.Substring(0, cname.LastIndexOf('_'));
-                        u = u.Substring(0, u.LastIndexOf('_'));
-                        while ((i = u.IndexOf('_')) >= 0)
-                        {
-                            users.Add(U_PREFIX + u.Substring(i + 1));
-                            u = u.Substring(0, i);
-                        }
-                        users.Add(U_PREFIX + u);
+                        ctype = ComType.Ssql;
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        OperLog.instance.WriteErrorLog("无法确认文件的用户：" + cname + ", Ex_Msg:" + ex.Message);
+                        ctype = ComType.Sql;
+                    }
+
+                    if (ctype == ComType.Sql)
+                    {
+                        try
+                        {
+                            // 处理sql脚本用户 secu secusz busin or.sql 去除最后两项
+                            int i = 0;
+                            string u = cname.Substring(0, cname.LastIndexOf('_'));
+                            u = u.Substring(0, u.LastIndexOf('_'));
+                            while ((i = u.IndexOf('_')) >= 0)
+                            {
+                                users.Add(U_PREFIX + u.Substring(i + 1));
+                                u = u.Substring(0, i);
+                            }
+                            users.Add(U_PREFIX + u);
+                        }
+                        catch (Exception ex)
+                        {
+                            OperLog.instance.WriteErrorLog("无法确认文件的用户：" + cname + ", Ex_Msg:" + ex.Message);
+                        }
                     }
                 }
             }
@@ -181,6 +190,7 @@ namespace MakeAuto
         public AmendPack(string AmendNo)
         {
             this.AmendNo = AmendNo;
+            TempModiFlag = false;
 
             log = OperLog.instance;
 
@@ -413,68 +423,6 @@ namespace MakeAuto
             }
         }
 
-        #region 递交组件版本比较
-        public bool ValidateVersion()
-        {
-            bool ret = true, ret1 = true;
-            foreach (CommitCom c in ComComms)
-            {
-                // 这里的校验主要校验版本，集成编译之后，对于SO，还要校验大小
-                // 根据文件类型调用不同方法校验版本
-                switch (c.ctype)
-                {
-                    case ComType.Dll:
-                    case ComType.Exe:
-                        ret1 = ValidateDll(c);
-                        break;
-                    case ComType.SO:  // SO 文件只有一个版本信息
-                    case ComType.Ini: // Ini 文件有多个版本信息
-                    case ComType.TablePatch: // Patch 文件有多行版本信息
-                    case ComType.Patch: // Patch 文件有多行版本信息
-                    case ComType.Sql:
-                        ret1 = ValidateSO(c);
-                        break;
-                    case ComType.Ssql:  // 小包无版本
-                        break;
-                    default:
-                        break;
-                }
-
-                if (ret1 == false) // 先校验完所有的，如果有一个不同，则返回版本不对
-                    ret = ret1;
-            }
-
-            return ret;
-
-        }
-
-        public bool ValidateSO(CommitCom c)
-        {
-            // 版本比较 
-            // 取压缩包的 SO 测试下正则表达式，同时比较版本信息
-            StreamReader sr = new StreamReader(SCMAmendDir + "/" + c.cname);
-            string input = sr.ReadToEnd();
-            //string pattern = @"V(\d+\.){3}\d+"; // V6.1.31.16
-            string pattern = c.cver;
-            Regex rgx = new Regex(pattern, RegexOptions.IgnoreCase);
-            // 确保版本逆序，只取第一个
-            Match m = rgx.Match(input);
-
-            sr.Close();
-            return m.Success;
-        }
-
-        public bool ValidateDll(CommitCom c)
-        {
-            // 获取文件版本信息
-            FileVersionInfo DllVer = FileVersionInfo.GetVersionInfo(
-                Path.Combine(SCMAmendDir + Path.DirectorySeparatorChar + c.cname));
-
-            // cver的 V 去掉，从第一个开始比较
-            return DllVer.FileVersion == c.cver.Substring(1);
-        }
-        #endregion
-
         // 获取FTP递交信息
         public Boolean QueryFTP()
         {
@@ -557,6 +505,7 @@ namespace MakeAuto
                 // 20111207012-委托管理-高虎-20120116-V13.rar --> 20111207012-委托管理-高虎-20120116-V13 -> 13
                 s = s.Substring(0, s.LastIndexOf('.'));
                 ScmVer = int.Parse(s.Substring(s.LastIndexOf('V') + 1));
+                ScmedVer = ScmVer;
                 // 如果存在对应的src文件夹，一并删除掉
                 if (ScmVer == SubmitVer)
                 {
@@ -611,6 +560,11 @@ namespace MakeAuto
             else
             {
                 SCMLastVer = 0;
+            }
+
+            if (ScmedVer == 0)
+            {
+                ScmedVer = SCMLastVer;
             }
 
             if (ScmSrc.Count > 0)
@@ -738,6 +692,7 @@ namespace MakeAuto
         public bool TempModiFlag;
         public int SubmitVer {get; set;}
         public int ScmVer { get; set; }
+        public int ScmedVer { get; set; } // 实际已经集成的版本
 
         public string Readme { get; private set; }  // readme文件名称
 

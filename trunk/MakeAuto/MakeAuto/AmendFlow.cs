@@ -27,9 +27,9 @@ namespace MakeAuto
             //_aflow.Add(new PackerCheck());
             //_aflow.Add(new PackerVSSCode());
             _aflow.Add(new PackerSvnCode());
-            _aflow.Add(new PackerCompile());
+            //_aflow.Add(new PackerCompile());
             _aflow.Add(new PackerDiffer());
-            _aflow.Add(new PackerSO());
+            //_aflow.Add(new PackerSO());
             _aflow.Add(new PackerRePack());
             //_aflow.Add(new PackerUpload());
             //_aflow.Add(new PackCleanUp());
@@ -77,7 +77,7 @@ namespace MakeAuto
                     }
                 }
 
-                log.WriteLog("STEP：" + _state.StateName + " 开始");
+                log.WriteLog("STEP：" + _state.StateName + "-开始");
 
                 if (!_state.DoWork(Amend))
                 {
@@ -85,7 +85,7 @@ namespace MakeAuto
                     break;
                 }
 
-                log.WriteLog("STEP：" + _state.StateName + " 完成");
+                log.WriteLog("STEP：" + _state.StateName + "-完成");
             }
 
             caption = "处理完成";

@@ -6,6 +6,7 @@ using System.IO;
 using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Windows.Forms;
+using System.Text.RegularExpressions;
 
 namespace MakeAuto
 {
@@ -315,15 +316,15 @@ namespace MakeAuto
                 return false;
             }
 
-            // 优先处理集成注意
-            result = ProcessScmNotice(ap);
-            if (!result)
-                return false;
-
             // 处理 ReadMe，以获取变动
             // 读取readme分成两步，先重新生成递交组件，然后检测修改
             result = ProcessComs(ap);
-            if(!result)
+            if (!result)
+                return false;
+
+            // 优先处理集成注意
+            result = ProcessScmNotice(ap);
+            if (!result)
                 return false;
 
             result = ProcessMods(ap);
@@ -394,7 +395,7 @@ namespace MakeAuto
             if (notice.Count > 0)
             {
                 string s = "Readme中有如下集成注意，请在处理完成后点击确定继续\n【注意：06版集成注意如果详细设计说明书文件新增了模块，请退出程序重启！】：";
-                foreach(string t in notice)
+                foreach (string t in notice)
                 {
                     s += "\r\n" + t;
                 }
@@ -402,12 +403,31 @@ namespace MakeAuto
                     "集成注意",
                     System.Windows.Forms.MessageBoxButtons.OK);
             }
+            else if(ap.scmtype == ScmType.NewScm) // 检查下是否存在 TablePatch之类
+            {
+                foreach (CommitCom c in ap.ComComms)
+                {
+                    if (c.ctype == ComType.TablePatch)
+                    {
+                        string message = "Readme中没有集成注意，但是检测到TablePatch脚本，请在处理完成后继续。";
+                        string caption = "测试";
+
+                        DialogResult dRes = MessageBox.Show(message, caption, MessageBoxButtons.YesNo,
+                            MessageBoxIcon.Question, MessageBoxDefaultButton.Button1);
+                        if (dRes == System.Windows.Forms.DialogResult.No)
+                        {
+                            return false;
+                        }
+                    }
+                }
+            }
 
             return true;
         }
 
         private bool ProcessComs(AmendPack ap)
         {
+            bool Result = true;
             // 清除掉组件列表，重新添加
             ap.ComComms.Clear();
             // 读取readme，重新集成，由于小球上查询的数据库记录的信息冗余，
@@ -445,6 +465,13 @@ namespace MakeAuto
                         index = line.LastIndexOf("["); // 希望读第一个 "[" 和最后一个 "]" 能够处理掉
                         index1 = line.LastIndexOf("]");
                         version = line.Substring(index + 1, index1 - index - 1);
+
+                        // 判断是否是临时包
+                        if (int.Parse(version.Substring(version.LastIndexOf(".") + 1)) > 500)
+                        {
+                            ap.TempModiFlag = true;
+                            break;
+                        }
 
                         // 生成组件信息
                         CommitCom c = new CommitCom(name, version);
@@ -487,6 +514,18 @@ namespace MakeAuto
                 return false;
             }
 
+            if (ap.TempModiFlag)
+            {
+                string message = "该修改单中存在递交项>500，应该是临时包，确认继续处理？";
+                string caption = "测试";
+
+                DialogResult dRes = MessageBox.Show(message, caption, MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
+                if (dRes == System.Windows.Forms.DialogResult.No)
+                {
+                    Result = false;
+                }
+            }
+
             // 输出下处理结果
             //log.WriteInfoLog("ProcessComs...");
             /*
@@ -497,7 +536,7 @@ namespace MakeAuto
                     + " " + Enum.GetName(typeof(ComType), c.ctype) + " " + c.cver + " " + c.path);
             }
              * */
-            return true;
+            return Result;
         }
 
         /// <summary>
@@ -610,9 +649,15 @@ namespace MakeAuto
             // 检查是否有变更，对于Bug集成，如果没有任何修改，无法集成
             if (ap.scmtype == ScmType.BugScm && havechange == false && deleteCom == false)
             {
-                log.WriteErrorLog("木有修改，也木有删除，还是个 V" + ap.ScmVer.ToString() + "你让人家咋集成 ?");
-                ap.scmstatus = ScmStatus.Error;
-                return false;
+                string message = "递交版本为 V" + ap.SubmitVer.ToString() + "，未检测到本次修改，确认继续？";
+                string caption = "测试";
+
+                DialogResult dRes = MessageBox.Show(message, caption, MessageBoxButtons.YesNo, 
+                    MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
+                if (dRes == System.Windows.Forms.DialogResult.No)
+                {
+                    return false;
+                }
             }
 
             return true;
@@ -672,7 +717,8 @@ namespace MakeAuto
                         c.path = c.path.Substring(1);
 
                     string temp = string.Empty;
-                    if (ap.ProductId == "00052" && (c.ctype == ComType.SO || c.ctype == ComType.Sql))
+                    if ((ap.ProductId == "00052" || ap.ProductId == "00053") 
+                        && (c.ctype == ComType.SO || c.ctype == ComType.Sql || c.ctype == ComType.FuncXml))
                     {
                         temp = @"Documents\D2.Designs\详细设计\后端";
                     }
@@ -916,9 +962,20 @@ namespace MakeAuto
                 svn.Version = s.Version;
                 // 检出失败，退出循环
                 Result = svn.GetAmendCode();
-                if (false == Result)
+                if (!Result)
                 {
-                    break;
+                    string message = " 获取版本库信息错误，确认继续？" + "\r\n" + s.LocalPath;
+                    string caption = "测试";
+
+                    DialogResult dRes = MessageBox.Show(message, caption, MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
+                    if (dRes == System.Windows.Forms.DialogResult.No)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        Result = true;  // 防止最后一个确认的svn点了Yes，但是仍然返回失败
+                    }
                 }
                 s.fstatus = FileStatus.New;
                 s.LastModTime = svn.uriinfo.LastChangeTime;
@@ -1048,6 +1105,8 @@ namespace MakeAuto
             BaseConf pconf = MAConf.instance.Configs[ap.ProductId];
             foreach (CommitCom c in ap.ComComms)
             {
+                CompareSame = true;
+
                 // 小包直接跳过
                 if (c.ctype == ComType.Ssql)
                 {
@@ -1069,22 +1128,22 @@ namespace MakeAuto
                         if (!File.Exists(file1))
                         {
                             log.WriteErrorLog("对比源文件不存在，请检查是否递交了源代码。" + file1);
+                            CompareSame = false;
                         }
                         else if (!File.Exists(file2))
                         {
                             log.WriteErrorLog("对比源文件不存在，请检查是否存在编译输出。" + file2);
+                            CompareSame = false;
                         }
 
-                        //if (!HashCom(file1, file2))
-                        if (!CompareSrc(file1, file2))
-                        {
-                            log.WriteErrorLog("文件对比不同，请手工处理一致后继续。" + file1 +  " " + file2);
-                            if (Result)
-                            {
-                                Result = false;
-                            }
-
+                        if (!CompareSame)
                             continue;
+
+                        if (!HashCom(file1, file2))
+                        {
+                            log.WriteErrorLog("文件对比不同，请手工处理一致后继续。" + file1 + " " + file2);
+                            CompareSame = false;
+                            CompareSrc(file1, file2);
                         }
                     }
                 }
@@ -1096,31 +1155,46 @@ namespace MakeAuto
                     if (!File.Exists(file1))
                     {
                         log.WriteErrorLog("对比源文件不存在，请检查是否递交了源代码。" + file1);
+                        CompareSame = false;
                     }
                     else if (!File.Exists(file2))
                     {
                         log.WriteErrorLog("对比源文件不存在，请检查是否存在编译输出。" + file2);
+                        CompareSame = false;
                     }
 
-                    //if (!HashCom(file1, file2))
-                    if(!CompareSrc(file1, file2))
+                    if (!CompareSame)
+                        continue;
+
+                    // 减少对比是的弹出框框
+                    if (!HashCom(file1, file2))
                     {
                         log.WriteErrorLog("文件对比不同，请手工处理一致后继续。" + file1 + " " + file2);
-                        if (Result)
-                        {
-                            Result = false;
-                        }
-                        continue;
+                        CompareSame = false;
+                        CompareSrc(file1, file2);
                     }
                 }
 
-                c.cstatus = ComStatus.Normal;
+                if (Result && !CompareSame)
+                {
+                    Result = false;
+                }
+                else if (CompareSame)
+                {
+                    c.cstatus = ComStatus.Normal;
+                }
             }
-            //log.WriteInfoLog("源代码对比完成。");
 
             if (!Result)
             {
+                string message = "源代码比对不同，是否继续处理？";
+                string caption = "测试";
 
+                DialogResult dRes = MessageBox.Show(message, caption, MessageBoxButtons.YesNo);
+                if (dRes == System.Windows.Forms.DialogResult.Yes)
+                {
+                    Result = true;
+                }
             }
 
             return Result;
@@ -1185,7 +1259,7 @@ namespace MakeAuto
             try
             {
                 p.StartInfo.FileName = @"D:\Program Files\WinMerge\WinMergeU.exe";
-                p.StartInfo.Arguments = @"/e /s /u /xq /wl /wr /minimize " + filescm + " " + filesub;    
+                p.StartInfo.Arguments = @"/e /s /u /xq /wl /wr " + filescm + " " + filesub;    
                 p.StartInfo.UseShellExecute = true;        // 关闭Shell的使用  
                 p.StartInfo.RedirectStandardInput = false; // 重定向标准输入
                 p.StartInfo.RedirectStandardOutput = false;  //重定向标准出  
@@ -1346,6 +1420,89 @@ namespace MakeAuto
             get { return "重新打包处理"; }
         }
 
+        #region 递交组件版本比较
+        public bool ValidateVersion(AmendPack ap)
+        {
+            BaseConf pconf = MAConf.instance.Configs[ap.ProductId];
+            bool Result = true, ret = true;
+            string VFile = string.Empty;
+            foreach (CommitCom c in ap.ComComms)
+            {
+                ret = true;
+                
+                // 这里的校验主要校验版本，集成编译之后，对于SO，还要校验大小
+                // 根据文件类型调用不同方法校验版本
+                switch (c.ctype)
+                {
+                    case ComType.Dll:
+                    case ComType.Exe:
+                        ret = ValidateDll(Path.Combine(pconf.OutDir, c.cname), c.cver, out VFile);
+                        break;
+                    case ComType.Ini: // Ini 文件有多个版本信息
+                    case ComType.TablePatch: // Patch 文件有多行版本信息
+                    case ComType.MenuPatch:
+                    case ComType.Patch: // Patch 文件有多行版本信息
+                        ret = ValidateSO(c.sawfile.LocalPath, c.cver, out VFile);
+                        break;
+                    case ComType.FuncXml: //todo 确认有无版本？
+                    case ComType.SO:  // SO 文件只有一个版本信息
+                    case ComType.Sql:
+                        ret = ValidateSO(Path.Combine(pconf.OutDir, c.cname), c.cver, out VFile);
+                        break;
+                    case ComType.Excel: // 暂时没法检查版本
+                    case ComType.Ssql:  // 小包无版本
+                        break;
+                    default:
+                        break;
+                }
+
+                if (!ret) // 先校验完所有的，如果有一个不同，则返回版本不对
+                {
+                    log.WriteErrorLog(c.cname + "版本信息不同!" + " " + c.cver + "<->" + VFile);
+
+                    if (Result)
+                        Result = false;
+                }
+            }
+
+            return Result;
+        }
+
+        public bool ValidateSO(string path, string version, out string VFile)
+        {
+            // 版本比较 
+            // 取压缩包的 SO 测试下正则表达式，同时比较版本信息
+            StreamReader sr = new StreamReader(path);
+            string input = sr.ReadToEnd();
+            sr.Close();
+
+            bool Result = true;
+            VFile = string.Empty;
+
+            string pattern = @"V(\d+\.){3}\d+"; // V6.1.31.16
+            Regex rgx = new Regex(pattern, RegexOptions.IgnoreCase);
+            // 确保版本逆序，只取第一个
+            Match m = rgx.Match(input);
+            if (!m.Success||(VFile =m.Groups[0].Captures[0].Value) != version)
+            {
+                Result = false;
+            }
+            
+            return Result;
+        }
+
+        public bool ValidateDll(string path, string version, out string VFile)
+        {
+            // 获取文件版本信息
+            FileVersionInfo DllVer = FileVersionInfo.GetVersionInfo(
+                path);
+
+            VFile = "V" + DllVer.FileVersion;
+            // cver的 V 去掉，从第一个开始比较
+            return VFile == version;
+        }
+        #endregion
+
         public bool CopyCommit(AmendPack ap)
         {
             bool Result = true;
@@ -1401,8 +1558,16 @@ namespace MakeAuto
 
         public override bool DoWork(AmendPack ap)
         {
+            // 检查版本一致性
+            bool Result = ValidateVersion(ap);
+            if (!Result)
+                return false;
+
             // 复制递交组件到递交包 
-            CopyCommit(ap);
+            Result = CopyCommit(ap);
+            if (!Result)
+                return false;
+
             // 此时，文件夹的组件已完成，对文件夹压包处理
             // 需要把递交组件和src分别压包，这个与开发递交的组件不同
             // 检查是否存在源代码

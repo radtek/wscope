@@ -24,7 +24,7 @@ namespace MakeAuto
         public Boolean GetAmendCode()
         {
             Boolean Result = false;
-            //log.WriteLog("文件版本：" + Version + " SvnUri：" + Uri + " 本地路径：" + Path);
+            log.WriteFileLog("文件版本：" + Version + " SvnUri：" + Uri + " 本地路径：" + Path);
 
             uritarget = new SvnUriTarget(Uri);
             pathtarget = new SvnPathTarget(Path);
