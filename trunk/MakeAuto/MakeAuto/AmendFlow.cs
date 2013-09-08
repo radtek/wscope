@@ -23,15 +23,14 @@ namespace MakeAuto
             _aflow = new ArrayList();
             _aflow.Add(new PackerDownload());
             _aflow.Add(new PackerReadMe());
-            _aflow.Add(new PackerCopyCom());
+            _aflow.Add(new CopyUnChange());
             //_aflow.Add(new PackerCheck());
-            //_aflow.Add(new PackerVSSCode());
             _aflow.Add(new PackerSvnCode());
-            //_aflow.Add(new PackerCompile());
+            _aflow.Add(new PackerCompile());
             _aflow.Add(new PackerDiffer());
-            //_aflow.Add(new PackerSO());
+            _aflow.Add(new PackerSO());
             _aflow.Add(new PackerRePack());
-            //_aflow.Add(new PackerUpload());
+            _aflow.Add(new PackerUpload());
             //_aflow.Add(new PackCleanUp());
         }
 
