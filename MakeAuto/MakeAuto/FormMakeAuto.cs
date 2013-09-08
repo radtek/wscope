@@ -57,7 +57,7 @@ namespace MakeAuto
                 }
                 else if (e.level == LogLevel.Warning)
                 {
-                    rbLog.SelectionColor = System.Drawing.Color.IndianRed;
+                    rbLog.SelectionColor = System.Drawing.Color.DarkViolet;
                 }
 
                 if (e.level == LogLevel.SqlExe)
@@ -398,7 +398,10 @@ namespace MakeAuto
             txtScmVer.Text = ap.ScmedVer.ToString();
 
             if (ap.ScmVer == ap.ScmedVer)
+            {
                 txtScmVer.BackColor = System.Drawing.Color.Red;
+                log.WriteLog("发现已经集成的递交" + ap.ScmedVer, LogLevel.Warning);
+            }
             else
                 txtScmVer.BackColor = System.Drawing.SystemColors.Control;
 

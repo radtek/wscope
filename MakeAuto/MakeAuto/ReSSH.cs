@@ -147,7 +147,7 @@ namespace MakeAuto
 
         public bool UploadModule(Detail dl)
         {
-            log.WriteLog("上传文件，Host: " + host + "，" + dl.GetProcStr(false), LogLevel.Info);
+            log.WriteLog("上传 " + dl.GetProcStr(false), LogLevel.Info);
                     
             bool Result = true;
             if (sftp.IsConnected == false)
@@ -203,7 +203,7 @@ namespace MakeAuto
             }
 
             bool Result = true;
-            MAConf.instance.WriteLog("下载文件 " + dl.SO, LogLevel.Info);
+            MAConf.instance.WriteLog("下载文件 " + dl.SO, LogLevel.FileLog);
             FileStream fs = new FileStream(Path.Combine(localdir, dl.SO), FileMode.Create);
             if (!sftp.Exists("/home/" + user + "/appcom/" + dl.SO))
             {
@@ -265,7 +265,7 @@ namespace MakeAuto
 
             //  开启命令，发送编译指令
             string Make = MakeCmd(dl);
-            log.WriteInfoLog("编译文件" + dl.SO);
+            log.WriteInfoLog("编译 " + dl.SO);
             log.WriteFileLog("发送编译命令：" + Make);
 
             try  // 防止原子AS数据库未开启报错导致应用程序飞掉
@@ -282,7 +282,7 @@ namespace MakeAuto
                 }
                 else
                 {
-                    log.WriteLog("编译so完成！ " + dl.SO, LogLevel.Info);
+                    log.WriteLog("编译so完成！ " + dl.SO, LogLevel.FileLog);
                 }
             }
             catch (Exception e)

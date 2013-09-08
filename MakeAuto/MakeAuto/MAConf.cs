@@ -209,7 +209,8 @@ namespace MakeAuto
             try
             {
                 // 读取显示属性
-                log.WriteFileLog("读取显示属性");
+
+                log.WriteFileLog("读取产品信息");
 
                 type = root.Attributes["type"].InnerText;
                 product_id = root.Attributes["product_id"].InnerText;
@@ -278,6 +279,12 @@ namespace MakeAuto
                 ftp.Password = fc.pass;
                 ftp.TransferType = FTPTransferType.BINARY;  // 指定 BINARY 传输，否则对于压缩包会失败
                 ftp.CommandEncoding = Encoding.GetEncoding("gb2312"); // 重要，否则乱码且连接不
+
+                log.WriteFileLog("读取对比参数");
+                xn = root.SelectSingleNode("Diff");
+                DiffEnable = bool.Parse(xn.Attributes["enable"].Value);
+                DiffBin = xn.Attributes["bin"].Value;
+                DiffArgs = xn.Attributes["args"].Value;
 
                 log.WriteFileLog("读取Delphi编译版本配置");
                 xn = root.SelectSingleNode("SpecialCom");
@@ -408,7 +415,7 @@ namespace MakeAuto
                 p.StartInfo.FileName = @"cmd.exe";
                 // 同步模式下，使用 @ 导入会有问题，sqlplus错误输出流会报引擎错误，用 < 没问题。异步好像 < 和 @ 都可以
                 p.StartInfo.Arguments = @"/C sqlplus.exe -S " + ConnStr + " < " + File;
-                log.WriteLog("[执行Sql文件] " + File);
+                log.WriteLog("执行Sql " + File);
                 
                 p.StartInfo.UseShellExecute = false;        // 关闭Shell的使用  
                 p.StartInfo.RedirectStandardInput = false; // 不重定向标准输入，因为文件要输入
@@ -508,7 +515,7 @@ namespace MakeAuto
         }
 
 
-        public string type {get; set;}
+        public string type { get; set; }
         public string product_id { get; set; }
         public bool enable { get; set; }
         public string name { get; set; }
@@ -519,8 +526,11 @@ namespace MakeAuto
         public string DevTool { get; private set; }
         public string Rar { get; private set; }
         public ReSSH Conn { get; private set; }
-        public FtpConf fc {get; private set;}
-        public FTPConnection ftp {get; private set;}
+        public FtpConf fc { get; private set;}
+        public FTPConnection ftp { get; private set; }
+        public bool DiffEnable { get; private set; }
+        public string DiffBin { get; private set; }
+        public string DiffArgs { get; private set; }
         public SvnPort SvnRepo { get; private set; }
         public ArrayList SpeComs;
         public string OutDir { get; set; }

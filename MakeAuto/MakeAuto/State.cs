@@ -161,7 +161,14 @@ namespace MakeAuto
 
             if (ftp.IsConnected == false)
             {
-                ftp.Connect();
+                try
+                {
+                    ftp.Connect();
+                }
+                catch (Exception e)
+                {
+                    log.WriteErrorLog("连接FTP服务器失败，错误信息：" + e.Message);
+                }
             }
 
             if (ftp.DirectoryExists(ap.RemoteDir) == false)
@@ -341,90 +348,6 @@ namespace MakeAuto
             return true;
         }
 
-        /// <summary>
-        /// 对于有集成注意的，提示集成注意，集成注意现在还不能自动处理
-        /// </summary>
-        /// <param name="ap"></param>
-        /// <returns></returns>
-        private bool ProcessScmNotice(AmendPack ap)
-        {
-            List<string> notice = new List<string>();
-            // 读取readme，生成集成注意
-            try
-            {
-                // Create an instance of StreamReader to read from a file.
-                // The using statement also closes the StreamReader.
-                using (StreamReader sr = new StreamReader(ap.SCMAmendDir + "/" + ap.Readme,
-                    Encoding.GetEncoding("gb2312")))
-                {
-                    string line;
-
-                    // 读取修改单列表
-                    while ((line = sr.ReadLine()) != null && line.IndexOf("修 改 单： ") < 0)
-                        ;
-                    ap.AmendList = line.Replace("修 改 单： ", string.Empty).Trim();
-
-                    // 读到时停止
-                    while ((line = sr.ReadLine()) != null && line.IndexOf("集成注意：") < 0)
-                        ;
-
-                    sr.ReadLine(); // 跳过"涉及的程序及文件 ..."这行字
-
-                    // 处理递交的组件
-                    while ((line = sr.ReadLine()) != null && line.IndexOf("涉及的程序及文件: ") < 0)
-                    {
-                        // 跳过空行
-                        if (line.Trim() == string.Empty)
-                            continue;
-
-                        if (line.Trim() == "暂无!")   // 没有集成注意，会填写一行暂无表示，这个也跳过去
-                            continue;
-
-                        // 把集成注意读进来
-                        notice.Add(line);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                log.WriteErrorLog("ProcessScmNotice异常 ReadMe：" + ap.Readme + " " + ex.Message);
-                return false;
-            }
-
-            // 如果集成注意不为空，那么提示用户先处理集成注意
-            if (notice.Count > 0)
-            {
-                string s = "Readme中有如下集成注意，请在处理完成后点击确定继续\n【注意：06版集成注意如果详细设计说明书文件新增了模块，请退出程序重启！】：";
-                foreach (string t in notice)
-                {
-                    s += "\r\n" + t;
-                }
-                System.Windows.Forms.MessageBox.Show(s,
-                    "集成注意",
-                    System.Windows.Forms.MessageBoxButtons.OK);
-            }
-            else if(ap.scmtype == ScmType.NewScm) // 检查下是否存在 TablePatch之类
-            {
-                foreach (CommitCom c in ap.ComComms)
-                {
-                    if (c.ctype == ComType.TablePatch)
-                    {
-                        string message = "Readme中没有集成注意，但是检测到TablePatch脚本，请在处理完成后继续。";
-                        string caption = "测试";
-
-                        DialogResult dRes = MessageBox.Show(message, caption, MessageBoxButtons.YesNo,
-                            MessageBoxIcon.Question, MessageBoxDefaultButton.Button1);
-                        if (dRes == System.Windows.Forms.DialogResult.No)
-                        {
-                            return false;
-                        }
-                    }
-                }
-            }
-
-            return true;
-        }
-
         private bool ProcessComs(AmendPack ap)
         {
             bool Result = true;
@@ -540,6 +463,90 @@ namespace MakeAuto
         }
 
         /// <summary>
+        /// 对于有集成注意的，提示集成注意，集成注意现在还不能自动处理
+        /// </summary>
+        /// <param name="ap"></param>
+        /// <returns></returns>
+        private bool ProcessScmNotice(AmendPack ap)
+        {
+            List<string> notice = new List<string>();
+            // 读取readme，生成集成注意
+            try
+            {
+                // Create an instance of StreamReader to read from a file.
+                // The using statement also closes the StreamReader.
+                using (StreamReader sr = new StreamReader(ap.SCMAmendDir + "/" + ap.Readme,
+                    Encoding.GetEncoding("gb2312")))
+                {
+                    string line;
+
+                    // 读取修改单列表
+                    while ((line = sr.ReadLine()) != null && line.IndexOf("修 改 单： ") < 0)
+                        ;
+                    ap.AmendList = line.Replace("修 改 单： ", string.Empty).Trim();
+
+                    // 读到时停止
+                    while ((line = sr.ReadLine()) != null && line.IndexOf("集成注意：") < 0)
+                        ;
+
+                    sr.ReadLine(); // 跳过"涉及的程序及文件 ..."这行字
+
+                    // 处理递交的组件
+                    while ((line = sr.ReadLine()) != null && line.IndexOf("涉及的程序及文件: ") < 0)
+                    {
+                        // 跳过空行
+                        if (line.Trim() == string.Empty)
+                            continue;
+
+                        if (line.Trim() == "暂无!")   // 没有集成注意，会填写一行暂无表示，这个也跳过去
+                            continue;
+
+                        // 把集成注意读进来
+                        notice.Add(line);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                log.WriteErrorLog("ProcessScmNotice异常 ReadMe：" + ap.Readme + " " + ex.Message);
+                return false;
+            }
+
+            // 如果集成注意不为空，那么提示用户先处理集成注意
+            if (notice.Count > 0)
+            {
+                string s = "Readme中有如下集成注意，请在处理完成后点击确定继续\n【注意：06版集成注意如果详细设计说明书文件新增了模块，请更新文件后退出程序重启！】：";
+                foreach (string t in notice)
+                {
+                    s += "\r\n" + t;
+                }
+                System.Windows.Forms.MessageBox.Show(s,
+                    "集成注意",
+                    System.Windows.Forms.MessageBoxButtons.OK);
+            }
+            else if(ap.scmtype == ScmType.NewScm) // 检查下是否存在 TablePatch之类
+            {
+                foreach (CommitCom c in ap.ComComms)
+                {
+                    if (c.ctype == ComType.TablePatch)
+                    {
+                        string message = "Readme中没有集成注意，但是检测到TablePatch脚本，请在处理完成后继续。";
+                        string caption = "测试";
+
+                        DialogResult dRes = MessageBox.Show(message, caption, MessageBoxButtons.YesNo,
+                            MessageBoxIcon.Question, MessageBoxDefaultButton.Button1);
+                        if (dRes == System.Windows.Forms.DialogResult.No)
+                        {
+                            return false;
+                        }
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
         /// 编译顺序为：表结构、存储过程、公用原子、其他原子、周边原子、外围原子、公用业务逻辑、同步业务逻辑、其他业务逻辑、周边业务逻辑、外围业务逻辑、
         /// 适配器业务逻辑（有些产品因为模块依赖关系，顺序需要调整，如消费支付的消费支付通知要在公用之后，其他之前编译）、DLL；
         /// 此处，编译SO前要比对SRC
@@ -558,6 +565,7 @@ namespace MakeAuto
 
             return true;
         }
+        
         private bool ProcessMods(AmendPack ap)
         {
             ap.SAWFiles.Clear();
@@ -759,14 +767,14 @@ namespace MakeAuto
             }
             return true;
         }
-
+        
         private void ProcessReadMe(AmendPack ap)
         {
             // 输出下处理结果
-            log.WriteInfoLog("[递交组件]");
+            log.WriteFileLog("[递交组件]");
             foreach (CommitCom c in ap.ComComms)
             {
-                log.WriteInfoLog("名称：" + c.cname + " "
+                log.WriteFileLog("名称：" + c.cname + " "
                     + "状态：" + Enum.GetName(typeof(ComStatus), c.cstatus) + " "
                     + "版本：" + c.cver + " "
                     + "路径：" + c.path);
@@ -781,6 +789,7 @@ namespace MakeAuto
                     + "文件状态：" + Enum.GetName(typeof(FileStatus), s.fstatus));
             }
         }
+
 
         /// <summary>
         /// 递归删除子文件夹以及文件(包括只读文件)
@@ -821,9 +830,9 @@ namespace MakeAuto
         public bool _tip = false;
     }
 
-    class PackerCopyCom : State
+    class CopyUnChange : State
     {
-        public PackerCopyCom()
+        public CopyUnChange()
             : base()
         {
         }
@@ -854,8 +863,14 @@ namespace MakeAuto
                     // 对于没有变动的组件，复制老的集成到新的集成包里
                     if (c.cstatus == ComStatus.NoChange)  // 无变动的可以复制了
                     {
-                        log.WriteInfoLog("复制文件，源地址：" + Path.Combine(ap.SCMLastAmendDir, c.cname) + "，"
-                            + "目标文件：" + Path.Combine(ap.SCMAmendDir, c.cname));
+                        log.WriteLog("复制文件，源地址：" + Path.Combine(ap.SCMLastAmendDir, c.cname) + "，"
+                            + "目标文件：" + Path.Combine(ap.SCMAmendDir, c.cname), LogLevel.FileLog);
+
+                        if (!File.Exists(Path.Combine(ap.SCMLastAmendDir, c.cname)))
+                        {
+                            log.WriteLog(Path.Combine(ap.SCMLastAmendDir, c.cname) + " 不存在，请检查是否集成出现异常", LogLevel.Error);
+                            continue;
+                        }
 
                         File.Copy(Path.Combine(ap.SCMLastAmendDir, c.cname), 
                             Path.Combine(ap.SCMAmendDir, c.cname), 
@@ -1092,6 +1107,8 @@ namespace MakeAuto
         {
         }
 
+        private string DiffBin;
+        private string DiffArgs;
 
         public override string StateName
         {
@@ -1103,6 +1120,23 @@ namespace MakeAuto
             // 对于相同的，可以不提示用户，对于不同的，需要集成的同学确认，这个还需要想办法来写
             bool Result = true, CompareSame = true;
             BaseConf pconf = MAConf.instance.Configs[ap.ProductId];
+
+            // 支持UF不做源代码对比
+            if (!pconf.DiffEnable)
+            {
+                log.WriteLog("源代码对比未启用，跳过步骤。");
+                return true;
+            }
+
+            if (!File.Exists(pconf.DiffBin))
+            {
+                log.WriteLog("源代码对比程序不存在，将跳过源代码对比", LogLevel.Warning);
+                return true;
+            }
+
+            DiffBin = pconf.DiffBin;
+            DiffArgs = pconf.DiffArgs;
+
             foreach (CommitCom c in ap.ComComms)
             {
                 CompareSame = true;
@@ -1141,7 +1175,7 @@ namespace MakeAuto
 
                         if (!HashCom(file1, file2))
                         {
-                            log.WriteErrorLog("文件对比不同，请手工处理一致后继续。" + file1 + " " + file2);
+                            log.WriteLog("文件对比不同，等待用户处理。" + file1 + " " + file2, LogLevel.Warning);
                             CompareSame = false;
                             CompareSrc(file1, file2);
                         }
@@ -1166,10 +1200,10 @@ namespace MakeAuto
                     if (!CompareSame)
                         continue;
 
-                    // 减少对比是的弹出框框
+                    // 减少对比时的弹出框框
                     if (!HashCom(file1, file2))
                     {
-                        log.WriteErrorLog("文件对比不同，请手工处理一致后继续。" + file1 + " " + file2);
+                        log.WriteLog("文件对比不同，等待用户处理。" + file1 + " " + file2, LogLevel.Warning);
                         CompareSame = false;
                         CompareSrc(file1, file2);
                     }
@@ -1255,11 +1289,13 @@ namespace MakeAuto
         { 
             // 使用 diff 来作对比
             string strOutput = string.Empty;
+
             Process p = new Process();
             try
             {
-                p.StartInfo.FileName = @"D:\Program Files\WinMerge\WinMergeU.exe";
-                p.StartInfo.Arguments = @"/e /s /u /xq /wl /wr " + filescm + " " + filesub;    
+                p.StartInfo.FileName = DiffBin;
+                p.StartInfo.Arguments = DiffArgs.Replace("%filescm%", "\"" + filescm + "\"").Replace("%filesub%", "\"" + filesub + "\"");
+                log.WriteLog("对比命令：" + p.StartInfo.FileName + " " + p.StartInfo.Arguments, LogLevel.FileLog);
                 p.StartInfo.UseShellExecute = true;        // 关闭Shell的使用  
                 p.StartInfo.RedirectStandardInput = false; // 重定向标准输入
                 p.StartInfo.RedirectStandardOutput = false;  //重定向标准出  
@@ -1458,18 +1494,37 @@ namespace MakeAuto
 
                 if (!ret) // 先校验完所有的，如果有一个不同，则返回版本不对
                 {
-                    log.WriteErrorLog(c.cname + "版本信息不同!" + " " + c.cver + "<->" + VFile);
+                    log.WriteErrorLog(c.cname + "版本信息不同!" + "[集成]" + VFile + "<->[递交]" + c.cver);
 
                     if (Result)
                         Result = false;
                 }
             }
 
+            if (!Result)
+            {
+                string message = " 版本对比不同，确认继续？";
+                string caption = "测试";
+
+                DialogResult dRes = MessageBox.Show(message, caption, MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
+                if (dRes == System.Windows.Forms.DialogResult.Yes)
+                {
+                    Result = true;
+                }
+            }
+
             return Result;
         }
-
+        
         public bool ValidateSO(string path, string version, out string VFile)
         {
+            if (!File.Exists(path))
+            {
+                log.WriteErrorLog(path + " 不存在");
+                VFile = "V0.0.0.0";
+                return false;
+            }
+
             // 版本比较 
             // 取压缩包的 SO 测试下正则表达式，同时比较版本信息
             StreamReader sr = new StreamReader(path);
@@ -1490,9 +1545,15 @@ namespace MakeAuto
             
             return Result;
         }
-
+        
         public bool ValidateDll(string path, string version, out string VFile)
         {
+            if (!File.Exists(path))
+            {
+                log.WriteErrorLog(path + " 不存在");
+                VFile = "V0.0.0.0";
+                return false;
+            }
             // 获取文件版本信息
             FileVersionInfo DllVer = FileVersionInfo.GetVersionInfo(
                 path);
@@ -1515,7 +1576,7 @@ namespace MakeAuto
                     continue;
                 }
 
-                log.WriteLog("复制：" + c.cname);
+                log.WriteLog("复制：" + c.cname, LogLevel.FileLog);
 
                 // 去除文件只读属性，否则复制时不能覆盖
                 FileAttributes attributes = File.GetAttributes(Path.Combine(ap.SCMAmendDir, c.cname));
@@ -1672,20 +1733,46 @@ namespace MakeAuto
         public override bool DoWork(AmendPack ap)
         {
             BaseConf pconf = MAConf.instance.Configs[ap.ProductId];
-            // 对于重新集成，先删除掉上一次集成的软件包，然后按照新集成处理
-            if (ap.scmtype == ScmType.ReScm)
+            
+            FTPConnection ftp = pconf.ftp;
+            if (ftp.IsConnected == false)
             {
-                // 删除ftp软件包，删除本地软件包
-                FTPConnection ftp = pconf.ftp;
-                if (ftp.IsConnected == false)
+                try
                 {
                     ftp.Connect();
                 }
+                catch (Exception e)
+                {
+                    log.WriteErrorLog("连接FTP服务器失败，错误信息：" + e.Message);
+                    return false;
+                }
+            }
 
-                log.WriteInfoLog("重新集成，删除服务器集成包" + ap.SCMRemoteFile);
-                //ftp.DeleteFile(SCMRemoteFile);
+            try
+            {
+                if (ftp.Exists(ap.SCMRemoteFile))
+                {
+                    string message = " Ftp文件已存在，确认继续？" + "\r\n" + ap.SCMRemoteFile;
+                    string caption = "测试";
 
-                // 重新标定，暂时不考虑重复集成
+                    DialogResult dRes = MessageBox.Show(message, caption, MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
+                    if (dRes == System.Windows.Forms.DialogResult.Yes)
+                    {
+                        ftp.DeleteFile(ap.SCMRemoteFile);
+                    }
+                    else
+                    {
+                        log.WriteErrorLog("选择保留ftp文件！" + ap.SCMRemoteFile);
+                        return true;
+                    }
+                }
+
+                ftp.UploadFile(ap.SCMLocalFile, ap.SCMRemoteFile);
+            }
+            catch (Exception e)
+            {
+                log.WriteErrorLog("上传文件失败，错误信息：" + e.Message);
+                return false;
             }
 
             return true;

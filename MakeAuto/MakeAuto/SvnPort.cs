@@ -92,7 +92,7 @@ namespace MakeAuto
             if (l == null)
             {
                 log.WriteLog("[无法确认Svn版本信息]，" + pathtarget.FileName + "，endRevision = " + endRevision.ToString()
-                    + "，startRevision " + startRevision.ToString());
+                    + "，startRevision " + startRevision.ToString(), LogLevel.Error);
 
                 return false;
             }
