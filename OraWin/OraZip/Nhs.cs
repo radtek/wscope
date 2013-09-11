@@ -248,9 +248,10 @@ namespace OraZip
                 // 报错返回
             }
 
-            string oradb = "Data Source=" +  dbconf.tnsname + 
-                ";User Id=" + d.name + ";Password=" + DBUser.DecPass(d.pass) + ";";
+            string oradb = "Data Source=" + dbconf.tnsname + ";User Id=" + d.name + ";Password=" + DBUser.DecPass(d.pass) + ";";
+
             conn = new OracleConnection(oradb); // C#
+
             try
             {
                 conn.Open();
@@ -275,6 +276,7 @@ namespace OraZip
             cmd = new OracleCommand();
             cmd.Connection = conn;
 
+            
             // 读取文件
             try
             {
@@ -314,6 +316,7 @@ namespace OraZip
 
             finally
             {
+                cmd.Dispose();
                 conn.Dispose();
             }
 
@@ -322,9 +325,10 @@ namespace OraZip
         private Boolean ExSqlBlock(string sql)
         {
             cmd.CommandText = sql;
-            cmd.CommandType = System.Data.CommandType.Text;
+            cmd.CommandType = CommandType.Text;
 
-            cmd.CommandText = cmd.CommandText.Replace("\r\n", "\n"); // 包含了 \r\n 就是各种报错，如果有，千万要换掉
+            //todo 20130809 gaohu 不报错了？ why ?
+            //cmd.CommandText = cmd.CommandText.Replace("\r\n", "\n"); // 包含了 \r\n 就是各种报错，如果有，千万要换掉
 
             // delcar型脚本
             // 处理换行符号
@@ -337,14 +341,14 @@ namespace OraZip
             }
             catch (OracleException e)
             {
-                string err = "Oracle语句执行异常，[sql语句] " + sql + "， [Oracle报错信息] " + e.Message;
+                string err = "Oracle语句执行异常，[sql语句] " + sql + "\r\n[Oracle报错信息] " + e.Message;
                 OperLog.instance.WriteLog(err, LogLevel.Error);
                 System.Windows.Forms.MessageBox.Show("执行sql语句失败，请检查日志确认。");
                 return false;
             }
             catch (Exception e)
             {
-                string err = "执行异常，[sql语句] " + sql + "， [报错信息] " + e.Message;
+                string err = "执行异常，[sql语句] " + sql + "\r\n[报错信息] " + e.Message;
                 OperLog.instance.WriteLog(err, LogLevel.Error);
                 System.Windows.Forms.MessageBox.Show("执行sql语句失败，请检查日志确认。");
                 return false;
@@ -363,6 +367,7 @@ namespace OraZip
                 ZipEntry e = zip.AddEntry(sqlfile, sb.ToString());
                 zip.Comment = user + "|" + cv.Product + "|" + cv.Sversion;
                 // 获取输出文件名
+
                 zip.Save(file);
             }
 
