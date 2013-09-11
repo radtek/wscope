@@ -8,6 +8,7 @@ using System.Text;
 using System.Windows.Forms;
 using System.IO;
 using Ionic.Zip;
+using Oracle.DataAccess.Client;
 
 namespace OraZip
 {
@@ -20,8 +21,45 @@ namespace OraZip
 
         private void button1_Click(object sender, EventArgs e)
         {
-            Nhs.GetMacAddr();
-            //Nhs.get2();
+          
+          OracleDatabase db = null;
+          string constring = "user id=hs_fund;password=handsome;data source=devgh";
+          OperLog oplog = OperLog.instance;
+
+          try
+          {
+              // Create an instance of an OracleDatbase object
+              db = new OracleDatabase(constring);
+
+              // Start up the database
+              //db.Startup();
+
+              Console.WriteLine("The Oracle database is now up.");
+
+              // Executing Startup() is the same as the following:
+              // db.Startup(OracleDBStartupMode.NoRestriction, null, true);
+              // which is also the same as:
+              // db.Startup(OracleDBStartupMode.NoRestriction, null, false);
+              db.ExecuteNonQuery("");
+              // db.ExecuteNonQuery("ALTER DATABASE OPEN");
+          }
+          catch (OracleException ex)
+          {
+              string err = "连接Oracle数据库失败，TNSNAME:racle异常信息：" + ex.Message;
+              oplog.WriteLog(err, LogLevel.Error);
+              System.Windows.Forms.MessageBox.Show(err);
+          }
+          catch (Exception ex)
+          {
+              string err = "连接Oracle数据库失败，TNSNAME:异常信息：" + ex.Message;
+              oplog.WriteLog(err, LogLevel.Error);
+              System.Windows.Forms.MessageBox.Show(err);
+          }
+            finally
+             {
+              // Dispose the OracleDatabase object
+              db.Dispose();
+             }
 
         }
 
