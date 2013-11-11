@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Windows.Forms;
 using System.Threading;
+using System.Collections.Generic;
 
 namespace MakeAuto
 {
@@ -20,7 +21,7 @@ namespace MakeAuto
             // 下载递交包-预处理递交包-检查递交包-检出VSS代码-编译-递交-清理
             // 下载递交包-从ftp 上获取压缩包
             // 预处理递交包，包括解压缩，检查
-            _aflow = new ArrayList();
+            _aflow = new List<State>();
             _aflow.Add(new PackerDownload());
             _aflow.Add(new PackerReadMe());
             _aflow.Add(new CopyUnChange());
@@ -113,7 +114,7 @@ namespace MakeAuto
         }
 
         public AmendPack Amend;
-        private ArrayList _aflow;
+        private List<State> _aflow;
         private OperLog log = OperLog.instance;
     }
 }

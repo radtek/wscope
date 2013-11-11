@@ -114,7 +114,6 @@
     </Compile>
     <Compile Include="AmendFlow.cs" />
     <Compile Include="Detail.cs" />
-    <Compile Include="DiffMatchPatch.cs" />
     <Compile Include="ExcelMacroHelper.cs" />
     <Compile Include="FileStatus.cs" />
     <Compile Include="FormMakeAuto.cs">
@@ -155,7 +154,8 @@
     <Reference Include="AutoUpdater.NET">
       <HintPath>..\depbin\AutoUpdater.NET.dll</HintPath>
     </Reference>
-    <Reference Include="ChnCharInfo">
+    <Reference Include="ChnCharInfo, Version=1.0.0.0, Culture=neutral, PublicKeyToken=18f031bd02e5e291, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\depbin\ChnCharInfo.dll</HintPath>
     </Reference>
     <Reference Include="edtFTPnet">
@@ -169,8 +169,7 @@
     <Reference Include="Renci.SshNet">
       <HintPath>..\depbin\Renci.SshNet.dll</HintPath>
     </Reference>
-    <Reference Include="SharpSvn, Version=1.7002.1998.12257, Culture=neutral, PublicKeyToken=d729672594885a28, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="SharpSvn">
       <HintPath>..\depbin\Svn_1.7\SharpSvn.dll</HintPath>
     </Reference>
     <Reference Include="System" />
@@ -180,17 +179,6 @@
     <Reference Include="System.Web" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.XML" />
-  </ItemGroup>
-  <ItemGroup>
-    <COMReference Include="Microsoft.Office.Core">
-      <Guid>{2DF8D04C-5BFA-101B-BDE5-00AA0044DE52}</Guid>
-      <VersionMajor>2</VersionMajor>
-      <VersionMinor>5</VersionMinor>
-      <Lcid>0</Lcid>
-      <WrapperTool>primary</WrapperTool>
-      <Isolated>False</Isolated>
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-    </COMReference>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0,Profile=Client">
