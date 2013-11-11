@@ -1,16 +1,13 @@
 <?xml version="1.0" encoding="gb2312"?>
 <!--连接配置-->
 <MakeAuto>
-    <Config>
-		<Diff bin="D:\Program Files\WinMerge\WinMergeU.exe" arg="/e /s /u /xq /wl /wr %filescm% %filesub%"/>
-	</Config>
 	<Products>
 		<Product type="cres" product_id="00100" enable="true" name="UF2.0" funclist="funclist_ref.xml">
 			<Repository repo="https://60.191.25.170:4000/secu/dep1/hstrade20/trunk" workspace="E:\hstrade20\trunk"/>
 			<Develop devtool="D:\HDT\eclipsec.exe" outdir="C:\gen" rar="C:\Program Files\WinRAR\Rar.exe"/>
 			<SSHConn name="scm" host="192.168.54.34" port="22" user="gftrade" pass="handsome" restartas="false"/>
 			<CommitFtp host="192.168.51.46" port="1021" user="cp1bscm" pass="scmcp1b" remotedir="/d:/测试代码站点/产品一部" localdir="E:\xgd"/>
-			<Diff enable="true" bin="D:\Program Files\WinMerge\WinMergeU.exe" args="/e /s /u /xq /wl /wr %filescm% %filesub%"/>
+			<Diff enable="true" bin="D:\Program Files\WinMerge\WinMergeU.exe" args="/e /s /u /xq /wl /wr %filescm% %filedev%"/>
 			<SpecialCom/>
 			<DB dbtns="dev06" note="开发数据库">
 				<user name="hs_user" pass="BRbpK8L2jgGwdN9CnMQnVw==" note="用户数据库"/>
@@ -28,7 +25,7 @@
 			<Develop devtool="D:\HDT\eclipsec.exe" outdir="C:\gen" rar="C:\Program Files\WinRAR\Rar.exe"/>
 			<SSHConn name="scm" host="192.168.185.90" port="22" user="gftrade" pass="handsome" restartas="false"/>
 			<CommitFtp host="192.168.51.46" port="1021" user="cp1bscm" pass="scmcp1b" remotedir="/d:/测试代码站点/产品一部" localdir="E:\refxg"/>
-			<Diff enable="true" bin="D:\Program Files\WinMerge\WinMergeU.exe" args="/e /s /u /xq /wl /wr %filescm% %filesub%"/>
+			<Diff enable="true" bin="D:\Program Files\WinMerge\WinMergeU.exe" args="/e /s /u /xq /wl /wr %filescm% %filedev%"/>
 			<SpecialCom/>
 			<DB dbtns="dev06" note="开发数据库">
 				<user name="hs_user" pass="BRbpK8L2jgGwdN9CnMQnVw==" note="用户数据库"/>
@@ -46,7 +43,7 @@
 			<Develop devtool="E:\06trade\HSTRADES11\trunk\Documents\D2.Designs\详细设计\金融产品销售系统_详细设计说明书.xls" outdir="C:\src" rar="C:\Program Files\WinRAR\Rar.exe"/>
 			<SSHConn name="scm" host="192.168.54.34" port="22" user="gftrade" pass="handsome" restartas="false"/>
 			<CommitFtp host="192.168.51.46" port="1021" user="cp1bscm" pass="scmcp1b" remotedir="/d:/测试代码站点/产品一部" localdir="E:\gfxgd"/>
-			<Diff enable="true" bin="D:\Program Files\WinMerge\WinMergeU.exe" args="/e /s /u /xq /wl /wr %filescm% %filesub%"/>
+			<Diff enable="true" bin="D:\Program Files\WinMerge\WinMergeU.exe" args="/e /s /u /xq /wl /wr %filescm% %filedev%"/>
 			<!-- 此处指定要使用不同版本的Delphi编译的组件，默认是6，所以此处只需要写用Delphi 5 的版本就可以了，后面可能还会有C++编译接口-->
 			<SpecialCom>
 				<Com lang="delphi" ver="5" coms="HsTools.exe;HsCentrTrans.exe;HsCbpTrans.exe;ShangHai.dll;ShenZhen2.dll;AFOF.dll;KXX.dll;RZRQXX.dll;TRZR.dll;HsQutSvr.exe;BondRate.dll;ETF.dll;Warrant.dll"/>
@@ -67,7 +64,7 @@
 			<Develop devtool="E:\06trade\HSTRADES11\trunk\Documents\D2.Designs\详细设计\金融产品销售系统_详细设计说明书.xls" outdir="C:\src" rar="C:\Program Files\WinRAR\Rar.exe"/>
 			<SSHConn name="scm" host="192.168.54.34" port="22" user="gftrade" pass="handsome" restartas="false"/>
 			<CommitFtp host="192.168.51.46" port="1021" user="cp1bscm" pass="scmcp1b" remotedir="/d:/测试代码站点/产品一部" localdir="E:\gfxgd"/>
-			<Diff enable="true" bin="D:\Program Files\WinMerge\WinMergeU.exe" args="/e /s /u /xq /wl /wr %filescm% %filesub%"/>
+			<Diff enable="true" bin="D:\Program Files\WinMerge\WinMergeU.exe" args="/e /s /u /xq /wl /wr %filescm% %filedev%"/>
 			<!-- 此处指定要使用不同版本的Delphi编译的组件，默认是6，所以此处只需要写用Delphi 5 的版本就可以了，后面可能还会有C++编译接口-->
 			<SpecialCom>
 				<Com lang="delphi" ver="5" coms="HsTools.exe;HsCentrTrans.exe;HsCbpTrans.exe;ShangHai.dll;ShenZhen2.dll;AFOF.dll;KXX.dll;RZRQXX.dll;TRZR.dll;HsQutSvr.exe;BondRate.dll;ETF.dll;Warrant.dll"/>

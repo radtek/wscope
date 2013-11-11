@@ -198,7 +198,7 @@ namespace MakeAuto
             // 创建连接
             sqlconn = new SqlConnection(ConnString);
             //为上面的连接指定Command对象
-            sqlcomm = sqlconn.CreateCommand();
+            sqlcmd = sqlconn.CreateCommand();
 
             SAWFiles = new SAWFileList();
 
@@ -240,35 +240,6 @@ namespace MakeAuto
                 log.WriteErrorLog("查询修改单信息失败！");
                 return;
             }
-
-            if (QueryFTP() == false)
-            {
-                scmstatus = ScmStatus.Error;
-                log.WriteErrorLog("查询FTP目录信息错误。");
-                return;
-            }
-
-            if (CheckAmendStatus() == false)
-            {
-                scmstatus = ScmStatus.Error;
-                foreach (KeyValuePair<string, string> kvp in ReworkList)
-                {
-                    if (!ReworkStatus.Contains(kvp.Value))
-                    {
-                        string sta;
-                        if (!StatusDict.TryGetValue(kvp.Value, out sta))
-                        {
-                            sta = "未知状态";
-                        }
-
-                        log.WriteLog("修改单号：" + kvp.Key + "，修改单状态：" + 
-                            kvp.Value + "-"  + sta, 
-                            LogLevel.Warning);
-                        break;
-                    }
-                }
-                return;
-            }
         }
 
         // 根据提供的修改单查询主单号
@@ -284,12 +255,12 @@ namespace MakeAuto
                 }
 
                 // 指定查询项 a.reference_stuff as 递交程序项, a.program_path_a as 递交路径, product_id as 产品
-                sqlcomm.CommandText = ""
+                sqlcmd.CommandText = ""
                   + " select a.reference_stuff, a.program_path_a, a.product_id "
                   + " from manage.dbo.programreworking2 a "
                   + " where reworking_id = '" + AmendNo + "' ";
                 //为指定的command对象执行DataReader;
-                sqldr = sqlcomm.ExecuteReader();
+                sqldr = sqlcmd.ExecuteReader();
 
                 // 如果有数据，读取数据
                 while (sqldr.Read())
@@ -337,7 +308,7 @@ namespace MakeAuto
             return result;
         }
 
-        private Boolean CheckAmendStatus()
+        public Boolean CheckAmendStatus()
         {
             Boolean result = true;
             // 打开连接
@@ -349,12 +320,15 @@ namespace MakeAuto
                 }
 
                 // 指定查询项 a.reference_stuff as 递交程序项, a.program_path_a as 递交路径, product_id as 产品
-                sqlcomm.CommandText = ""
+                // 段琪反馈，如果直接递交后删除，会在programreworking2里留记录，因此改为检查modifyrework里的修改单
+                sqlcmd.CommandText = ""
                   + " select a.reworking_id, a.reworking_status "
                   + " from manage.dbo.programreworking2 a "
-                  + " where a.program_path_a = '" + CommitPath + "' ";
+                  + " where a.reworking_id in "
+                  + "  (select reworking_id from manage.dbo.modifyrework b"
+                  + " where b.modify_batch = '" + CommitDir + "')";
                 //为指定的command对象执行DataReader;
-                sqldr = sqlcomm.ExecuteReader();
+                sqldr = sqlcmd.ExecuteReader();
 
                 // 如果有数据，读取数据
                 while (sqldr.Read())
@@ -643,7 +617,7 @@ namespace MakeAuto
         public string AmendSubject { get; private set; } // 融资融券 广发版技术支持测试
 
         // 本地修改单路径，不带最后的 /
-        public string LocalDir {get; private set;} // E:\xgd\融资融券\20111123054-国金短信
+        public string LocalDir {get; set;} // E:\xgd\融资融券\20111123054-国金短信
 
         // 远程递交文件夹
         public string RemoteDir {get; private set;} //
@@ -661,12 +635,12 @@ namespace MakeAuto
         //public string AmendDir { get; private set; } // E:\xgd\融资融券\20111123054-国金短信\20111123054-国金短信-李景杰-20120117-V1
 
         // 集成文件夹路径
-        public string SCMAmendDir { get; private set; }  // E:\xgd\融资融券\20111123054-国金短信\集成-20111123054-国金短信-李景杰-20120117-V1
+        public string SCMAmendDir { get; set; }  // E:\xgd\融资融券\20111123054-国金短信\集成-20111123054-国金短信-李景杰-20120117-V1
 
         // 需求单号，暂时不用
         //private string ReqNo {get; set;}
 
-        public string SrcRar { get; private set; }
+        public string SrcRar { get; set; }
         public string SCMSrcRar { get; private set; }
 
         // 上次集成版本
@@ -686,7 +660,7 @@ namespace MakeAuto
 
         // 建立连接对象
         private SqlConnection sqlconn;
-        private SqlCommand sqlcomm;
+        private SqlCommand sqlcmd;
         private SqlDataReader sqldr;
 
         public bool TempModiFlag;

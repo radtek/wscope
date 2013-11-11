@@ -53,7 +53,7 @@ namespace MakeAuto
             catch (Exception e)
             {
                 log.WriteLog("，取本地版本库信息异常:" + pathtarget.FileName + " 错误信息：" + e.Message, LogLevel.Error);
-                //return false;
+                return false;
             }
 
             // 本地文件版本已经最新，不重新获取服务器版本
@@ -67,7 +67,6 @@ namespace MakeAuto
 
             // Get Log
             System.Collections.ObjectModel.Collection<SvnLogEventArgs> logs;
-            List<string> changelog = new List<string>();
             SvnLogArgs arg = new SvnLogArgs();
             // 时间正序，版本历史从小到大；时间反向，版本历史从大到小
             //arg.Range = new SvnRevisionRange(new SvnRevision(DateTime.Now.AddDays(-10)), new SvnRevision(DateTime.Now.AddDays(-20)));

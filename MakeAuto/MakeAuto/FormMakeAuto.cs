@@ -3,6 +3,8 @@ using System.Windows.Forms;
 using System.Diagnostics;
 using AutoUpdaterDotNET;
 using System.Threading;
+using System.Collections.Generic;
+using SharpSvn;
 
 namespace MakeAuto
 {
@@ -393,17 +395,56 @@ namespace MakeAuto
             if (ap.scmstatus == ScmStatus.Error)
                 return;
 
+            if (ap.QueryFTP() == false)
+            {
+                ap.scmstatus = ScmStatus.Error;
+                log.WriteErrorLog("查询FTP目录信息错误。");
+                return;
+            }
+
+            if (ap.CheckAmendStatus() == false)
+            {
+                ap.scmstatus = ScmStatus.Error;
+                foreach (KeyValuePair<string, string> kvp in ap.ReworkList)
+                {
+                    if (!ap.ReworkStatus.Contains(kvp.Value))
+                    {
+                        string sta;
+                        if (!ap.StatusDict.TryGetValue(kvp.Value, out sta))
+                        {
+                            sta = "未知状态";
+                        }
+
+                        log.WriteLog("修改单号：" + kvp.Key + "，修改单状态：" +
+                            kvp.Value + "-" + sta,
+                            LogLevel.Warning);
+                        break;
+                    }
+                }
+                return;
+            }
+
             txbCommitPath.Text = ap.CommitPath;
             txtSubmitVer.Text = ap.ScmVer.ToString();
             txtScmVer.Text = ap.ScmedVer.ToString();
 
-            if (ap.ScmVer == ap.ScmedVer)
+            if (ap.SubmitVer == 0)
+            {
+                txtScmVer.BackColor = System.Drawing.Color.Red;
+                log.WriteLog("Ftp目录无递交包" + ap.AmendNo.ToString(), LogLevel.Warning);
+                btnFlow.Enabled = false;
+                btnDel.Enabled = false;
+                return;
+            }
+            else if (ap.ScmVer == ap.ScmedVer)
             {
                 txtScmVer.BackColor = System.Drawing.Color.Red;
                 log.WriteLog("发现已经集成的递交" + ap.ScmedVer, LogLevel.Warning);
             }
             else
+            {
                 txtScmVer.BackColor = System.Drawing.SystemColors.Control;
+            }
 
             btnFlow.Enabled = true;
             btnDel.Enabled = true;
@@ -475,7 +516,25 @@ namespace MakeAuto
 
         private void button2_Click_1(object sender, EventArgs e)
         {
+            
+            System.Collections.ObjectModel.Collection<SharpSvn.SvnStatusEventArgs> ss;
+            
+            SharpSvn.SvnClient sclient = new SharpSvn.SvnClient();
+            sclient.GetStatus(@"E:\06trade\HSTRADES11\trunk\Documents\D2.Designs\详细设计\后端\", out ss);
 
+
+            foreach (SharpSvn.SvnStatusEventArgs s in ss)
+            {
+                if (!s.Versioned)
+                    continue;
+                if (!s.Modified)
+                    continue;
+                // 正常处理
+                textBox3.Text = DBUser.EncPass(textBox2.Text);
+
+            }
+
+            textBox3.Text = DBUser.EncPass(textBox2.Text);
         }
     }
 }

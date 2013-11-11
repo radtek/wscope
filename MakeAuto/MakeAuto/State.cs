@@ -190,7 +190,7 @@ namespace MakeAuto
                 System.Windows.Forms.MessageBox.Show("FTP文件 " + ap.RemoteFile + " 不存在！");
                 return false;
             }
-            
+
             try
             {
                 // 如果本地已经存在，提示是否覆盖
@@ -216,7 +216,7 @@ namespace MakeAuto
             }
             catch (IOException)
             {
-                log.WriteErrorLog("下载文件失败，请检查压缩文件是否被锁定！");
+                log.WriteErrorLog("下载文件失败，请检查压缩文件是否被锁定！" +  ap.LocalFile);
                 return false;
             }
 
@@ -247,44 +247,6 @@ namespace MakeAuto
                 }
             }
 
-            return true;
-        }
-        
-        public override string StateName
-        {
-            get { return "下载压缩包"; }
-        }
-
-        public override bool Tip
-        {
-            get {return _tip;}
-        }
-
-        public bool _tip = false;
-    }
-
-    /// <summary>
-    /// 处理ReadMe
-    /// </summary>
-    class PackerReadMe : State
-    {
-        public PackerReadMe()
-            : base()
-        {
-        }
-
-        public override string StateName
-        {
-            get { return "处理ReadMe"; }
-        }
-
-        // 根据 Readme 置重新集成状态，这里分成两步，因为数据库里读出来的递交组件不可靠
-        // 如果一张修改单不递交，只是生成下 readme，数据库就会更新掉递交的组件，
-        // 所以直接使用数据库的stuff字段有问题，调整为使用readme处理
-        public override bool DoWork(AmendPack ap)
-        {
-            bool result = true;
-
             // 检查集成本地文件夹是否存在，不存在则创建，存在则先删除后创建
             // 对于本地文件夹存在只读文件的情况，直接删除会报错，这里要去只读属性后来删除
             if (Directory.Exists(ap.SCMAmendDir))
@@ -309,11 +271,92 @@ namespace MakeAuto
             UnRar(ap, ap.LocalFile, ap.SCMAmendDir);
 
             // 如果存在 src 压缩文件夹，解压缩 src 文件夹
+            // 对于不规范的src，重新修订src的名字
+            foreach (string filenamestr in Directory.GetFiles(ap.SCMAmendDir))
+            {
+                if (File.Exists(filenamestr) && Path.GetFileName(filenamestr).ToUpper().IndexOf("SRC") >= 0)
+                {
+                    ap.SrcRar = filenamestr;
+                    break;
+                }
+            }
+
             if (File.Exists(ap.SrcRar))
             {
                 UnRar(ap, ap.SrcRar, ap.SCMAmendDir);  // 解压处理，供对比用
                 File.Delete(ap.SrcRar);  // 删除掉递交的src，不需要留着了
             }
+
+            return true;
+        }
+
+        /// <summary>
+        /// 递归删除子文件夹以及文件(包括只读文件)
+        /// </summary>
+        /// <param name="TARGET_PATH">文件路径</param>
+        public void DeleteFolder(string TARGET_PATH)
+        {
+            //如果存在目录文件，就将其目录文件删除
+            if (Directory.Exists(TARGET_PATH))
+            {
+                foreach (string filenamestr in Directory.GetFileSystemEntries(TARGET_PATH))
+                {
+                    if (File.Exists(filenamestr))
+                    {
+                        FileInfo file = new FileInfo(filenamestr);
+                        if (file.Attributes.ToString().IndexOf("ReadOnly") != -1)
+                        {
+                            file.Attributes = FileAttributes.Normal;//去掉文件属性
+                        }
+                        File.Delete(filenamestr);//直接删除其中的文件
+                    }
+                    else
+                    {
+                        DeleteFolder(filenamestr);//递归删除
+                    }
+
+                }
+                System.IO.DirectoryInfo DirInfo = new DirectoryInfo(TARGET_PATH);
+                DirInfo.Attributes = FileAttributes.Normal & FileAttributes.Directory;    //去掉文件夹属性     
+                Directory.Delete(TARGET_PATH, true);
+            }
+        }
+
+        public override string StateName
+        {
+            get { return "下载压缩包"; }
+        }
+
+        public override bool Tip
+        {
+            get {return _tip;}
+        }
+
+        public bool _tip = false;
+    }
+
+
+    /// <summary>
+    /// 处理ReadMe
+    /// </summary>
+    class PackerReadMe : State
+    {
+        public PackerReadMe()
+            : base()
+        {
+        }
+
+        public override string StateName
+        {
+            get { return "处理ReadMe"; }
+        }
+
+        // 根据 Readme 置重新集成状态，这里分成两步，因为数据库里读出来的递交组件不可靠
+        // 如果一张修改单不递交，只是生成下 readme，数据库就会更新掉递交的组件，
+        // 所以直接使用数据库的stuff字段有问题，调整为使用readme处理
+        public override bool DoWork(AmendPack ap)
+        {
+            bool result = true;
 
             // 20130802 
             // 如果Readme不存在，之后的的操作不用执行
@@ -348,7 +391,7 @@ namespace MakeAuto
             return true;
         }
 
-        private bool ProcessComs(AmendPack ap)
+        public bool ProcessComs(AmendPack ap)
         {
             bool Result = true;
             // 清除掉组件列表，重新添加
@@ -378,7 +421,8 @@ namespace MakeAuto
                             continue;
 
                         // 跳过 src 行
-                        if (line.Trim().IndexOf("src-V") >= 0)
+                        // 20131107 src-V -> 改为 SRC 判断，以支持账户系统集成
+                        if (line.Trim().ToUpper().IndexOf("SRC") >= 0)
                             continue;
 
                         // 连续读取两行，一行文件说明和版本，一行存放路径
@@ -566,7 +610,7 @@ namespace MakeAuto
             return true;
         }
         
-        private bool ProcessMods(AmendPack ap)
+        public bool ProcessMods(AmendPack ap)
         {
             ap.SAWFiles.Clear();
             // 如果是第一次递交，那么不管修改是什么，都需要重新集成
@@ -612,6 +656,10 @@ namespace MakeAuto
 
                         // 跳过空行
                         if (line.Trim() == string.Empty)
+                            continue;
+
+                        // 跳过 src 行
+                        if (line.Trim().ToUpper().IndexOf("SRC") >= 0)
                             continue;
 
                         // 跳过可能的文件名称行，不知道readme里为啥有这种数据
@@ -672,13 +720,13 @@ namespace MakeAuto
         }
 
         // 处理 SAWPath，设置检出代码的路径
-        private bool ProcessSAWPath(AmendPack ap)
+        public bool ProcessSAWPath(AmendPack ap)
         {
             // 确认修改单的配置库
             ap.svn = MAConf.instance.Configs[ap.ProductId].SvnRepo;
             if (ap.svn == null)
             {
-                log.WriteInfoLog("获取对应配置库失败，在配置文件节点无法找到该递交主题的配置库路径");
+                log.WriteInfoLog("获取对应配置库失败，在配置文件节点无法找到该递交产品的配置库路径 " + ap.ProductId);
                 ap.scmstatus = ScmStatus.Error;
                 return false;
             }
@@ -768,7 +816,7 @@ namespace MakeAuto
             return true;
         }
         
-        private void ProcessReadMe(AmendPack ap)
+        public void ProcessReadMe(AmendPack ap)
         {
             // 输出下处理结果
             log.WriteFileLog("[递交组件]");
@@ -787,38 +835,6 @@ namespace MakeAuto
                     + "本地路径：" + s.LocalPath + " "
                     + "SvnUri：" + s.UriPath + " "
                     + "文件状态：" + Enum.GetName(typeof(FileStatus), s.fstatus));
-            }
-        }
-
-
-        /// <summary>
-        /// 递归删除子文件夹以及文件(包括只读文件)
-        /// </summary>
-        /// <param name="TARGET_PATH">文件路径</param>
-        public void DeleteFolder(string TARGET_PATH)
-        {
-            //如果存在目录文件，就将其目录文件删除
-            if (Directory.Exists(TARGET_PATH))
-            {
-                foreach (string filenamestr in Directory.GetFileSystemEntries(TARGET_PATH))
-                {
-                    if (File.Exists(filenamestr))
-                    {
-                        FileInfo file = new FileInfo(filenamestr);
-                        if (file.Attributes.ToString().IndexOf("ReadOnly") != -1)
-                        {
-                            file.Attributes = FileAttributes.Normal;//去掉文件属性
-                        }
-                        File.Delete(filenamestr);//直接删除其中的文件
-                    }
-                    else {
-                        DeleteFolder(filenamestr);//递归删除
-                    }
-
-                }
-                System.IO.DirectoryInfo DirInfo = new DirectoryInfo(TARGET_PATH);
-                DirInfo.Attributes = FileAttributes.Normal & FileAttributes.Directory;    //去掉文件夹属性     
-                Directory.Delete(TARGET_PATH, true);
             }
         }
 
@@ -1134,8 +1150,11 @@ namespace MakeAuto
                 return true;
             }
 
+
             DiffBin = pconf.DiffBin;
             DiffArgs = pconf.DiffArgs;
+            string filescm = string.Empty;
+            string filedev = string.Empty;
 
             foreach (CommitCom c in ap.ComComms)
             {
@@ -1156,44 +1175,46 @@ namespace MakeAuto
                     // 按照Hash对比，希望是可行的，
                     foreach (string s in pconf.GetDetail(c).ProcFiles)
                     {
-                        string file1 = Path.Combine(ap.SCMAmendDir, s);
-                        string file2 = Path.Combine(pconf.OutDir, s);
+                        CompareSame = true;
+                        filescm = Path.Combine(pconf.OutDir, s);
+                        filedev = Path.Combine(ap.SCMAmendDir, s);
 
-                        if (!File.Exists(file1))
+                        if (!File.Exists(filescm))
                         {
-                            log.WriteErrorLog("对比源文件不存在，请检查是否递交了源代码。" + file1);
+                            log.WriteErrorLog("对比源文件不存在，请检查是否存在编译输出。" + filescm);
                             CompareSame = false;
                         }
-                        else if (!File.Exists(file2))
+                        else if (!File.Exists(filedev))
                         {
-                            log.WriteErrorLog("对比源文件不存在，请检查是否存在编译输出。" + file2);
+                            log.WriteErrorLog("对比源文件不存在，请检查是否递交了源代码。" + filedev);
                             CompareSame = false;
                         }
 
-                        if (!CompareSame)
+                        if (!CompareSame)  // 文件不存在，不能对比
                             continue;
 
-                        if (!HashCom(file1, file2))
+                        // 减少对比时的弹出框框
+                        if (!HashCom(filescm, filedev))
                         {
-                            log.WriteLog("文件对比不同，等待用户处理。" + file1 + " " + file2, LogLevel.Warning);
+                            log.WriteLog("文件对比不同，等待用户处理。" + filescm + " " + filedev, LogLevel.Warning);
                             CompareSame = false;
-                            CompareSrc(file1, file2);
+                            CompareSrc(filescm, filedev);
                         }
                     }
                 }
                 else if(c.ctype == ComType.Sql)
                 {
-                    string file1 = Path.Combine(ap.SCMAmendDir, c.cname);
-                    string file2 = Path.Combine(pconf.OutDir, c.cname);
+                    filescm = Path.Combine(pconf.OutDir, c.cname);
+                    filedev = Path.Combine(ap.SCMAmendDir, c.cname);
 
-                    if (!File.Exists(file1))
+                    if (!File.Exists(filescm))
                     {
-                        log.WriteErrorLog("对比源文件不存在，请检查是否递交了源代码。" + file1);
+                        log.WriteErrorLog("对比源文件不存在，请检查是否存在编译输出。" + filescm);
                         CompareSame = false;
                     }
-                    else if (!File.Exists(file2))
+                    else if (!File.Exists(filedev))
                     {
-                        log.WriteErrorLog("对比源文件不存在，请检查是否存在编译输出。" + file2);
+                        log.WriteErrorLog("对比源文件不存在，请检查是否递交了源代码。" + filedev);
                         CompareSame = false;
                     }
 
@@ -1201,11 +1222,11 @@ namespace MakeAuto
                         continue;
 
                     // 减少对比时的弹出框框
-                    if (!HashCom(file1, file2))
+                    if (!HashCom(filescm, filedev))
                     {
-                        log.WriteLog("文件对比不同，等待用户处理。" + file1 + " " + file2, LogLevel.Warning);
+                        log.WriteLog("文件对比不同，等待用户处理。" + filescm + " " + filedev, LogLevel.Warning);
                         CompareSame = false;
-                        CompareSrc(file1, file2);
+                        CompareSrc(filescm, filedev);
                     }
                 }
 
@@ -1285,7 +1306,7 @@ namespace MakeAuto
             }
         }
 
-        private bool CompareSrc(string filescm, string filesub)
+        private bool CompareSrc(string filescm, string filedev)
         { 
             // 使用 diff 来作对比
             string strOutput = string.Empty;
@@ -1294,7 +1315,7 @@ namespace MakeAuto
             try
             {
                 p.StartInfo.FileName = DiffBin;
-                p.StartInfo.Arguments = DiffArgs.Replace("%filescm%", "\"" + filescm + "\"").Replace("%filesub%", "\"" + filesub + "\"");
+                p.StartInfo.Arguments = DiffArgs.Replace("%filescm%", "\"" + filescm + "\"").Replace("%filedev%", "\"" + filedev + "\"");
                 log.WriteLog("对比命令：" + p.StartInfo.FileName + " " + p.StartInfo.Arguments, LogLevel.FileLog);
                 p.StartInfo.UseShellExecute = true;        // 关闭Shell的使用  
                 p.StartInfo.RedirectStandardInput = false; // 重定向标准输入
