@@ -516,24 +516,6 @@ namespace MakeAuto
 
         private void button2_Click_1(object sender, EventArgs e)
         {
-            
-            System.Collections.ObjectModel.Collection<SharpSvn.SvnStatusEventArgs> ss;
-            
-            SharpSvn.SvnClient sclient = new SharpSvn.SvnClient();
-            sclient.GetStatus(@"E:\06trade\HSTRADES11\trunk\Documents\D2.Designs\详细设计\后端\", out ss);
-
-
-            foreach (SharpSvn.SvnStatusEventArgs s in ss)
-            {
-                if (!s.Versioned)
-                    continue;
-                if (!s.Modified)
-                    continue;
-                // 正常处理
-                textBox3.Text = DBUser.EncPass(textBox2.Text);
-
-            }
-
             textBox3.Text = DBUser.EncPass(textBox2.Text);
         }
     }

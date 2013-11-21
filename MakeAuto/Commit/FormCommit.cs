@@ -55,8 +55,6 @@ namespace MakeAuto
             pr.ProcessSAWPath(ap);
             
             // 全部修改
-
-
             #region
             // 输出下处理结果
             foreach (CommitCom c in ap.ComComms)
@@ -90,75 +88,153 @@ namespace MakeAuto
         string CommitDir;
         int Version;
         string Readme;
+        List<string> ld;  // 递交文件（或文件夹）列表
+        Dictionary<string, string> lver;  // 递交文件或者文件夹版本号
+        Dictionary<string, Dictionary<string, Boolean>> lpath; // 每一个递交项对应的递交文件列表
+        SharpSvn.SvnClient sclient;
+        Dictionary<string, Boolean> tpath; // 临时变量
 
         private void button1_Click(object sender, EventArgs e)
         {
             
-            //BaseConf pf = MAConf.instance.Configs[ap.ProductId];
-
+            pf = MAConf.instance.Configs[ap.ProductId];
+            
             System.Collections.ObjectModel.Collection<SharpSvn.SvnStatusEventArgs> ss;
-            SharpSvn.SvnClient sclient = new SharpSvn.SvnClient();
-            bool bFlag = false;
-            string Name;
+            sclient = new SharpSvn.SvnClient();
+            ld = new List<string>();
+            lver = new Dictionary<string,string>();
+            lpath = new Dictionary<string, Dictionary<string, Boolean>>();
+
             foreach (CommitCom c in ap.ComComms)
             {
                 // 对于无变动和要删除的，不需要再生成SAW库信息；对于小包，不需要生成 SAW库信息
                 if (c.cstatus == ComStatus.NoChange || c.cstatus == ComStatus.Delete || c.ctype == ComType.Ssql)
                     continue;
 
-                bFlag = false;
-                Name = "[" + c.cname + "]";
-                // 相同路径放到同一组
-                foreach (ListViewItem l in listView1.Items)
+                if (!ld.Contains(c.sawfile.LocalPath))
                 {
-                    if (l.Tag.ToString() == c.sawfile.LocalPath)
-                    {
-                        l.Group.Header = l.Group.Header + " " + Name;
-                        bFlag = true;
-                        break;
-                    }
-                    
+                    ld.Add(c.sawfile.LocalPath);
+                    lver.Add(c.sawfile.LocalPath, c.cver);
                 }
+            }
 
-                if (bFlag)
-                    continue;
+            foreach (string s in pf.CommitPublic)
+            {
+                if (!ld.Contains(s))
+                {
+                    ld.Add(System.IO.Path.Combine(pf.WorkSpace, s));
+                    lver.Add(System.IO.Path.Combine(pf.WorkSpace, s), pf.logmessage);
+                }
+            }
 
-                ListViewGroup lvg = new System.Windows.Forms.ListViewGroup(Name, System.Windows.Forms.HorizontalAlignment.Left);
-
+            string sname;
+            listView1.Items.Clear();
+            ListViewGroup lvg;
+            ListViewItem lvItem;
+            foreach (string k in ld)
+            {
                 try
                 {
-                    // RetrieveAllEntries 以显示所有，包括正常的版本
-                    sclient.GetStatus(c.sawfile.LocalPath, out ss);
-                    foreach (SharpSvn.SvnStatusEventArgs s in ss)
+                    // RetrieveAllEntries 参数可以显示所有，包括正常的版本
+                    sclient.GetStatus(k, out ss);
+
+
+                    if (ss.Count > 0)
                     {
-                        if (s.LocalContentStatus == SharpSvn.SvnStatus.NotVersioned)
-                            continue;
-                        if (s.LocalContentStatus == SharpSvn.SvnStatus.Normal)
-                            continue;
-                        
+                        if (System.IO.Path.HasExtension(k))
+                        {
+                            sname = System.IO.Path.GetFileName(k);
+                        }
+                        else
+                        {
+                            sname = k.Replace(pf.WorkSpace, string.Empty);
+                        }
 
-                        ListViewItem lvItem = new ListViewItem(System.IO.Path.GetFileName(s.Path));
-                        lvItem.SubItems.Add(Enum.GetName(typeof(SharpSvn.SvnStatus), s.LocalContentStatus));
-                        lvItem.Tag = c.sawfile.LocalPath;
-                        lvItem.Checked = true;
-                        lvItem.Group = lvg;
-                        listView1.Items.Add(lvItem);
+                        lvg = new System.Windows.Forms.ListViewGroup(sname,
+                          System.Windows.Forms.HorizontalAlignment.Left);
+                        lvg.Tag = k;
 
+                        tpath = new Dictionary<string, Boolean>();
+                        foreach (SharpSvn.SvnStatusEventArgs s in ss)
+                        {
+                            if (s.LocalContentStatus == SharpSvn.SvnStatus.NotVersioned)
+                            {
+                                rbLog.AppendText("[NotVersioned] " + s.Path + Environment.NewLine);
+                                continue;
+                            }
+                            if (s.LocalContentStatus == SharpSvn.SvnStatus.Normal)
+                                continue;
+
+                            tpath.Add(s.Path, true);
+                            lvItem = new ListViewItem(System.IO.Path.GetFileName(s.Path));
+                            lvItem.SubItems.Add(Enum.GetName(typeof(SharpSvn.SvnStatus), s.LocalContentStatus));
+                            lvItem.Tag = s.Path;
+                            lvItem.Checked = true;
+                            lvItem.Group = lvg;
+                            listView1.Items.Add(lvItem);
+                        }
+
+                        // 都是 Not Versioned 不需处理
+                        if (tpath.Count > 0)
+                        {
+                            lpath.Add(k, tpath);
+                            listView1.Groups.Add(lvg);
+                        }
                     }
                 }
                 catch (Exception ex)
                 {
                     MAConf.instance.WriteLog("获取状态失败" + ex.Message, LogLevel.Error);
                 }
+            }
+        }
 
-                listView1.Groups.Add(lvg);
-           }
-            
-    }
-
-        private void listView1_SelectedIndexChanged(object sender, EventArgs e)
+        private void button2_Click(object sender, EventArgs e)
         {
+            // 置选中状态
+            foreach (ListViewGroup g in listView1.Groups)
+            {
+                foreach (ListViewItem l in g.Items)
+                {
+                    (lpath[g.Tag as string])[l.Tag as string] = l.Checked;
+                }
+            }
 
+            bool bRes;
+            SharpSvn.SvnCommitArgs cargs = new SharpSvn.SvnCommitArgs();
+            cargs.KeepLocks = true;
+            SharpSvn.SvnCommitResult cres;
+            List<string> paths = new List<string>();
+            foreach (KeyValuePair<String, Dictionary<string, Boolean>> element in lpath)
+            {                
+                paths.Clear();
+                cargs.LogMessage = AmendNo.ToString() +"-" + lver[element.Key] + "-V" + Version;
+                rbLog.AppendText(cargs.LogMessage + " " + element.Key + Environment.NewLine);
+                foreach (KeyValuePair<string, Boolean> le in element.Value)
+                {
+                    if (le.Value == false)
+                        continue;
+
+                    paths.Add(le.Key);
+                    rbLog.AppendText(le.Key + Environment.NewLine);
+                }
+                try
+                {
+                    bRes = sclient.Commit(paths, cargs, out cres);
+                    if (!bRes)
+                    {
+                        rbLog.AppendText("递交失败! " + cres.PostCommitError + Environment.NewLine);
+                    }
+                    else
+                    {
+                        rbLog.AppendText("递交成功! " + cres.Revision.ToString() + Environment.NewLine);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MAConf.instance.WriteLog("获取状态失败" + ex.Message, LogLevel.Error);
+                }
+            }
         }
     }
     

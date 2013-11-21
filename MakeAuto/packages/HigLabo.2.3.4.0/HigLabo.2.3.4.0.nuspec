@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+  <metadata>
+    <id>HigLabo</id>
+    <version>2.3.4.0</version>
+    <authors>Higty</authors>
+    <owners>Higty</owners>
+    <licenseUrl>http://higlabo.codeplex.com/license</licenseUrl>
+    <projectUrl>http://higlabo.codeplex.com/</projectUrl>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <description>Library include Mail(Smtp,Pop3,Imap),Ftp,Twitter,Dropbox,SugarSync,Box.net,WindowsAzureManagementRestService,WindowsLiveRestService,Facebook,Rss</description>
+    <releaseNotes>Release for .NET 4.0</releaseNotes>
+    <copyright>HigLabo</copyright>
+    <tags>Http OAuth Mail Smtp Pop3 Imap Ftp Twitter Facebook Rss Dropbox SugarSync Box.net WindowsAzureManagementRestService WindowsLiveRestService</tags>
+  </metadata>
+</package>

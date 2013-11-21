@@ -201,6 +201,7 @@ namespace MakeAuto
         {
             log = OperLog.instance;
             Users = new List<DBUser>();
+            CommitPublic = new List<String>();
             detail = null;
         }
 
@@ -312,10 +313,28 @@ namespace MakeAuto
                         x.Attributes["note"].InnerText);
                     Users.Add(u);
                 }
+
+                
+                // 读取公用递交配置
+                try
+                {
+                    xn = root.SelectSingleNode("CommitPublic");
+                    logmessage = xn.Attributes["logmessage"].Value;
+                    xnl = xn.ChildNodes;
+                    foreach (XmlNode x in xnl)
+                    {
+                        CommitPublic.Add(x.Attributes["dir"].InnerText);
+                    }
+                }
+                catch
+                {
+                    log.WriteLog("无法读取公共递交资源CommitPublic！，请检查MAConf.xml配置");
+                }
             }
             catch (Exception e)
             {
                 log.WriteLog("加载配置失败，活动节点：" + xn.Name + e.Message, LogLevel.Error);
+                throw new MissingFieldException("LoadConf");
             }
         }
 
@@ -537,6 +556,8 @@ namespace MakeAuto
         public string OutDir { get; set; }
         protected Detail detail;
         public List<DBUser> Users { get; private set; }
+        public string logmessage;
+        public List<String> CommitPublic { get; private set; }
         public string dbtns { get; private set; }
 
         public OperLog log;

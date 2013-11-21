@@ -255,12 +255,6 @@ namespace MakeAuto
             }
             Directory.CreateDirectory(ap.SCMAmendDir);
 
-            // 如果本地集成文件已存在，删除本地集成文件
-            if (File.Exists(ap.SCMLocalFile))
-            {
-                File.Delete(ap.SCMLocalFile);
-            }
-
             if (!File.Exists(ap.LocalFile))
             {
                 log.WriteErrorLog("本地递交包丢失，无法解压缩！");
@@ -732,6 +726,7 @@ namespace MakeAuto
             }
  
             // 处理 SAWFile
+            SAWFile f = null;
             foreach (CommitCom c in ap.ComComms)
             {
                 // 对于无变动和要删除的，不需要再生成SAW库信息；对于小包，不需要生成 SAW库信息
@@ -739,7 +734,7 @@ namespace MakeAuto
                     continue;
 
                 // 标记文件需要刷新，添加到文件状态列表中
-                SAWFile f = ap.SAWFiles[c.path];
+                f = ap.SAWFiles[c.path];
                 if (f == null)
                 {
                     f = new SAWFile(c.path, FileStatus.Old);
@@ -758,9 +753,6 @@ namespace MakeAuto
                 c.sawfile = f;
                 
                 #region 根据组件类别，统一路径处理
-                if (c.ctype == ComType.Ssql)
-                    continue;
-
                 if (c.cname == "HsSettle.exe" || c.cname == "HsBkSettle.exe")
                 {
                     string temp = @"HsSettle\trunk\Sources\ClientCom\" + Path.GetFileNameWithoutExtension(c.cname);
@@ -1480,13 +1472,22 @@ namespace MakeAuto
         #region 递交组件版本比较
         public bool ValidateVersion(AmendPack ap)
         {
-            BaseConf pconf = MAConf.instance.Configs[ap.ProductId];
             bool Result = true, ret = true;
             string VFile = string.Empty;
+
+            BaseConf pconf = MAConf.instance.Configs[ap.ProductId];
+                
             foreach (CommitCom c in ap.ComComms)
             {
+                // 对于无变动和要删除的，不需要再生成SAW库信息；对于小包，不需要生成 SAW库信息
+                if (c.cstatus == ComStatus.NoChange || c.cstatus == ComStatus.Delete || c.ctype == ComType.Ssql)
+                {
+                    log.WriteLog("跳过：" + c.cname);
+                    continue;
+                }
+
+                log.WriteLog("校验版本：" + c.cname);
                 ret = true;
-                
                 // 这里的校验主要校验版本，集成编译之后，对于SO，还要校验大小
                 // 根据文件类型调用不同方法校验版本
                 switch (c.ctype)
@@ -1520,7 +1521,7 @@ namespace MakeAuto
                     if (Result)
                         Result = false;
                 }
-            }
+            }   
 
             if (!Result)
             {
@@ -1539,6 +1540,9 @@ namespace MakeAuto
         
         public bool ValidateSO(string path, string version, out string VFile)
         {
+            bool Result = true;
+            VFile = string.Empty;
+
             if (!File.Exists(path))
             {
                 log.WriteErrorLog(path + " 不存在");
@@ -1548,19 +1552,24 @@ namespace MakeAuto
 
             // 版本比较 
             // 取压缩包的 SO 测试下正则表达式，同时比较版本信息
-            StreamReader sr = new StreamReader(path);
-            string input = sr.ReadToEnd();
-            sr.Close();
-
-            bool Result = true;
-            VFile = string.Empty;
-
-            string pattern = @"V(\d+\.){3}\d+"; // V6.1.31.16
-            Regex rgx = new Regex(pattern, RegexOptions.IgnoreCase);
-            // 确保版本逆序，只取第一个
-            Match m = rgx.Match(input);
-            if (!m.Success||(VFile =m.Groups[0].Captures[0].Value) != version)
+            try
             {
+                StreamReader sr = new StreamReader(path);
+                string input = sr.ReadToEnd();
+                sr.Close();
+
+                string pattern = @"V(\d+\.){3}\d+"; // V6.1.31.16
+                Regex rgx = new Regex(pattern, RegexOptions.IgnoreCase);
+                // 确保版本逆序，只取第一个
+                Match m = rgx.Match(input);
+                if (!m.Success || (VFile = m.Groups[0].Captures[0].Value) != version)
+                {
+                    Result = false;
+                }
+            }
+            catch(Exception e)
+            {
+                log.WriteErrorLog("取版本信息异常，" + path + "  " + e.Message);
                 Result = false;
             }
             
@@ -1576,8 +1585,7 @@ namespace MakeAuto
                 return false;
             }
             // 获取文件版本信息
-            FileVersionInfo DllVer = FileVersionInfo.GetVersionInfo(
-                path);
+            FileVersionInfo DllVer = FileVersionInfo.GetVersionInfo(path);
 
             VFile = "V" + DllVer.FileVersion;
             // cver的 V 去掉，从第一个开始比较
@@ -1594,46 +1602,58 @@ namespace MakeAuto
                 // 小包直接跳过
                 if (c.ctype == ComType.Ssql || c.cstatus == ComStatus.NoChange)
                 {
+                    log.WriteLog("跳过：" + c.cname);
                     continue;
                 }
 
-                log.WriteLog("复制：" + c.cname, LogLevel.FileLog);
+                log.WriteLog("复制：" + c.cname);
 
                 // 去除文件只读属性，否则复制时不能覆盖
-                FileAttributes attributes = File.GetAttributes(Path.Combine(ap.SCMAmendDir, c.cname));
-                FileAttributes attr1 = attributes;
-                if ((attributes & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
+                try
                 {
-                    // Show the file.
-                    attributes = attributes & ~FileAttributes.ReadOnly;
-                    File.SetAttributes(Path.Combine(ap.SCMAmendDir, c.cname), attributes);
-                }
-
-                if (c.ctype == ComType.Patch || c.ctype == ComType.TablePatch || c.ctype == ComType.Ini || 
-                   c.ctype == ComType.Xml || c.ctype == ComType.Excel || c.ctype == ComType.MenuPatch)
-                {
-                    File.Copy(c.sawfile.LocalPath, Path.Combine(ap.SCMAmendDir, c.cname), true);
-                }
-                else
-                {
-                    File.Copy(Path.Combine(pconf.OutDir, c.cname), Path.Combine(ap.SCMAmendDir, c.cname), true);
-
-                    if (c.ctype == ComType.SO) // so 多复制源代码
+                    FileAttributes attributes = File.GetAttributes(Path.Combine(ap.SCMAmendDir, c.cname));
+                    FileAttributes attr1 = attributes;
+                    if ((attributes & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
                     {
-                        Detail d = pconf.GetDetail(c);
-                        foreach (string s in d.ProcFiles)
+                        // Show the file.
+                        attributes = attributes & ~FileAttributes.ReadOnly;
+                        File.SetAttributes(Path.Combine(ap.SCMAmendDir, c.cname), attributes);
+                    }
+
+                    if (c.ctype == ComType.Patch || c.ctype == ComType.TablePatch || c.ctype == ComType.Ini ||
+                       c.ctype == ComType.Xml || c.ctype == ComType.Excel || c.ctype == ComType.MenuPatch)
+                    {
+                        File.Copy(c.sawfile.LocalPath, Path.Combine(ap.SCMAmendDir, c.cname), true);
+                    }
+                    else
+                    {
+                        File.Copy(Path.Combine(pconf.OutDir, c.cname), Path.Combine(ap.SCMAmendDir, c.cname), true);
+
+                        if (c.ctype == ComType.SO) // so 多复制源代码
                         {
-                            File.Copy(Path.Combine(pconf.OutDir, s), Path.Combine(ap.SCMAmendDir, s), true);
+                            Detail d = pconf.GetDetail(c);
+                            foreach (string s in d.ProcFiles)
+                            {
+                                File.Copy(Path.Combine(pconf.OutDir, s), Path.Combine(ap.SCMAmendDir, s), true);
+                            }
                         }
                     }
+
+                    // 还原只读属性，似乎不需要还原，没啥用
+                    //attributes = attr1;
+                    //if ((attributes & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
+                    //{
+                    //    File.SetAttributes(Path.Combine(ap.SCMAmendDir, c.cname), attributes);
+                    //}
+                }
+                catch (Exception e)
+                {
+                    log.WriteLog("[Error]复制文件异常 " + c.cname + " " + e.Message);
+                    Result = false;
                 }
 
-                // 还原只读属性，似乎不需要还原，没啥用
-                //attributes = attr1;
-                //if ((attributes & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
-                //{
-                //    File.SetAttributes(Path.Combine(ap.SCMAmendDir, c.cname), attributes);
-                //}
+                if (!Result)
+                    break;
             }
             return Result;
         }
@@ -1641,11 +1661,14 @@ namespace MakeAuto
         public override bool DoWork(AmendPack ap)
         {
             // 检查版本一致性
-            bool Result = ValidateVersion(ap);
+            log.WriteLog("校验版本......");
+            bool Result = true;
+            Result = ValidateVersion(ap);
             if (!Result)
                 return false;
 
-            // 复制递交组件到递交包 
+            // 复制递交组件到递交包
+            log.WriteLog("复制递交组件......");
             Result = CopyCommit(ap);
             if (!Result)
                 return false;
@@ -1656,7 +1679,7 @@ namespace MakeAuto
             bool SrcFlag = false, result = true;
             foreach (CommitCom c in ap.ComComms)
             {
-                if (c.ctype == ComType.SO)  // 交了SO，一定要存在源代码 
+                if (c.ctype == ComType.SO)  // 交了SO，需要递交源代码 
                 {
                     SrcFlag = true;
                     break;
@@ -1681,6 +1704,7 @@ namespace MakeAuto
                 if (SrcFlag == true)
                 {
                     // 打包 Src
+                    log.WriteLog("打包源代码......");
                     p.StartInfo.Arguments = " m -ep " + ap.SCMSrcRar + " "
                         + ap.SCMAmendDir + "\\" + "*.h " + ap.SCMAmendDir + "\\" + "*.pc "
                         + ap.SCMAmendDir + "\\" + "*.cpp " + ap.SCMAmendDir + "\\" + "*.gcc ";   // 设置执行参数  
@@ -1704,6 +1728,7 @@ namespace MakeAuto
                 }
 
                 // 打包Pack，替换 压缩.bat 的 a -ep 为 m -ep
+                log.WriteLog("打包组件......");
                 p.StartInfo.Arguments = " a -ep " + ap.SCMLocalFile + " "
                     + ap.SCMAmendDir + " " + "-x" +ap.SCMSrcRar;   // 设置执行参数
                 
@@ -1788,7 +1813,19 @@ namespace MakeAuto
                     }
                 }
 
+                if (!File.Exists(ap.SCMLocalFile))
+                {
+                    log.WriteErrorLog("本地文件" + ap.SCMLocalFile + "不存在！");
+                }
+                log.WriteLog("上传：" + ap.SCMLocalFile + "->" + ap.SCMRemoteFile);
                 ftp.UploadFile(ap.SCMLocalFile, ap.SCMRemoteFile);
+
+                //存在源代码，上传源代码压缩包
+                if (File.Exists(ap.SCMSrcRar))
+                {
+                    log.WriteLog("上传：" + ap.SCMSrcRar + "->" + ap.SCMRemoteSrcRar);
+                    ftp.UploadFile(ap.SCMSrcRar, ap.SCMRemoteSrcRar);
+                }
             }
             catch (Exception e)
             {

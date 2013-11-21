@@ -4,6 +4,9 @@ using System.IO;
 
 namespace MakeAuto
 {
+    /// <summary>
+    /// 定义宏调用类型
+    /// </summary>
     public enum MacroType
     {
         Nothing = 0,
