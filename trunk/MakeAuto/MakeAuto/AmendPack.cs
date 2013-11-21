@@ -238,7 +238,7 @@ namespace MakeAuto
             {
                 scmstatus = ScmStatus.Error;
                 log.WriteErrorLog("查询修改单信息失败！");
-                return;
+                throw new DataException("QueryAmendInfo Failed!!!");
             }
         }
 
@@ -505,14 +505,14 @@ namespace MakeAuto
 
             ScmVer = SubmitVer;
             LocalFile = Path.Combine(LocalDir, currVerFile);
-            RemoteFile = Path.Combine(RemoteDir, currVerFile);
+            RemoteFile = LocalFile.Replace(LocalDir, RemoteDir);
 
             SCMLocalFile = Path.Combine(SCMAmendDir, "集成-" + currVerFile);
-            SCMRemoteFile = Path.Combine(RemoteDir, "集成-" +currVerFile);
+            SCMRemoteFile = SCMLocalFile.Replace(SCMAmendDir, RemoteDir);
 
             SrcRar = Path.Combine(SCMAmendDir, "src-V" + ScmVer.ToString() + ".rar");
             SCMSrcRar = Path.Combine(SCMAmendDir,"集成-src-V" + ScmVer.ToString() + ".rar");
-
+            SCMRemoteSrcRar = SCMSrcRar.Replace(SCMAmendDir, RemoteDir);
 
             if (ScmL.Count > 0)
             {
@@ -642,6 +642,7 @@ namespace MakeAuto
 
         public string SrcRar { get; set; }
         public string SCMSrcRar { get; private set; }
+        public string SCMRemoteSrcRar { get; private set; }
 
         // 上次集成版本
         public int SCMLastVer { get; private set; }
