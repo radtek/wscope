@@ -109,6 +109,7 @@
     <Compile Include="..\MakeAuto\SvnPort.cs">
       <Link>SvnPort.cs</Link>
     </Compile>
+    <Compile Include="CommitHelper.cs" />
     <Compile Include="FormCommit.cs">
       <SubType>Form</SubType>
     </Compile>

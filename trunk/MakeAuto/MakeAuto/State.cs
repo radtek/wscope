@@ -803,6 +803,10 @@ namespace MakeAuto
                     f.LocalPath = Path.Combine(ap.svn.Workspace, c.path).Replace('/', '\\');
                     f.UriPath = Path.Combine(ap.svn.Server, c.path).Replace('\\', '/');
                 }
+
+                // 为了Commit程序能调用 GetDirctory取路径
+                if (!System.IO.Path.HasExtension(f.LocalPath) && f.LocalPath[f.LocalPath.Length - 1] != System.IO.Path.DirectorySeparatorChar)
+                    f.LocalPath = f.LocalPath + System.IO.Path.DirectorySeparatorChar;
                 #endregion
             }
             return true;

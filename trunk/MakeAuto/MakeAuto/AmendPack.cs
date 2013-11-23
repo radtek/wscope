@@ -231,6 +231,11 @@ namespace MakeAuto
             // 查询修改单信息
             if (QueryAmendInfo() == true)
             {
+                // 标定路径
+                log.WriteFileLog("确认本地远程路径.....");
+                RemoteDir = MAConf.instance.Configs[ProductId].fc.ServerDir + CommitPath;
+                LocalDir = MAConf.instance.Configs[ProductId].fc.LocalDir;
+                
                 // 生成修改单组件包信息
                 //SetComs();
             }
@@ -280,10 +285,6 @@ namespace MakeAuto
 
                 // Readme 文件名称
                 Readme = "Readme-" + CommitDir + ".txt";
-
-                // 标定路径
-                RemoteDir = MAConf.instance.Configs[ProductId].fc.ServerDir + CommitPath;
-                LocalDir = MAConf.instance.Configs[ProductId].fc.LocalDir;
 
                 result = true;
             }

@@ -47,8 +47,10 @@ namespace MakeAuto
 
         private OperLog()
         {
-            LogDir = "Log";
-            LogFile = Path.Combine(LogDir, "MA" + DateTime.Now.ToString("yyyyMMdd") + ".Log");
+            //LogDir = "Log";
+            //LogFile = Path.Combine(LogDir, "MA" + DateTime.Now.ToString("yyyyMMdd") + ".Log");
+            LogFile = "MA" + DateTime.Now.ToString("yyyyMMdd") + ".Log";
+            /*
             if (!System.IO.Directory.Exists(LogDir))
             {
                 try
@@ -60,6 +62,7 @@ namespace MakeAuto
                     System.Windows.Forms.MessageBox.Show(e.Message);
                 }
             }
+             * */
 
             try
             {
@@ -149,7 +152,7 @@ namespace MakeAuto
             writer.Flush();
         }
 
-        private string LogDir;
+        //private string LogDir;
         private string LogFile;
         private FileStream filestream;
         private StreamWriter writer;
