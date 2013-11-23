@@ -19,6 +19,11 @@
 				<user name="hs_his" pass="BRbpK8L2jgGwdN9CnMQnVw==" note="历史数据库"/>
 				<user name="hs_fil" pass="BRbpK8L2jgGwdN9CnMQnVw==" note="归档数据库"/>
 			</DB>
+			<CommitPublic logmessage="V6.1.4.999">
+				<item dir="Sources\ClientCom\Include"/>
+				<item dir="Sources\ClientCom\Class"/>
+				<item dir="Sources\ClientCom\Printers"/>
+			</CommitPublic>
 		</Product>
 		<Product type="cres" product_id="00109" enable="true" name="证券公司转融通系统" funclist="funclist_ref.xml">
 			<Repository repo="https://192.168.57.30/secu/dep1/HSRef10/trunk" workspace="E:\HSRef10"/>
@@ -37,6 +42,11 @@
 				<user name="hs_his" pass="BRbpK8L2jgGwdN9CnMQnVw==" note="历史数据库"/>
 				<user name="hs_fil" pass="BRbpK8L2jgGwdN9CnMQnVw==" note="归档数据库"/>
 			</DB>
+			<CommitPublic logmessage="V6.1.4.999">
+				<item dir="Sources\ClientCom\Include"/>
+				<item dir="Sources\ClientCom\Class"/>
+				<item dir="Sources\ClientCom\Printers"/>
+			</CommitPublic>
 		</Product>
 		<Product type="febs" product_id="00052" enable="true" name="06版集中交易系统" funclist="funclist.xml">
 			<Repository repo="https://60.191.25.170:4000/secu/dep1/06trade/HSTRADES11/trunk" workspace="E:\06trade\HSTRADES11\trunk"/>
@@ -58,6 +68,11 @@
 				<user name="hs_his" pass="BRbpK8L2jgGwdN9CnMQnVw==" note="历史数据库"/>
 				<user name="hs_fil" pass="BRbpK8L2jgGwdN9CnMQnVw==" note="归档数据库"/>
 			</DB>
+			<CommitPublic logmessage="V6.1.4.999">
+				<item dir="Sources\ClientCom\Include"/>
+				<item dir="Sources\ClientCom\Class"/>
+				<item dir="Sources\ClientCom\Printers"/>
+			</CommitPublic>
 		</Product>
 		<Product type="febs" product_id="00053" enable="true" name="融资融券" funclist="funclist.xml">
 			<Repository repo="https://60.191.25.170:4000/secu/dep1/06trade/HSTRADES11/trunk" workspace="E:\06trade\HSTRADES11\trunk"/>
@@ -79,6 +94,11 @@
 				<user name="hs_his" pass="BRbpK8L2jgGwdN9CnMQnVw==" note="历史数据库"/>
 				<user name="hs_fil" pass="BRbpK8L2jgGwdN9CnMQnVw==" note="归档数据库"/>
 			</DB>
+			<CommitPublic logmessage="V6.1.4.999">
+				<item dir="Sources\ClientCom\Include"/>
+				<item dir="Sources\ClientCom\Class"/>
+				<item dir="Sources\ClientCom\Printers"/>
+			</CommitPublic>
 		</Product>
 	</Products>
 </MakeAuto>

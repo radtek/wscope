@@ -17,7 +17,12 @@ namespace MakeAuto
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             if (args.Length == 0)
-                Application.Run(new FormCommit());
+            {
+                MessageBox.Show("无递交路径，退出程序！");
+                Application.Exit();
+                //Application.Run(new FormCommit());
+                
+            }
             else
                 Application.Run(new FormCommit(args));
         }

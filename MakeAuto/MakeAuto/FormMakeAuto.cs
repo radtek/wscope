@@ -347,7 +347,7 @@ namespace MakeAuto
              * 4. reminderLaterTimeFormat is a time format enum that specifies if you want to take remind later time span value as minutes, hours or days.
              * AutoUpdater.Start(string appcastURL, bool lateUserSelectRemindLater, int reminderLaterTime, int reminderLaterTimeFormat)
             */
-            AutoUpdater.Start("http://192.168.185.89/makeauto/MA_AppCast.xml");
+            //AutoUpdater.Start("http://192.168.54.35/makeauto/MA_AppCast.xml");
         }
 
         private void tbModule_TextChanged(object sender, EventArgs e)
