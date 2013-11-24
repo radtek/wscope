@@ -66,9 +66,10 @@
     <Reference Include="Renci.SshNet">
       <HintPath>..\depbin\Renci.SshNet.dll</HintPath>
     </Reference>
-    <Reference Include="SharpSvn, Version=1.6017.1920.11722, Culture=neutral, PublicKeyToken=d729672594885a28, processorArchitecture=x86">
+    <Reference Include="SharpSvn, Version=1.7002.1998.12257, Culture=neutral, PublicKeyToken=d729672594885a28, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\depbin\Svn_1.7\SharpSvn.dll</HintPath>
+      <HintPath>..\depbin\Svn_1.6\SharpSvn.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -131,6 +132,9 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
+    <None Include="..\MakeAuto\App.config">
+      <Link>App.config</Link>
+    </None>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -140,9 +144,6 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="App.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

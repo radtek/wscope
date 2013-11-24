@@ -417,6 +417,7 @@ namespace MakeAuto
                 catch(Exception e)
                 {
                     log.WriteErrorLog("连接FTP服务器失败，错误信息：" + e.Message);
+                    return false;
                 }
             }
 
@@ -425,7 +426,7 @@ namespace MakeAuto
             // 对于V1，是全部都需要集成，对于Vn(n>1)，只集成变动的部分就可以了
             if (ftp.DirectoryExists(RemoteDir) == false)
             {
-                System.Windows.Forms.MessageBox.Show("FTP路径" + fc.ServerDir + CommitPath + "不存在！");
+                System.Windows.Forms.MessageBox.Show("FTP路径" + RemoteDir + "不存在！");
                 return false;
             }
             ftp.ChangeWorkingDirectory(fc.ServerDir);
@@ -585,7 +586,7 @@ namespace MakeAuto
 
             if (ftp.DirectoryExists(RemoteDir) == false)
             {
-                System.Windows.Forms.MessageBox.Show("FTP路径" + fc.ServerDir + CommitPath + "不存在！");
+                System.Windows.Forms.MessageBox.Show("FTP路径" + RemoteDir + "不存在！");
                 return false;
             }
 
