@@ -48,152 +48,30 @@ namespace MakeAuto
 
     public class DBUser
     {
-        public DBUser(string name, string pass, string note)
+        public DBUser(string name, string pass, string dbtns, string note)
         {
             this.name = name;
             this.pass = pass;
+            this.dbtns = dbtns;
             this.note = note;
-        }
-
-        public static bool test(string pass)
-        {
-            return true;
-
-        }
-
-        private static byte[] key;
-        private static byte[] iv;
-
-        private static void InitKey()
-        {
-            if (key == null || iv == null)
-            {
-                byte[] key_t = Encoding.UTF8.GetBytes(G_KEY);
-                // 做一下MD5哈希，作为 key，实际可以直接使用，HASH的值太小了
-                SHA512Managed provider_SHA = new SHA512Managed();
-                byte[] byte_pwdSHA = provider_SHA.ComputeHash(key_t);
-
-                key = new byte[32];
-                Array.Copy(byte_pwdSHA, key, 32);
-                iv = new byte[16];
-                Array.Copy(Encoding.UTF8.GetBytes(G_IV), key, 16);
-                myAes.Key = key;
-                myAes.IV = iv;
-            }
         }
 
         public static string DecPass(string encpass)
         {
-            InitKey();
-            string plainText = DecryptStringFromBytes_Aes(Convert.FromBase64String(encpass), myAes.Key, myAes.IV);
-            return plainText;
-
+            return MyAesMan.DecPass(encpass);
         }
 
         public static string EncPass(string original)
         {
-            InitKey();
-            byte[] cipherText = EncryptStringToBytes_Aes(original, myAes.Key, myAes.IV);
-            return Convert.ToBase64String(cipherText);
-        }
-
-        static byte[] EncryptStringToBytes_Aes(string plainText, byte[] Key, byte[] IV)
-        {
-            // Check arguments.
-            if (plainText == null || plainText.Length <= 0)
-                throw new ArgumentNullException("plainText");
-            if (Key == null || Key.Length <= 0)
-                throw new ArgumentNullException("Key");
-            if (IV == null || IV.Length <= 0)
-                throw new ArgumentNullException("Key");
-            byte[] encrypted;
-            // Create an AesManaged object
-            // with the specified key and IV.
-            using (AesManaged aesAlg = new AesManaged())
-            {
-                aesAlg.Key = Key;
-                aesAlg.IV = IV;
-
-                // Create a decrytor to perform the stream transform.
-                ICryptoTransform encryptor = aesAlg.CreateEncryptor(aesAlg.Key, aesAlg.IV);
-
-                // Create the streams used for encryption.
-                using (MemoryStream msEncrypt = new MemoryStream())
-                {
-                    using (CryptoStream csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write))
-                    {
-                        using (StreamWriter swEncrypt = new StreamWriter(csEncrypt))
-                        {
-
-                            //Write all data to the stream.
-                            swEncrypt.Write(plainText);
-                        }
-                        encrypted = msEncrypt.ToArray();
-                    }
-                }
-            }
-
-
-            // Return the encrypted bytes from the memory stream.
-            return encrypted;
-
-        }
-
-        static string DecryptStringFromBytes_Aes(byte[] cipherText, byte[] Key, byte[] IV)
-        {
-            // Check arguments.
-            if (cipherText == null || cipherText.Length <= 0)
-                throw new ArgumentNullException("cipherText");
-            if (Key == null || Key.Length <= 0)
-                throw new ArgumentNullException("Key");
-            if (IV == null || IV.Length <= 0)
-                throw new ArgumentNullException("Key");
-
-            // Declare the string used to hold
-            // the decrypted text.
-            string plaintext = null;
-
-            // Create an AesManaged object
-            // with the specified key and IV.
-            using (AesManaged aesAlg = new AesManaged())
-            {
-                aesAlg.Key = Key;
-                aesAlg.IV = IV;
-
-                // Create a decrytor to perform the stream transform.
-                ICryptoTransform decryptor = aesAlg.CreateDecryptor(aesAlg.Key, aesAlg.IV);
-
-                // Create the streams used for decryption.
-                using (MemoryStream msDecrypt = new MemoryStream(cipherText))
-                {
-                    using (CryptoStream csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read))
-                    {
-                        using (StreamReader srDecrypt = new StreamReader(csDecrypt))
-                        {
-
-                            // Read the decrypted bytes from the decrypting stream
-                            // and place them in a string.
-                            plaintext = srDecrypt.ReadToEnd();
-                        }
-                    }
-                }
-
-            }
-
-            return plaintext;
-
+            return MyAesMan.EncPass(original);
         }
 
         public string name { get; private set; }
         public string pass { get; private set; }
+        public string dbtns { get; private set; }
         public string note { get; private set; }
         public string file;
-
-        public static AesManaged myAes = new AesManaged();
-        const string G_KEY = "12345678xyze133ttyyfahdfajyeafjaldjzdvjldjfdlajafljdfnvladnnvnswdehhe329789oweuw";
-        const string G_IV = "87654321xywer123488ewfjaldjf9u238r2fsjfalsfj;al;fjaoewurwhvfadlfhadfjalkfweourw";
     }
-
 
     class BaseConf
     {
@@ -304,12 +182,12 @@ namespace MakeAuto
 
                 // 读取数据库连接属性
                 xn = root.SelectSingleNode("DB");
-                dbtns = xn.Attributes["dbtns"].Value;
                 xnl = xn.ChildNodes;
                 foreach (XmlNode x in xnl)
                 {
                     DBUser u = new DBUser(x.Attributes["name"].InnerText,
                         x.Attributes["pass"].InnerText,
+                        x.Attributes["dbtns"].InnerText,
                         x.Attributes["note"].InnerText);
                     Users.Add(u);
                 }
@@ -368,7 +246,7 @@ namespace MakeAuto
             foreach (DBUser u in Users)
             {
                 if (u.name.Equals(user))
-                    return u.name + "/" + DBUser.DecPass(u.pass) + "@" + dbtns;
+                    return u.name + "/" + DBUser.DecPass(u.pass) + "@" + u.dbtns;
             }
 
             return string.Empty;
@@ -423,7 +301,7 @@ namespace MakeAuto
         private StringBuilder sBuilderErr = new StringBuilder();
 
         // todo 实现异步执行的功能
-        protected Boolean CompileSqlOne(string ConnStr, string File)
+        protected Boolean CompileSqlOne(string sConnStr, string sFile)
         {
             bool result = true;
             sBuilder.Clear();
@@ -434,9 +312,14 @@ namespace MakeAuto
             {
                 p.StartInfo.FileName = @"cmd.exe";
                 // 同步模式下，使用 @ 导入会有问题，sqlplus错误输出流会报引擎错误，用 < 没问题。异步好像 < 和 @ 都可以
-                p.StartInfo.Arguments = @"/C sqlplus.exe -S " + ConnStr + " < " + File;
-                log.WriteLog("执行Sql " + File);
-                
+                p.StartInfo.Arguments = @"/C sqlplus.exe -S " + sConnStr + " < " + sFile;
+                int t1 = sConnStr.IndexOf("/");
+                int t2 = sConnStr.IndexOf("@");
+                string sConnStr1 = sConnStr.Substring(0, t1 + 1) + "******" + sConnStr.Substring(t2);
+
+                log.WriteLog("执行Sql " + sFile);
+                log.WriteLog(p.StartInfo.FileName + " " + p.StartInfo.Arguments.Replace(sConnStr, sConnStr1));
+
                 p.StartInfo.UseShellExecute = false;        // 关闭Shell的使用  
                 p.StartInfo.RedirectStandardInput = false; // 不重定向标准输入，因为文件要输入
                 p.StartInfo.RedirectStandardOutput = true;  //重定向标准出  
@@ -465,7 +348,7 @@ namespace MakeAuto
                     || sBuilder.ToString().IndexOf("ORACLE") >= 0 || sBuilder.ToString().IndexOf("SQL*Plus") >= 0
                     )
                 {
-                    log.WriteLog("编译过程可能有错误，请检查日志文件确认！" + File, LogLevel.Error);
+                    log.WriteLog("编译过程可能有错误，请检查日志文件确认！" + sFile, LogLevel.Error);
                     result = false;
                 }
 
@@ -475,7 +358,7 @@ namespace MakeAuto
             }
             catch (Exception ex)
             {
-                log.WriteLog("执行Sql脚本失败，文件：" + File + "错误信息，" + ex.Message, LogLevel.Error);
+                log.WriteLog("执行Sql脚本失败，文件：" + sFile + "错误信息，" + ex.Message, LogLevel.Error);
                 result = false;
             }
 
@@ -487,7 +370,7 @@ namespace MakeAuto
             if (!String.IsNullOrEmpty(outLine.Data))
             {
                 sBuilder.AppendLine(outLine.Data);
-                //OperLog.instance.WriteLog(outLine.Data, LogLevel.SqlExe);
+                //log.WriteLog(outLine.Data, LogLevel.SqlExe);  // 关闭日志可大幅提高性能
             }
         }
 
@@ -496,6 +379,7 @@ namespace MakeAuto
             if (!String.IsNullOrEmpty(outLine.Data))
             {
                 sBuilderErr.AppendLine(outLine.Data);
+                //log.WriteLog(outLine.Data, LogLevel.SqlExe);
             }
         }
 
@@ -521,10 +405,14 @@ namespace MakeAuto
             string strOutput = p.StandardOutput.ReadToEnd();
             log.WriteFileLog("[编译命令] " + p.StartInfo.FileName + p.StartInfo.Arguments);
             log.WriteFileLog("[编译输出]");
-            log.WriteFileLog(strOutput);
             if (strOutput.IndexOf("Complile Failed") >= 0)
             {
+                log.WriteErrorLog(strOutput);
                 Result = false;
+            }
+            else
+            {
+                log.WriteFileLog(strOutput);
             }
 
             log.WriteFileLog("[编译结束]");
@@ -558,7 +446,6 @@ namespace MakeAuto
         public List<DBUser> Users { get; private set; }
         public string logmessage;
         public List<String> CommitPublic { get; private set; }
-        public string dbtns { get; private set; }
 
         public OperLog log;
     }
@@ -876,7 +763,7 @@ namespace MakeAuto
 
         public override bool CompileBackEnd(CommitCom c)
         {
-            return CompileHDT(c);
+            return CompileHDT2(c);
         }
 
         protected override string GetDprName()
@@ -946,8 +833,84 @@ namespace MakeAuto
 
             return Result;
         }
-    }
 
+        private StringBuilder sBuilder = new StringBuilder();
+
+        private bool CompileHDT2(CommitCom c)
+        {
+            bool Result = true;
+
+            //分解Project
+            string t = c.sawfile.LocalPath;
+            string Pdata = string.Empty;
+            string Pproject = string.Empty;
+            string Pbiz = string.Empty;
+            string FlagStr = string.Empty;
+
+            if (c.ctype == ComType.FuncXml && c.cname.IndexOf("functionlist") >= 0)
+            {
+                Pdata = Path.Combine(WorkSpace, @"Sources\DevCodes");
+                Pproject = name;  // 用项目配置
+                Pbiz = c.cname;
+                FlagStr = "functionlist文件生成完成";
+
+            }
+            else
+            {
+                int i = t.IndexOf("DevCodes");
+                Pdata = t.Substring(0, i + 8); // 
+                t = t.Substring(i + 9);
+                i = t.IndexOf("\\");
+                Pproject = t.Substring(0, i);
+                Pbiz = t.Substring(i + 1);
+                FlagStr = "生成模块代码总耗时";
+            }
+
+
+            // 开发工具限制，一定要在HDT下调用程序，否则总是会报下JAVA的错误，因此通过批处理编译，批处理中先将目录进行切换。
+            Process p = new Process();
+            p.StartInfo.FileName = "cm_back.bat";
+            p.StartInfo.Arguments = " " + Pdata + " " + Pproject + " " + Pbiz + " " + OutDir;
+            log.WriteLog("[编译命令] " + p.StartInfo.FileName + p.StartInfo.Arguments);
+            p.StartInfo.UseShellExecute = false;
+            p.StartInfo.RedirectStandardInput = true;
+            p.StartInfo.RedirectStandardOutput = true;
+            p.StartInfo.RedirectStandardError = true;
+            p.StartInfo.CreateNoWindow = true;
+
+            p.OutputDataReceived += new DataReceivedEventHandler(p_OutputDataReceived);
+            p.ErrorDataReceived += new DataReceivedEventHandler(p_OutputDataReceived);
+
+            p.Start();    // 启动
+
+            p.BeginOutputReadLine();
+            p.BeginErrorReadLine();
+            p.WaitForExit();
+            p.Close();
+
+            // <提示>经纪业务运营平台V21已经存在 输出在错误流
+            if (sBuilder.ToString().IndexOf("Exception") >= 0 // 异常
+                || sBuilder.ToString().IndexOf("exception") >= 0  // 异常
+                || sBuilder.ToString().IndexOf("错误信息") >= 0) // 文件缺失时，<警告>模块代码已生成，但有错误信息。请参考日志文件：file:/E:/hstrade20/trun
+                
+            {
+                log.WriteLog("HDT编译过程可能有错误，请检查日志文件确认！", LogLevel.Error);
+                Result = false;
+            }
+
+            log.WriteLog("编译结束 " + c.cname);
+            return Result;
+        }
+
+        private void p_OutputDataReceived(object sendingProcess, DataReceivedEventArgs outLine)
+        {
+            if (!String.IsNullOrEmpty(outLine.Data))
+            {
+                sBuilder.AppendLine(outLine.Data);
+                log.WriteLog(outLine.Data, LogLevel.SqlExe);
+            }
+        }
+    }
 
     sealed class MAConf
     {

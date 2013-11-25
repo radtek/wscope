@@ -5,6 +5,9 @@ using AutoUpdaterDotNET;
 using System.Threading;
 using System.Collections.Generic;
 using SharpSvn;
+using HigLabo.Net;
+using HigLabo.Net.Mail;
+using HigLabo.Net.Smtp;
 
 namespace MakeAuto
 {
@@ -467,7 +470,7 @@ namespace MakeAuto
             }
         }
 
-        private void button2_Click(object sender, EventArgs e)
+        private void btnFlow_Click(object sender, EventArgs e)
         {
             btnFlow.Enabled = false;
             btnReadInfo.Enabled = false;
@@ -509,14 +512,40 @@ namespace MakeAuto
             ab.Show(this);
         }
 
-        private void button9_Click(object sender, EventArgs e)
+        private void button2_Click(object sender, EventArgs e)
         {
-            textBox3.Text = DBUser.EncPass(textBox2.Text);
-        }
+            //====Smtp sample==================================//
+            SmtpClient cl = new SmtpClient();
+            cl.ServerName = "mail.hundsun.com";
+            cl.UserName = "gaohu";
+            cl.Password = "Hundsun_3";
+            cl.Port = 25;
+            cl.Ssl = false;
+            //cl.AuthenticateMode = SmtpAuthenticateMode.Auto;
+            //bool t = cl.AuthenticateByLogin(); //false
+            //bool t1 = cl.AuthenticateByPlain(); //falses
+            //bool t2 = cl.Authenticate();  // 返回为 true
+            //bool t3 = cl.AuthenticateByCramMD5(); // 返回为 true, 偶们邮箱是这种认证，其他都是false
+            SmtpMessage mg = new SmtpMessage();
+            mg.Subject = "title";
+            mg.BodyText = "Hi.my mail body text!";
+            //Send by HTML format
+            mg.IsHtml = true;
+            mg.From = new MailAddress("gaohu@hundsun.com");
+            mg.To.Add(new MailAddress("tigertall@126.com"));
+            //Add attachment file from local disk
+            //SmtpContent ct = new SmtpContent();
+            //ct.LoadFileData("C:\\setup.ini");
+            //mg.Contents.Add(ct);
 
-        private void button2_Click_1(object sender, EventArgs e)
-        {
-            textBox3.Text = DBUser.EncPass(textBox2.Text);
+            var rs = cl.SendMail(mg);
+            //Check mail was sent or not
+            if (rs.SendSuccessful == false)
+            {
+                //You can get information about send mail is success or error reason
+                var resultState = rs.State;
+            }
+
         }
     }
 }

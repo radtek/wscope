@@ -18,7 +18,10 @@ namespace MakeAuto
             this.labelVersion.Text = String.Format("版本 {0}", AssemblyVersion);
             this.labelCopyright.Text = AssemblyCopyright;
             this.labelCompanyName.Text = AssemblyCompany;
-            this.textBoxDescription.Text = AssemblyDescription;
+            this.textBoxDescription.Text = AssemblyDescription + 
+                Environment.NewLine + 
+                System.Diagnostics.FileVersionInfo.GetVersionInfo(
+                Assembly.GetExecutingAssembly().Location).FileVersion.ToString();
         }
 
         #region 程序集特性访问器
