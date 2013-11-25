@@ -49,7 +49,6 @@ namespace MakeAuto
         {
             LogDir = "Log";
             LogFile = Path.Combine(LogDir, "MA" + DateTime.Now.ToString("yyyyMMdd") + ".Log");
-            LogFile = "MA" + DateTime.Now.ToString("yyyyMMdd") + ".Log";
             if (!System.IO.Directory.Exists(LogDir))
             {
                 try

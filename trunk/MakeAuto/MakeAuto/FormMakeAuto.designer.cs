@@ -48,12 +48,8 @@
             this.tcSCM = new System.Windows.Forms.TabControl();
             this.tabPage3 = new System.Windows.Forms.TabPage();
             this.button2 = new System.Windows.Forms.Button();
-            this.textBox3 = new System.Windows.Forms.TextBox();
-            this.textBox2 = new System.Windows.Forms.TextBox();
             this.btnDel = new System.Windows.Forms.Button();
             this.btnFlow = new System.Windows.Forms.Button();
-            this.button9 = new System.Windows.Forms.Button();
-            this.button8 = new System.Windows.Forms.Button();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
             this.label8 = new System.Windows.Forms.Label();
             this.txtScmVer = new System.Windows.Forms.TextBox();
@@ -245,12 +241,8 @@
             // tabPage3
             // 
             this.tabPage3.Controls.Add(this.button2);
-            this.tabPage3.Controls.Add(this.textBox3);
-            this.tabPage3.Controls.Add(this.textBox2);
             this.tabPage3.Controls.Add(this.btnDel);
             this.tabPage3.Controls.Add(this.btnFlow);
-            this.tabPage3.Controls.Add(this.button9);
-            this.tabPage3.Controls.Add(this.button8);
             this.tabPage3.Controls.Add(this.groupBox4);
             this.tabPage3.Controls.Add(this.btnReadInfo);
             this.tabPage3.Location = new System.Drawing.Point(4, 22);
@@ -269,26 +261,7 @@
             this.button2.TabIndex = 36;
             this.button2.Text = "test";
             this.button2.UseVisualStyleBackColor = true;
-            this.button2.Click += new System.EventHandler(this.button2_Click_1);
-            // 
-            // textBox3
-            // 
-            this.textBox3.Location = new System.Drawing.Point(529, 49);
-            this.textBox3.Name = "textBox3";
-            this.textBox3.Size = new System.Drawing.Size(160, 21);
-            this.textBox3.TabIndex = 35;
-            this.textBox3.Text = "20130725049";
-            this.textBox3.Visible = false;
-            // 
-            // textBox2
-            // 
-            this.textBox2.Location = new System.Drawing.Point(529, 22);
-            this.textBox2.Name = "textBox2";
-            this.textBox2.PasswordChar = '*';
-            this.textBox2.Size = new System.Drawing.Size(103, 21);
-            this.textBox2.TabIndex = 34;
-            this.textBox2.Text = "hundsun";
-            this.textBox2.Visible = false;
+            this.button2.Click += new System.EventHandler(this.button2_Click);
             // 
             // btnDel
             // 
@@ -310,28 +283,7 @@
             this.btnFlow.TabIndex = 32;
             this.btnFlow.Text = "开始";
             this.btnFlow.UseVisualStyleBackColor = true;
-            this.btnFlow.Click += new System.EventHandler(this.button2_Click);
-            // 
-            // button9
-            // 
-            this.button9.Location = new System.Drawing.Point(638, 20);
-            this.button9.Name = "button9";
-            this.button9.Size = new System.Drawing.Size(75, 23);
-            this.button9.TabIndex = 31;
-            this.button9.Text = "生成密码";
-            this.button9.UseVisualStyleBackColor = true;
-            this.button9.Visible = false;
-            this.button9.Click += new System.EventHandler(this.button9_Click);
-            // 
-            // button8
-            // 
-            this.button8.Location = new System.Drawing.Point(550, 95);
-            this.button8.Name = "button8";
-            this.button8.Size = new System.Drawing.Size(75, 23);
-            this.button8.TabIndex = 30;
-            this.button8.Text = "版本校验";
-            this.button8.UseVisualStyleBackColor = true;
-            this.button8.Visible = false;
+            this.btnFlow.Click += new System.EventHandler(this.btnFlow_Click);
             // 
             // groupBox4
             // 
@@ -418,7 +370,7 @@
             this.txbAmenNo.Name = "txbAmenNo";
             this.txbAmenNo.Size = new System.Drawing.Size(74, 21);
             this.txbAmenNo.TabIndex = 12;
-            this.txbAmenNo.Text = "20130725049";
+            this.txbAmenNo.Text = "20131029049";
             this.txbAmenNo.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txbAmenNo_KeyDown);
             // 
             // btnReadInfo
@@ -717,7 +669,6 @@
             this.panel2.ResumeLayout(false);
             this.tcSCM.ResumeLayout(false);
             this.tabPage3.ResumeLayout(false);
-            this.tabPage3.PerformLayout();
             this.groupBox4.ResumeLayout(false);
             this.groupBox4.PerformLayout();
             this.tabPage1.ResumeLayout(false);
@@ -781,8 +732,6 @@
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.TextBox txbAmenNo;
-        private System.Windows.Forms.Button button8;
-        private System.Windows.Forms.Button button9;
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.TextBox txtScmVer;
         private System.Windows.Forms.Label label7;
@@ -791,8 +740,6 @@
         private System.Windows.Forms.Timer timer1;
         private System.Windows.Forms.Button btnFlow;
         private System.Windows.Forms.Button btnDel;
-        private System.Windows.Forms.TextBox textBox3;
-        private System.Windows.Forms.TextBox textBox2;
         private System.Windows.Forms.Button button2;
     }
 }

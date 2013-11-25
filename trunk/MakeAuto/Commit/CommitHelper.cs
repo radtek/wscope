@@ -51,7 +51,7 @@ namespace MakeAuto
             // 输出下处理结果
             foreach (CommitCom c in ap.ComComms)
             {
-                log.WriteLog("名称：" + c.cname + " "
+                log.WriteFileLog("名称：" + c.cname + " "
                     + "状态：" + Enum.GetName(typeof(ComStatus), c.cstatus) + " "
                     + "版本：" + c.cver + " "
                     + "路径：" + c.path);
@@ -60,7 +60,7 @@ namespace MakeAuto
             //log.WriteFileLog("[配置库文件]");
             foreach (SAWFile s in ap.SAWFiles)
             {
-                log.WriteLog("路径：" + s.Path + " "
+                log.WriteFileLog("路径：" + s.Path + " "
                     + "本地路径：" + s.LocalPath + " "
                     + "SvnUri：" + s.UriPath + " "
                     + "文件状态：" + Enum.GetName(typeof(FileStatus), s.fstatus));
@@ -82,6 +82,7 @@ namespace MakeAuto
             lstatus = new Dictionary<string, Dictionary<string, SharpSvn.SvnStatus>>();
             Dictionary<string, bool> tpath; // 临时变量
             Dictionary<string, SharpSvn.SvnStatus> tstatus; // 临时变量
+            string ext;
 
             foreach (CommitCom c in ap.ComComms)
             {
@@ -120,7 +121,12 @@ namespace MakeAuto
                         {
                             if (s.LocalContentStatus == SharpSvn.SvnStatus.NotVersioned)
                             {
-                                log.WriteLog("[NotVersioned] " + s.Path);
+                                ext = System.IO.Path.GetExtension(s.Path).ToLower();
+                                if (ext == ".dcu" || ext == ".~pas" || ext == ".~dfm")
+                                    log.WriteLog("[NotVersioned] " + s.Path, LogLevel.FileLog);
+                                else
+                                    log.WriteLog("[NotVersioned] " + s.Path);
+
                                 continue;
                             }
                             if (s.LocalContentStatus == SharpSvn.SvnStatus.Normal)
@@ -168,8 +174,8 @@ namespace MakeAuto
 
                 if (paths.Count == 0)
                 {
-                    log.WriteErrorLog("无选中递交项！");
-                    return true;
+                    log.WriteLog("无选中递交项！" + element.Key);
+                    continue;
                 }
 
                 try

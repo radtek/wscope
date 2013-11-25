@@ -21,11 +21,26 @@ namespace MakeAuto
 
         public FormCommit(string[] args)
         {
+            CommitPath = args[0];
             InitializeComponent();
             log.OnLogInfo += new LogInfoEventHandler(WriteLog);
-            ch = new CommitHelper(args[0]);
+        }
+
+        private void FormCommit_Shown(object sender, EventArgs e)
+        {
+            log.WriteLog("查询修改单信息......");
+            ch = new CommitHelper(CommitPath);
+            log.WriteLog("获取Svn代码状态......");
             ch.GetStatus();
-            RefreshStatus();
+            if (ch.lpath.Count > 0)
+            {
+                RefreshStatus();
+            }
+            else
+            {
+                log.WriteLog("未检测到代码变更", LogLevel.Warning);
+            }
+
         }
 
         public delegate void AppendTextCallback(object sender, LogInfoArgs e);
@@ -96,36 +111,13 @@ namespace MakeAuto
             }
         }
 
-        private void button2_Click(object sender, EventArgs e)
-        {
-            // 置选中状态
-            foreach (ListViewGroup g in listView1.Groups)
-            {
-                foreach (ListViewItem l in g.Items)
-                {
-                    (ch.lpath[g.Tag as string])[l.Tag as string] = l.Checked;
-                }
-            }
-
-            if (!ch.DoCommit())
-            {
-                MessageBox.Show("检入异常，请手工检查！");
-            }
-        }
-
         private void rbLog_TextChanged(object sender, EventArgs e)
         {
             rbLog.ScrollToCaret();
         }
 
-        private void button1_Click(object sender, EventArgs e)
-        {
-            ch.GetStatus();
-            RefreshStatus();
-        }
-
-
         CommitHelper ch;
+        string CommitPath;
         OperLog log = OperLog.instance;
 
         private void 对比ToolStripMenuItem_Click(object sender, EventArgs e)
@@ -160,6 +152,28 @@ namespace MakeAuto
             {
                 MAConf.instance.WriteLog("执行比较异常" + ex.Message, LogLevel.Error);
             }
+        }
+
+        private void btnCommit_Click(object sender, EventArgs e)
+        {
+            // 置选中状态
+            foreach (ListViewGroup g in listView1.Groups)
+            {
+                foreach (ListViewItem l in g.Items)
+                {
+                    (ch.lpath[g.Tag as string])[l.Tag as string] = l.Checked;
+                }
+            }
+
+            if (!ch.DoCommit())
+            {
+                MessageBox.Show("检入异常，请手工检查！");
+            }
+        }
+
+        private void btnExit_Click(object sender, EventArgs e)
+        {
+            Close();
         }
     }
     
